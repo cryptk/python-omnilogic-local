@@ -400,10 +400,150 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         return data
 
     async def getLogConfig(self):
-        self._sendRequest(REQUEST_LOG_CONFIG_MESSAGE_TYPE)
+        await self._sendRequest(REQUEST_LOG_CONFIG_MESSAGE_TYPE)
 
         data = await self._receiveFile()
         return data
+
+    async def setEquipment(self, poolId: int, equipmentId: int, isOn: Union[int,bool],
+        isCountDownTimer: bool=False, startTimeHours: int=0, startTimeMinutes: int=0,
+        endTimeHours: int=0, endTimeMinutes: int=0, daysActive: int=0, recurring: bool=False):
+        """setEquipment handles sending a SetUIEquipmentCmd XML API call to the Hayward Omni pool controller
+        Args:
+            poolId (int): The Pool/BodyOfWater ID that you want to address
+            equipmentId (int): Which equipmentID within that Pool to address
+            isOn (Union[int,bool]): For most equipment items, True/False to turn on/off.
+                For Variable Speed Pumps, you can optionally provide an int from 0-100 to set the speed percentage with 0 being Off.
+            isCountDownTimer (bool, optional): For potential future use, included to be "API complete". Defaults to False.
+            startTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            startTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            endTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            endTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            daysActive (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
+        """
+        bodyElement = ET.Element('Request', {'xmlns': 'http://nextgen.hayward.com/api'})
+
+        nameElement = ET.SubElement(bodyElement, 'Name')
+        nameElement.text = "SetUIEquipmentCmd"
+
+        parametersElement = ET.SubElement(bodyElement, 'Parameters')
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="PoolID", dataType="int")
+        parameter.text = str(poolId)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="EquipmentID", dataType="int")
+        parameter.text = str(equipmentId)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="IsOn", dataType="int")
+        parameter.text = str(int(isOn))
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="IsCountDownTimer", dataType="bool")
+        parameter.text = str(int(isCountDownTimer))
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="StartTimeHours", dataType="int")
+        parameter.text = str(startTimeHours)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="StartTimeMinutes", dataType="int")
+        parameter.text = str(startTimeMinutes)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="EndTimeHours", dataType="int")
+        parameter.text = str(endTimeHours)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="EndTimeMinutes", dataType="int")
+        parameter.text = str(endTimeMinutes)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="DaysActive", dataType="int")
+        parameter.text = str(daysActive)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Recurring", dataType="bool")
+        parameter.text = str(int(recurring))
+
+        reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
+        await self._sendRequest(sock, SET_EQUIPMENT_MESSAGE_TYPE, reqBody)
+
+    async def setFilterSpeed(self, poolId: int, equipmentId: int, speed: int):
+        """setFilterSpeed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
+        Args:
+            poolId (int): The Pool/BodyOfWater ID that you want to address
+            equipmentId (int): Which equipmentID within that Pool to address
+            speed (int): Speed value from 0-100 to set the filter to.  A value of 0 will turn the filter off.
+        """
+        bodyElement = ET.Element('Request', {'xmlns': 'http://nextgen.hayward.com/api'})
+
+        nameElement = ET.SubElement(bodyElement, 'Name')
+        nameElement.text = "SetUIFilterSpeedCmd"
+
+        parametersElement = ET.SubElement(bodyElement, 'Parameters')
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="PoolID", dataType="int")
+        parameter.text = str(poolId)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="FilterID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipmentId)
+        # NOTE: Despite the API calling it RPM here, the speed value is a percentage from 1-100
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Speed", dataType="int", unit="RPM", alias="Data")
+        parameter.text = str(speed)
+
+        reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
+        await self._sendRequest(sock, SET_FILTER_SPEED_MESSAGE_TYPE, reqBody)
+
+    async def setLightShow(self, poolId: int, equipmentId: int, show: int, speed: Literal[0,1,2,3,4,5,6,7,8]=4, brightness: Literal[0,1,2,3,4]=4,
+        reserved: int=0, isCountDownTimer: bool=False, startTimeHours: int=0, startTimeMinutes: int=0, endTimeHours: int=0,
+        endTimeMinutes: int=0, daysActive: int=0, recurring: bool=False):
+        """setLightShow handles sending a SetStandAloneLightShow XML API call to the Hayward Omni pool controller
+        Args:
+            poolId (int): The Pool/BodyOfWater ID that you want to address
+            equipmentId (int): Which equipmentID within that Pool to address
+            show (int): ID of the light show to display
+            speed (Literal[0,1,2,3,4,5,6,7,8], optional): Speed to animate the show. Defaults to 4.  0-8 which map to:
+                0: 1/16th
+                1: 1/8th
+                2: 1/4
+                3: 1/2
+                4: 1x
+                5: 2x
+                6: 4x
+                7: 8x
+                8: 16x
+            brightness (Literal[0,1,2,3,4], optional): How bright should the light be. Defaults to 4. 0-4 which map to:
+                0: 20%
+                1: 40%
+                2: 60%
+                3: 80%
+                4: 100%
+            reserved (int, optional): Reserved. Defaults to 0.
+            isCountDownTimer (bool, optional): For potential future use, included to be "API complete". Defaults to False.
+            startTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            startTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            endTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            endTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            daysActive (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
+        """
+        bodyElement = ET.Element('Request', {'xmlns': 'http://nextgen.hayward.com/api'})
+
+        nameElement = ET.SubElement(bodyElement, 'Name')
+        nameElement.text = "SetStandAloneLightShow"
+
+        parametersElement = ET.SubElement(bodyElement, 'Parameters')
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="PoolID", dataType="int")
+        parameter.text = str(poolId)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="LightID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipmentId)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Show", dataType="byte")
+        parameter.text = str(show)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Speed", dataType="byte")
+        parameter.text = str(speed)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Brightness", dataType="byte")
+        parameter.text = str(brightness)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Reserved", dataType="byte")
+        parameter.text = str(reserved)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="IsCountDownTimer", dataType="bool")
+        parameter.text = str(int(isCountDownTimer))
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="StartTimeHours", dataType="int")
+        parameter.text = str(startTimeHours)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="StartTimeMinutes", dataType="int")
+        parameter.text = str(startTimeMinutes)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="EndTimeHours", dataType="int")
+        parameter.text = str(endTimeHours)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="EndTimeMinutes", dataType="int")
+        parameter.text = str(endTimeMinutes)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="DaysActive", dataType="int")
+        parameter.text = str(daysActive)
+        parameter = ET.SubElement(parametersElement, 'Parameter', name="Recurring", dataType="bool")
+        parameter.text = str(int(recurring))
+
+        reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
+        await self._sendRequest(sock, SET_STANDALONE_LIGHT_SHOW_MESSAGE_TYPE, reqBody)
 
 async def main():
 
