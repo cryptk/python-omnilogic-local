@@ -450,7 +450,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter.text = str(int(recurring))
 
         reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
-        await self._sendRequest(sock, SET_EQUIPMENT_MESSAGE_TYPE, reqBody)
+        await self._sendRequest(SET_EQUIPMENT_MESSAGE_TYPE, reqBody)
 
     async def setFilterSpeed(self, poolId: int, equipmentId: int, speed: int):
         """setFilterSpeed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
@@ -474,7 +474,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter.text = str(speed)
 
         reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
-        await self._sendRequest(sock, SET_FILTER_SPEED_MESSAGE_TYPE, reqBody)
+        await self._sendRequest(SET_FILTER_SPEED_MESSAGE_TYPE, reqBody)
 
     async def setLightShow(self, poolId: int, equipmentId: int, show: int, speed: Literal[0,1,2,3,4,5,6,7,8]=4, brightness: Literal[0,1,2,3,4]=4,
         reserved: int=0, isCountDownTimer: bool=False, startTimeHours: int=0, startTimeMinutes: int=0, endTimeHours: int=0,
@@ -543,7 +543,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter.text = str(int(recurring))
 
         reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding='unicode')
-        await self._sendRequest(sock, SET_STANDALONE_LIGHT_SHOW_MESSAGE_TYPE, reqBody)
+        await self._sendRequest(SET_STANDALONE_LIGHT_SHOW_MESSAGE_TYPE, reqBody)
 
 async def main():
 
