@@ -31,18 +31,19 @@ class OmniLogicRequest:
         self.version = "1.19".encode("ascii")
 
     def toBytes(self):
+        print(self.msgType.value)
         retval = struct.pack(
             OmniLogicRequest.HEADER_FORMAT,
             self.msgId,  # Msg id
             int(time.time_ns() / (10**9)),  # Timestamp
             bytes(self.version),  # version string
-            self.msgType,  # OpID/msgType
+            self.msgType.value,  # OpID/msgType
             self.clientType,  # Client type
             0,  # reserved
             0,  # compressed
             0,  # reserved
         )
-        # logging.debug(retval+self.extraData)
+        logging.debug(retval+self.extraData)
         return retval + self.extraData
 
     @staticmethod
@@ -52,7 +53,7 @@ class OmniLogicRequest:
         rdata = data[24:]
 
         msgId, tstamp, vers, msgType, clientType, res1, compressed, res3 = struct.unpack(OmniLogicRequest.HEADER_FORMAT, header)
-        return msgId, tstamp, vers, msgType, clientType, res1, compressed, res3, rdata
+        return msgId, tstamp, vers, MessageType(msgType), clientType, res1, compressed, res3, rdata
 
 
 class OmniLogicAPI:
@@ -60,7 +61,7 @@ class OmniLogicAPI:
         self.controllerIpAndPort = controllerIpAndPort
         self.responseTimeout = responseTimeout
 
-    async def async_getAlarmList(self):
+    async def asyncGetAlarmList(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
 
@@ -69,7 +70,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_getConfig(self):
+    async def asyncGetConfig(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
 
@@ -78,7 +79,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_getFilterDiagnostics(self, poolId: int, equipmentId: int):
+    async def asyncGetFilterDiagnostics(self, poolId: int, equipmentId: int):
         """getDiagnostics handles sending a GetUIFilterDiagnosticInfo XML API call to the Hayward Omni pool controller
 
         Args:
@@ -96,7 +97,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_getLogConfig(self):
+    async def asyncGetLogConfig(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
 
@@ -105,7 +106,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_getTelemetry(self):
+    async def asyncGetTelemetry(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
 
@@ -115,7 +116,7 @@ class OmniLogicAPI:
             transport.close()
 
     # pylint: disable=too-many-arguments,too-many-locals
-    async def async_setEquipment(
+    async def asyncSetEquipment(
         self,
         poolId: int,
         equipmentId: int,
@@ -165,7 +166,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_setFilterSpeed(self, poolId: int, equipmentId: int, speed: int):
+    async def asyncSetFilterSpeed(self, poolId: int, equipmentId: int, speed: int):
         """setFilterSpeed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
 
         Args:
@@ -181,7 +182,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_setLightShow(
+    async def asyncSetLightShow(
         self,
         poolId: int,
         equipmentId: int,
@@ -244,6 +245,7 @@ class OmniLogicAPI:
 class OmniLogicProtocol(asyncio.DatagramProtocol):
     def __init__(self):
         self.dataQueue = asyncio.Queue()
+        self.transport = None
 
     def connection_made(self, transport):
         self.transport = transport
@@ -253,14 +255,14 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             raise exc
 
     def datagram_received(self, data, addr):
-        msgId, tstamp, vers, msgType, clientType, res1, compressed, res3, data = OmniLogicRequest.fromBytes(data)
+        msgId, _, _, msgType, _, _, compressed, _, data = OmniLogicRequest.fromBytes(data)
         self.dataQueue.put_nowait((msgId, msgType, compressed, data))
 
     def error_received(self, exc):
         raise exc
 
     async def _sendRequest(self, msgType, extraData=""):
-        logging.debug("Sending Message Type: %d, Request Body: %s", msgType, extraData)
+        logging.debug("Sending Message Type: %s, Request Body: %s", msgType, extraData)
 
         # Good security practice, random msgId's.
         msgId = random.randrange(2**32)
@@ -271,6 +273,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         # The Hayward API terminates it's messages with a null character
         extraData += "\x00" if extraData != "" else ""
 
+        print("foo")
         request = OmniLogicRequest(msgId, msgType, extraData, clientType)
 
         self.transport.sendto(request.toBytes())
@@ -278,7 +281,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         # Wait for the ACK
         recMsgId = -1
         while recMsgId != msgId:
-            recMsgId, msgType, compressed, data = await self.dataQueue.get()
+            recMsgId, msgType, _, _ = await self.dataQueue.get()
 
     def _sendAck(self, msgId):
 
@@ -554,8 +557,8 @@ async def main():
 
     omni = OmniLogicAPI((os.environ.get("OMNILOGIC_HOST"), 10444), 5.0)
 
-    print(await omni.async_getConfig())
-    print(await omni.async_getTelemetry())
+    # print(await omni.asyncGetConfig())
+    print(await omni.asyncGetTelemetry())
 
 
 if __name__ == "__main__":

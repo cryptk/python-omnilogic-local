@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class MessageType(Enum):
+class MessageType(IntEnum):
     REQUEST_CONFIGURATION = 1
     SET_FILTER_SPEED = 9
     REQUEST_LOG_CONFIG = 31
@@ -21,7 +21,7 @@ class MessageType(Enum):
     ACK = 1002
 
 
-class ColorLogicSpeed(Enum):
+class ColorLogicSpeed(IntEnum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1
     ONE_QUARTER = 2
@@ -33,7 +33,7 @@ class ColorLogicSpeed(Enum):
     SIXTEEN_TIMES = 8
 
 
-class ColorLogicBrightness(Enum):
+class ColorLogicBrightness(IntEnum):
     TWENTY_PERCENT = 0
     FOURTY_PERCENT = 1
     SIXTY_PERCENT = 2
@@ -41,7 +41,7 @@ class ColorLogicBrightness(Enum):
     ONE_HUNDRED_PERCENT = 4
 
 
-class ColorLogicShow(Enum):
+class ColorLogicShow(IntEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     ROYAL_BLUE = 2
