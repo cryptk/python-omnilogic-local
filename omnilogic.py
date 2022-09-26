@@ -71,7 +71,7 @@ class OmniLogicAPI:
     async def async_getAlarmList(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
@@ -82,7 +82,7 @@ class OmniLogicAPI:
     async def async_getConfig(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
@@ -102,11 +102,11 @@ class OmniLogicAPI:
         """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
-            return await asyncio.wait_for(protocol.getFilterDiagnostics(poolId, equipmentId), 
+            return await asyncio.wait_for(protocol.getFilterDiagnostics(poolId, equipmentId),
                                           self.responseTimeout)
         finally:
             transport.close()
@@ -114,7 +114,7 @@ class OmniLogicAPI:
     async def async_getLogConfig(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
@@ -125,7 +125,7 @@ class OmniLogicAPI:
     async def async_getTelemetry(self):
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
@@ -154,19 +154,19 @@ class OmniLogicAPI:
         """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
-            return await asyncio.wait_for(protocol.setEquipment(poolId, 
-                                                                equipmentId, 
+            return await asyncio.wait_for(protocol.setEquipment(poolId,
+                                                                equipmentId,
                                                                 isOn,
-                                                                isCountDownTimer, 
-                                                                startTimeHours, 
-                                                                startTimeMinutes, 
+                                                                isCountDownTimer,
+                                                                startTimeHours,
+                                                                startTimeMinutes,
                                                                 endTimeHours,
-                                                                endTimeMinutes, 
-                                                                daysActive, 
+                                                                endTimeMinutes,
+                                                                daysActive,
                                                                 recurring), self.responseTimeout)
         finally:
             transport.close()
@@ -181,7 +181,7 @@ class OmniLogicAPI:
         """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
@@ -225,22 +225,22 @@ class OmniLogicAPI:
         """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-                lambda: OmniLogicProtocol(), 
+                lambda: OmniLogicProtocol(),
                 remote_addr = self.controllerIpAndPort)
 
         try:
-            return await asyncio.wait_for(protocol.setLightShow(poolId, 
-                                                                equipmentId, 
-                                                                show, 
-                                                                speed, 
+            return await asyncio.wait_for(protocol.setLightShow(poolId,
+                                                                equipmentId,
+                                                                show,
+                                                                speed,
                                                                 brightness,
-                                                                reserved, 
-                                                                isCountDownTimer, 
-                                                                startTimeHours, 
-                                                                startTimeMinutes, 
+                                                                reserved,
+                                                                isCountDownTimer,
+                                                                startTimeHours,
+                                                                startTimeMinutes,
                                                                 endTimeHours,
-                                                                endTimeMinutes, 
-                                                                daysActive, 
+                                                                endTimeMinutes,
+                                                                daysActive,
                                                                 recurring), self.responseTimeout)
         finally:
             transport.close()
