@@ -31,7 +31,6 @@ class OmniLogicRequest:
         self.version = "1.19".encode("ascii")
 
     def toBytes(self):
-        print(self.msgType.value)
         retval = struct.pack(
             OmniLogicRequest.HEADER_FORMAT,
             self.msgId,  # Msg id
@@ -43,7 +42,7 @@ class OmniLogicRequest:
             0,  # compressed
             0,  # reserved
         )
-        logging.debug(retval+self.extraData)
+        # logging.debug(retval+self.extraData)
         return retval + self.extraData
 
     @staticmethod
@@ -63,7 +62,7 @@ class OmniLogicAPI:
 
     async def asyncGetAlarmList(self):
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.getAlarmList(), self.responseTimeout)
@@ -72,7 +71,7 @@ class OmniLogicAPI:
 
     async def asyncGetConfig(self):
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.getConfig(), self.responseTimeout)
@@ -90,7 +89,7 @@ class OmniLogicAPI:
             _type_: _description_
         """
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.getFilterDiagnostics(poolId, equipmentId), self.responseTimeout)
@@ -99,7 +98,7 @@ class OmniLogicAPI:
 
     async def asyncGetLogConfig(self):
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.getLogConfig(), self.responseTimeout)
@@ -108,7 +107,7 @@ class OmniLogicAPI:
 
     async def asyncGetTelemetry(self):
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.getTelemetry(), self.responseTimeout)
@@ -145,7 +144,7 @@ class OmniLogicAPI:
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(
@@ -175,7 +174,7 @@ class OmniLogicAPI:
             speed (int): Speed value from 0-100 to set the filter to.  A value of 0 will turn the filter off.
         """
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(protocol.setFilterSpeed(poolId, equipmentId, speed), self.responseTimeout)
@@ -217,7 +216,7 @@ class OmniLogicAPI:
         """
 
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(lambda: OmniLogicProtocol(), remote_addr=self.controllerIpAndPort)
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controllerIpAndPort)
 
         try:
             return await asyncio.wait_for(
@@ -262,7 +261,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         raise exc
 
     async def _sendRequest(self, msgType, extraData=""):
-        logging.debug("Sending Message Type: %s, Request Body: %s", msgType, extraData)
+        logging.debug("Sending Message Type: %s, Request Body: %s", msgType.name, extraData)
 
         # Good security practice, random msgId's.
         msgId = random.randrange(2**32)
@@ -273,7 +272,6 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         # The Hayward API terminates it's messages with a null character
         extraData += "\x00" if extraData != "" else ""
 
-        print("foo")
         request = OmniLogicRequest(msgId, msgType, extraData, clientType)
 
         self.transport.sendto(request.toBytes())
@@ -527,11 +525,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter = ET.SubElement(parametersElement, "Parameter", name="LightID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipmentId)
         parameter = ET.SubElement(parametersElement, "Parameter", name="Show", dataType="byte")
-        parameter.text = str(show)
+        parameter.text = str(show.value)
         parameter = ET.SubElement(parametersElement, "Parameter", name="Speed", dataType="byte")
-        parameter.text = str(speed)
+        parameter.text = str(speed.value)
         parameter = ET.SubElement(parametersElement, "Parameter", name="Brightness", dataType="byte")
-        parameter.text = str(brightness)
+        parameter.text = str(brightness.value)
         parameter = ET.SubElement(parametersElement, "Parameter", name="Reserved", dataType="byte")
         parameter.text = str(reserved)
         parameter = ET.SubElement(parametersElement, "Parameter", name="IsCountDownTimer", dataType="bool")
@@ -557,40 +555,37 @@ async def main():
 
     omni = OmniLogicAPI((os.environ.get("OMNILOGIC_HOST"), 10444), 5.0)
 
-    # print(await omni.asyncGetConfig())
+    # Some basic calls to run some testing against the library
+    poolId = 1
+    pumpEquipmentId = 2
+    lightEquipmentId = 4
+
+    print(await omni.asyncGetConfig())
     print(await omni.asyncGetTelemetry())
+    # print(await omni.asyncGetLogConfig())
+    # print(await omni.asyncGetAlarmList())
+
+    # Turn a variable speed pump on to 50%
+    # print(await omni.asyncSetEquipment(poolId, pumpEquipmentId, 50))
+    # Turn a variable speed pump on to 75%
+    # print(await omni.asyncSetFilterSpeed(poolId, pumpEquipmentId, 75))
+    # Turn the pump off
+    print(await omni.asyncSetEquipment(poolId, pumpEquipmentId, False))
+
+    # Activate a light show
+    # print(await omni.asyncSetLightShow(
+    #   poolId,
+    #   lightEquipmentId,
+    #   ColorLogicShow.VOODOO_LOUNGE,
+    #   ColorLogicSpeed.ONE_HALF,
+    #   ColorLogicBrightness.SIXTY_PERCENT
+    # ))
+    # Turn off the light
+    print(await omni.asyncSetEquipment(poolId, lightEquipmentId, 0))
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
     # logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.WARNING)
-    # api = OmniLogicAPI((os.environ.get('OMNILOGIC_HOST'), 10444), 10444, 5)
 
-    # cfg = api.getConfig()
-    # print(cfg)
-
-    # logConfig = api.getLogConfig()
-    # print(logConfig)
-
-    # telem = api.getTelemetry()
-    # print(telem)
-
-    # telem = api.getAlarmList()
-    # print(telem)
-
-    # equip = api.setEquipment(1, 2, 0)
-    # equip = api.setFilterSpeed(1, 2, 0)
-    # light = api.setLightShow(1, 4, 12)
-    # # print(equip)
-
-    # time.sleep(1.5)
-    # telem = api.getTelemetry()
-    # print(telem)
-
-    # Nums in the request that get an ack, but nothing else:
-    # 300
-    # 304
-    # 305
-    # 977
-    # 1003
     asyncio.run(main())

@@ -1,27 +1,28 @@
-from enum import IntEnum
+from enum import Enum
 
 
-class MessageType(IntEnum):
+class MessageType(Enum):
+    XML_ACK = 0000
     REQUEST_CONFIGURATION = 1
     SET_FILTER_SPEED = 9
     REQUEST_LOG_CONFIG = 31
     SET_EQUIPMENT = 164
     CREATE_SCHEDULE = 230
     DELETE_SCHEDULE = 231
-    MSP_LEADMESSAGE = 1998
-    MSP_BLOCKMESSAGE = 1999
-    MSP_CONFIGURATIONUPDATE = 1003
     GET_TELEMETRY = 300
     GET_ALARM_LIST = 304
     SET_STANDALONE_LIGHT_SHOW = 308
     GET_FILTER_DIAGNOSTIC_INFO = 386
-    MSP_TELEMETRY_UPDATE = 1004
-    XML_ACK = 0000
     HANDSHAKE = 1000
     ACK = 1002
+    MSP_TELEMETRY_UPDATE = 1004
+    MSP_CONFIGURATIONUPDATE = 1003
+    MSP_ALARM_LIST = 1304
+    MSP_LEADMESSAGE = 1998
+    MSP_BLOCKMESSAGE = 1999
 
 
-class ColorLogicSpeed(IntEnum):
+class ColorLogicSpeed(Enum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1
     ONE_QUARTER = 2
@@ -33,7 +34,7 @@ class ColorLogicSpeed(IntEnum):
     SIXTEEN_TIMES = 8
 
 
-class ColorLogicBrightness(IntEnum):
+class ColorLogicBrightness(Enum):
     TWENTY_PERCENT = 0
     FOURTY_PERCENT = 1
     SIXTY_PERCENT = 2
@@ -41,7 +42,7 @@ class ColorLogicBrightness(IntEnum):
     ONE_HUNDRED_PERCENT = 4
 
 
-class ColorLogicShow(IntEnum):
+class ColorLogicShow(Enum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     ROYAL_BLUE = 2
