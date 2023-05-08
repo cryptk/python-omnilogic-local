@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
-
 import asyncio
 import logging
-import os
 import random
 import struct
 import time
@@ -10,7 +7,7 @@ from typing import Union
 import xml.etree.ElementTree as ET
 import zlib
 
-from omnilogicTypes import (
+from .omnilogicTypes import (
     MessageType,
     ColorLogicSpeed,
     ColorLogicShow,
@@ -288,6 +285,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         nameElement.text = "Ack"
 
         reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding="unicode")
+        # TODO: Why is this method sending the request itself rather than using self._sendRequest like everything else?
         request = OmniLogicRequest(msgId, MessageType.XML_ACK, reqBody, 0)
 
         self.transport.sendto(request.toBytes())
@@ -389,7 +387,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter.text = str(equipmentId)
 
         reqBody = ET.tostring(bodyElement, xml_declaration=True, encoding="unicode")
-        await self._sendRequest(MessageType.REQUEST_CONFIGURATION, reqBody)
+        await self._sendRequest(MessageType.GET_FILTER_DIAGNOSTIC_INFO, reqBody)
 
         data = await self._receiveFile()
         return data
@@ -551,41 +549,9 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self._sendRequest(MessageType.SET_STANDALONE_LIGHT_SHOW, reqBody)
 
 
-async def main():
+class OmniLogicException(Exception):
+    pass
 
-    omni = OmniLogicAPI((os.environ.get("OMNILOGIC_HOST"), 10444), 5.0)
-
-    # Some basic calls to run some testing against the library
-    poolId = 1
-    pumpEquipmentId = 2
-    lightEquipmentId = 4
-
-    print(await omni.asyncGetConfig())
-    print(await omni.asyncGetTelemetry())
-    # print(await omni.asyncGetLogConfig())
-    # print(await omni.asyncGetAlarmList())
-
-    # Turn a variable speed pump on to 50%
-    # print(await omni.asyncSetEquipment(poolId, pumpEquipmentId, 50))
-    # Turn a variable speed pump on to 75%
-    # print(await omni.asyncSetFilterSpeed(poolId, pumpEquipmentId, 75))
-    # Turn the pump off
-    print(await omni.asyncSetEquipment(poolId, pumpEquipmentId, False))
-
-    # Activate a light show
-    # print(await omni.asyncSetLightShow(
-    #   poolId,
-    #   lightEquipmentId,
-    #   ColorLogicShow.VOODOO_LOUNGE,
-    #   ColorLogicSpeed.ONE_HALF,
-    #   ColorLogicBrightness.SIXTY_PERCENT
-    # ))
-    # Turn off the light
-    print(await omni.asyncSetEquipment(poolId, lightEquipmentId, 0))
-
-
-if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
-    # logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.WARNING)
-
-    asyncio.run(main())
+# TODO: remove this
+class LoginException(OmniLogicException):
+    pass

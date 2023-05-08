@@ -71,3 +71,10 @@ class ColorLogicShow(Enum):
     CRISP_WHITE = 24
     WARM_WHITE = 25
     BRIGHT_YELLOW = 26
+
+class ColorLogicPowerStates(Enum):
+    OFF = 0
+    POWERING_OFF = 1
+    CHANGING_SHOW = 3
+    FIFTEEN_SECONDS_WHITE = 4
+    SHOW_ACTIVE = 6
