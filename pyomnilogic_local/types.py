@@ -72,6 +72,7 @@ class ColorLogicShow(Enum):
     WARM_WHITE = 25
     BRIGHT_YELLOW = 26
 
+
 class ColorLogicPowerStates(Enum):
     OFF = 0
     POWERING_OFF = 1
