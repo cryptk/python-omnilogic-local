@@ -51,10 +51,14 @@ class OmniLogicAPI:
     def __init__(self, controller_ip_and_port, response_timeout):
         self.controller_ip_and_port = controller_ip_and_port
         self.response_timeout = response_timeout
+        self._loop = asyncio.get_running_loop()
+        self._protocol_factory = OmniLogicProtocol
+
+    async def _get_endpoint(self):
+        return await self._loop.create_datagram_endpoint(self._protocol_factory, remote_addr=self.controller_ip_and_port)
 
     async def async_get_alarm_list(self):
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.get_alarm_list(), self.response_timeout)
@@ -62,8 +66,7 @@ class OmniLogicAPI:
             transport.close()
 
     async def async_get_config(self):
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.get_config(), self.response_timeout)
@@ -71,7 +74,7 @@ class OmniLogicAPI:
             transport.close()
 
     async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int):
-        """getDiagnostics handles sending a GetUIFilterDiagnosticInfo XML API call to the Hayward Omni pool controller
+        """async_get_filter_diagnostics handles sending a GetUIFilterDiagnosticInfo XML API call to the Hayward Omni pool controller
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -80,8 +83,7 @@ class OmniLogicAPI:
         Returns:
             _type_: _description_
         """
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.get_filter_diagnostics(pool_id, equipment_id), self.response_timeout)
@@ -89,8 +91,7 @@ class OmniLogicAPI:
             transport.close()
 
     async def async_get_log_config(self):
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.get_log_config(), self.response_timeout)
@@ -98,8 +99,7 @@ class OmniLogicAPI:
             transport.close()
 
     async def async_get_telemetry(self):
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.get_telemetry(), self.response_timeout)
@@ -120,7 +120,7 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ):
-        """setEquipment handles sending a SetUIEquipmentCmd XML API call to the Hayward Omni pool controller
+        """async_set_equipment handles sending a SetUIEquipmentCmd XML API call to the Hayward Omni pool controller
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -135,8 +135,7 @@ class OmniLogicAPI:
             daysActive (int, optional): For potential future use, included to be "API complete". Defaults to 0.
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(
@@ -158,15 +157,14 @@ class OmniLogicAPI:
             transport.close()
 
     async def async_set_filter_speed(self, pool_id: int, equipment_id: int, speed: int):
-        """setFilterSpeed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
+        """async_set_filter_speed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
             speed (int): Speed value from 0-100 to set the filter to.  A value of 0 will turn the filter off.
         """
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(protocol.set_filter_speed(pool_id, equipment_id, speed), self.response_timeout)
@@ -189,7 +187,7 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ):
-        """setLightShow handles sending a SetStandAloneLightShow XML API call to the Hayward Omni pool controller
+        """async_set_light_show handles sending a SetStandAloneLightShow XML API call to the Hayward Omni pool controller
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -207,8 +205,7 @@ class OmniLogicAPI:
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
 
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=self.controller_ip_and_port)
+        transport, protocol = await self._get_endpoint()
 
         try:
             return await asyncio.wait_for(
@@ -252,11 +249,12 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     def error_received(self, exc):
         raise exc
 
-    async def _send_request(self, msg_type, extra_data=""):
+    async def _send_request(self, msg_type, extra_data="", msg_id=None):
         logging.debug("Sending Message Type: %s, Request Body: %s", msg_type.name, extra_data)
 
-        # Good security practice, random msg_id's.
-        msg_id = random.randrange(2**32)
+        # If we aren't sending a specific msg_id, lets randomize it
+        if not msg_id:
+            msg_id = random.randrange(2**32)
 
         # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
         client_type = 0 if extra_data != "" else 1
@@ -268,27 +266,25 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
         self.transport.sendto(request.to_bytes())
 
-        # Wait for the ACK
-        rec_msg_id = -1
-        while rec_msg_id != msg_id:
-            rec_msg_id, msg_type, _, _ = await self.data_queue.get()
+        # If we are the ones sending the ACK, we do not expect a response
+        if msg_type not in [MessageType.XML_ACK, MessageType.ACK]:
+            rec_msg_id = -1
+            while rec_msg_id != msg_id:
+                rec_msg_id, msg_type, _, _ = await self.data_queue.get()
 
-    def _send_ack(self, msg_id):
+    async def _send_ack(self, msg_id):
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "Ack"
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
-        # TODO: Why is this method sending the request itself rather than using self._sendRequest like everything else?
-        request = OmniLogicRequest(msg_id, MessageType.XML_ACK, req_body, 0)
-
-        self.transport.sendto(request.to_bytes())
+        await self._send_request(MessageType.XML_ACK, req_body, msg_id)
 
     async def _receive_file(self):
         # wait for the initial packet.
         msg_id, msg_type, compressed, data = await self.data_queue.get()
 
-        self._send_ack(msg_id)
+        await self._send_ack(msg_id)
 
         # Check if the 23rd bit of the header (compressed bit) was a 1
         # There are also some messages that are ALWAYS compressed although they do not return a 1 in their LeadMessage
@@ -305,7 +301,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # If we received a LeadMessage, continue to receive messages until we have all of our data
             for _ in range(block_count):
                 msg_id, msg_type, compressed, data = await self.data_queue.get()
-                self._send_ack(msg_id)
+                await self._send_ack(msg_id)
                 # remove an 8 byte header to get to the payload data
                 retval += data[8:]
         # If we did not receive a LeadMessage, but the message is compressed anyway...
@@ -392,6 +388,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         data = await self._receive_file()
         return data
 
+    # pylint: disable=too-many-arguments,too-many-locals
     async def set_equipment(
         self,
         pool_id: int,
@@ -473,6 +470,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         await self._send_request(MessageType.SET_FILTER_SPEED, req_body)
 
+    # pylint: disable=too-many-arguments,too-many-locals
     async def set_light_show(
         self,
         pool_id: int,
@@ -544,9 +542,4 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
 
 class OmniLogicException(Exception):
-    pass
-
-
-# TODO: remove this
-class LoginException(OmniLogicException):
     pass

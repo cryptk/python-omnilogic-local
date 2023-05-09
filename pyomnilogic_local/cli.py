@@ -11,25 +11,25 @@ async def async_main():
     omni = OmniLogicAPI((os.environ.get("OMNILOGIC_HOST"), 10444), 5.0)
 
     # Some basic calls to run some testing against the library
-    pool_id = 7
-    pump_equipment_id = 8
-    light_equipment_id = 10
+    pool_id = 7  # pylint: disable=unused-variable
+    pump_equipment_id = 8  # pylint: disable=unused-variable
+    light_equipment_id = 10  # pylint: disable=unused-variable
 
     print(await omni.async_get_config())
     print(await omni.async_get_telemetry())
 
-    # print(await omni.asyncGetLogConfig())
-    # print(await omni.asyncGetAlarmList())
+    print(await omni.async_get_log_config())
+    print(await omni.async_get_alarm_list())
 
     # Turn a variable speed pump on to 50%
-    # print(await omni.asyncSetEquipment(pool_id, pump_equipment_id, 50))
+    # print(await omni.async_set_equipment(pool_id, pump_equipment_id, 50))
     # Turn a variable speed pump on to 75%
-    # print(await omni.asyncSetFilterSpeed(pool_id, pump_equipment_id, 75))
+    # print(await omni.async_set_filter_speed(pool_id, pump_equipment_id, 75))
     # Turn the pump off
-    # print(await omni.asyncSetEquipment(pool_id, pump_equipment_id, 50))
+    # print(await omni.async_set_equipment(pool_id, pump_equipment_id, 50))
 
     # Activate a light show
-    # print(await omni.asyncSetLightShow(
+    # print(await omni.async_set_light_show(
     #   pool_id,
     #   light_equipment_id,
     #   ColorLogicShow.VOODOO_LOUNGE,
@@ -37,10 +37,10 @@ async def async_main():
     #   ColorLogicBrightness.SIXTY_PERCENT
     # ))
     # Turn off the light
-    # print(await omni.asyncSetEquipment(pool_id, light_equipment_id, 1))
-    # print(await omni.asyncGetTelemetry())
+    # print(await omni.async_set_equipment(pool_id, light_equipment_id, 1))
+    # print(await omni.async_get_telemetry())
 
-    # print(await omni.asyncGetFilterDiagnostics(pool_id, pump_equipment_id))
+    print(await omni.async_get_filter_diagnostics(pool_id, pump_equipment_id))
 
 
 def main():
