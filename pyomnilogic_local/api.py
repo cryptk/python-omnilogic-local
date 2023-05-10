@@ -440,7 +440,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         data = await self._receive_file()
         return data
 
-    async def set_heater_enabled(
+    async def set_heater_enable(
         self,
         pool_id: int,
         equipment_id: int,
@@ -468,10 +468,10 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
-        parameter.text = int(enabled)
+        parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
-        await self._send_request(MessageType.SET_EQUIPMENT, req_body)
+        await self._send_request(MessageType.SET_HEATER_ENABLED, req_body)
 
     async def set_heater(
         self,
@@ -502,7 +502,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
-        parameter.text = int(temperature)
+        parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         await self._send_request(MessageType.SET_EQUIPMENT, req_body)
