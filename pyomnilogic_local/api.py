@@ -106,6 +106,58 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
+    async def async_set_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str):
+        """async_set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            temperature (int): What temperature to request
+            unit (str): The temperature unit to use (either F or C)
+
+        Returns:
+            _type_: _description_
+        """
+        transport, protocol = await self._get_endpoint()
+
+        try:
+            return await asyncio.wait_for(
+                protocol.set_heater(
+                    pool_id,
+                    equipment_id,
+                    temperature,
+                    unit
+                ),
+                self.response_timeout,
+            )
+        finally:
+            transport.close()
+
+    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled:Union[int, bool]):
+        """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            enabled (bool, optional): Turn the heater on (True) or off (False)
+
+        Returns:
+            _type_: _description_
+        """
+        transport, protocol = await self._get_endpoint()
+
+        try:
+            return await asyncio.wait_for(
+                protocol.set_heater_enable(
+                    pool_id,
+                    equipment_id,
+                    enabled
+                ),
+                self.response_timeout,
+            )
+        finally:
+            transport.close()
+
     # pylint: disable=too-many-arguments,too-many-locals
     async def async_set_equipment(
         self,
@@ -387,6 +439,73 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
         data = await self._receive_file()
         return data
+
+    async def set_heater_enabled(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        enabled: Union[int,bool],
+    ):
+        """set_heater_enabled handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            enabled (bool, optional): Turn the heater on (True) or off (False)
+
+        Returns:
+            _type_: _description_
+        """
+
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetHeaterEnable"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
+        parameter.text = int(enabled)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        await self._send_request(MessageType.SET_EQUIPMENT, req_body)
+
+    async def set_heater(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        temperature: int,
+        unit: str,
+    ):
+        """set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            temperature (int): What temperature to request
+            unit (str): The temperature unit to use (either F or C)
+
+        Returns:
+            _type_: _description_
+        """
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetUIHeaterCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter.text = int(temperature)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        await self._send_request(MessageType.SET_EQUIPMENT, req_body)
 
     # pylint: disable=too-many-arguments,too-many-locals
     async def set_equipment(
