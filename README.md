@@ -36,4 +36,4 @@ If your controller has functionality outside of this list, please do not hesitat
 
 ## Credits
 
-The work on this library would not have been possible without the efforts of [djtimca](https://github.com/djtimca/) and [garionphx](https://github.com/garionphx/)
+The work on this library would not have been possible without the efforts of [djtimca](https://github.com/djtimca/) and [John Sutherland](garionphx@gmail.com)
