@@ -9,6 +9,8 @@ import zlib
 
 from .types import ColorLogicBrightness, ColorLogicShow, ColorLogicSpeed, MessageType
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class OmniLogicRequest:
     HEADER_FORMAT = "!LQ4sLBBBB"
@@ -34,7 +36,7 @@ class OmniLogicRequest:
             0,  # compressed
             0,  # reserved
         )
-        # logging.debug(retval+self.extra_data)
+        # _LOGGER.debug(retval+self.extra_data)
         return retval + self.extra_data
 
     @staticmethod
@@ -293,11 +295,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         raise exc
 
     async def _send_request(self, msg_type, extra_data="", msg_id=None):
-        logging.debug("Sending Message Type: %s, Request Body: %s", msg_type.name, extra_data)
-
         # If we aren't sending a specific msg_id, lets randomize it
         if not msg_id:
             msg_id = random.randrange(2**32)
+
+        _LOGGER.debug("Sending Message ID: %s, Message Type: %s, Request Body: %s", msg_id, msg_type.name, extra_data)
 
         # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
         client_type = 0 if extra_data != "" else 1
@@ -326,6 +328,10 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     async def _receive_file(self):
         # wait for the initial packet.
         msg_id, msg_type, compressed, data = await self.data_queue.get()
+        if compressed:
+            _LOGGER.debug("Received compressed message ID: %s, Type: %s", msg_id, msg_type)
+        else:
+            _LOGGER.debug("Received Message ID: %s, Type: %s", msg_id, msg_type)
 
         await self._send_ack(msg_id)
 
@@ -342,11 +348,18 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Wait for the block data data
             retval = b""
             # If we received a LeadMessage, continue to receive messages until we have all of our data
-            for _ in range(block_count):
+            # Fragments of data may arrive out of order, so we store them in a buffer as they arrive and sort them after
+            data_fragments: dict = {}
+            while len(data_fragments) < block_count:
                 msg_id, msg_type, compressed, data = await self.data_queue.get()
                 await self._send_ack(msg_id)
                 # remove an 8 byte header to get to the payload data
-                retval += data[8:]
+                data_fragments[msg_id] = data[8:]
+
+            # Reassemble the fragmets in order
+            for _, data in sorted(data_fragments.items()):
+                retval += data
+
         # If we did not receive a LeadMessage, but the message is compressed anyway...
         elif msg_compressed:
             retval = data
