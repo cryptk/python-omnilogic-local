@@ -122,18 +122,13 @@ class OmniLogicAPI:
 
         try:
             return await asyncio.wait_for(
-                protocol.set_heater(
-                    pool_id,
-                    equipment_id,
-                    temperature,
-                    unit
-                ),
+                protocol.set_heater(pool_id, equipment_id, temperature, unit),
                 self.response_timeout,
             )
         finally:
             transport.close()
 
-    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled:Union[int, bool]):
+    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: Union[int, bool]):
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
         Args:
@@ -148,11 +143,7 @@ class OmniLogicAPI:
 
         try:
             return await asyncio.wait_for(
-                protocol.set_heater_enable(
-                    pool_id,
-                    equipment_id,
-                    enabled
-                ),
+                protocol.set_heater_enable(pool_id, equipment_id, enabled),
                 self.response_timeout,
             )
         finally:
@@ -444,7 +435,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         self,
         pool_id: int,
         equipment_id: int,
-        enabled: Union[int,bool],
+        enabled: Union[int, bool],
     ):
         """set_heater_enabled handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 

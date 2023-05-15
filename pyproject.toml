@@ -49,3 +49,6 @@ max-line-length=140
 [tool.pylint."MESSAGES CONTROL"]
 #For now, we have a lot of thing missing docstrings, this is ok for now
 disable="missing-docstring"
+
+[tool.ruff]
+line-length = 140
