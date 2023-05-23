@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import random
 import struct
 import time
-from typing import Union
+from typing import Any
 import xml.etree.ElementTree as ET
 import zlib
 
+from .models.leadmessage import LeadMessage
 from .types import ColorLogicBrightness, ColorLogicShow, ColorLogicSpeed, MessageType
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class OmniLogicRequest:
     HEADER_FORMAT = "!LQ4sLBBBB"
 
-    def __init__(self, msg_id, msg_type: MessageType, extra_data="", client_type=1):
+    def __init__(self, msg_id: int, msg_type: MessageType, extra_data: str = "", client_type: int = 1) -> None:
         self.msg_id = msg_id
         self.msg_type = msg_type
         self.client_type = client_type
@@ -24,7 +27,7 @@ class OmniLogicRequest:
 
         self.version = "1.19".encode("ascii")
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
         retval = struct.pack(
             OmniLogicRequest.HEADER_FORMAT,
             self.msg_id,  # Msg id
@@ -40,23 +43,23 @@ class OmniLogicRequest:
         return retval + self.extra_data
 
     @staticmethod
-    def from_bytes(data):
+    def from_bytes(data: bytes) -> tuple[int, int, float, MessageType, int, Any, int, Any, bytes]:
         # split the header and data
         header = data[0:24]
-        rdata = data[24:]
+        rdata: bytes = data[24:]
 
         msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res3 = struct.unpack(OmniLogicRequest.HEADER_FORMAT, header)
-        return msg_id, tstamp, vers, MessageType(msg_type), client_type, res1, compressed, res3, rdata
+        return int(msg_id), int(tstamp), float(vers), MessageType(msg_type), client_type, res1, compressed, res3, rdata
 
 
 class OmniLogicAPI:
-    def __init__(self, controller_ip_and_port, response_timeout):
+    def __init__(self, controller_ip_and_port: tuple[str, int], response_timeout: float) -> None:
         self.controller_ip_and_port = controller_ip_and_port
         self.response_timeout = response_timeout
         self._loop = asyncio.get_running_loop()
         self._protocol_factory = OmniLogicProtocol
 
-    async def _get_endpoint(self):
+    async def _get_endpoint(self) -> tuple[asyncio.DatagramTransport, OmniLogicProtocol]:
         return await self._loop.create_datagram_endpoint(self._protocol_factory, remote_addr=self.controller_ip_and_port)
 
     async def async_get_alarm_list(self):
@@ -130,7 +133,7 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: Union[int, bool]):
+    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool):
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
         Args:
@@ -151,12 +154,11 @@ class OmniLogicAPI:
         finally:
             transport.close()
 
-    # pylint: disable=too-many-arguments,too-many-locals
     async def async_set_equipment(
         self,
         pool_id: int,
         equipment_id: int,
-        is_on: Union[int, bool],
+        is_on: int | bool,
         is_countdown_timer: bool = False,
         start_time_hours: int = 0,
         start_time_minutes: int = 0,
@@ -276,25 +278,27 @@ class OmniLogicAPI:
 
 
 class OmniLogicProtocol(asyncio.DatagramProtocol):
-    def __init__(self):
-        self.data_queue = asyncio.Queue()
-        self.transport = None
+    transport: asyncio.DatagramTransport
 
-    def connection_made(self, transport):
+    def __init__(self) -> None:
+        self.data_queue = asyncio.Queue()
+        # self.transport: asyncio.DatagramTransport = None
+
+    def connection_made(self, transport) -> None:
         self.transport = transport
 
     def connection_lost(self, exc):
         if exc:
             raise exc
 
-    def datagram_received(self, data, addr):
+    def datagram_received(self, data: bytes, addr):
         msg_id, _, _, msg_type, _, _, compressed, _, data = OmniLogicRequest.from_bytes(data)
         self.data_queue.put_nowait((msg_id, msg_type, compressed, data))
 
-    def error_received(self, exc):
+    def error_received(self, exc: Exception) -> None:
         raise exc
 
-    async def _send_request(self, msg_type, extra_data="", msg_id=None):
+    async def _send_request(self, msg_type: MessageType, extra_data: str = "", msg_id: int | None = None) -> None:
         # If we aren't sending a specific msg_id, lets randomize it
         if not msg_id:
             msg_id = random.randrange(2**32)
@@ -317,7 +321,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             while rec_msg_id != msg_id:
                 rec_msg_id, msg_type, _, _ = await self.data_queue.get()
 
-    async def _send_ack(self, msg_id):
+    async def _send_ack(self, msg_id: int) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "Ack"
@@ -325,7 +329,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         await self._send_request(MessageType.XML_ACK, req_body, msg_id)
 
-    async def _receive_file(self):
+    async def _receive_file(self) -> str:
         # wait for the initial packet.
         msg_id, msg_type, compressed, data = await self.data_queue.get()
         if compressed:
@@ -341,16 +345,14 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
         # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
         if msg_type == MessageType.MSP_LEADMESSAGE:
-            # Parse XML
-            root = ET.fromstring(data[:-1])  # strip trailing \x00
-            block_count = int(root.findall(".//*[@name='MsgBlockCount']")[0].text)
+            leadmsg = LeadMessage.from_orm(ET.fromstring(data[:-1]))
 
             # Wait for the block data data
-            retval = b""
+            retval: bytes = b""
             # If we received a LeadMessage, continue to receive messages until we have all of our data
             # Fragments of data may arrive out of order, so we store them in a buffer as they arrive and sort them after
-            data_fragments: dict = {}
-            while len(data_fragments) < block_count:
+            data_fragments: dict[int, bytes] = {}
+            while len(data_fragments) < leadmsg.msg_block_count:
                 msg_id, msg_type, compressed, data = await self.data_queue.get()
                 await self._send_ack(msg_id)
                 # remove an 8 byte header to get to the payload data
@@ -400,7 +402,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         data = await self._receive_file()
         return data
 
-    async def get_config(self):
+    async def get_config(self) -> str:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -448,7 +450,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         self,
         pool_id: int,
         equipment_id: int,
-        enabled: Union[int, bool],
+        enabled: int | bool,
     ):
         """set_heater_enabled handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
@@ -511,12 +513,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         await self._send_request(MessageType.SET_EQUIPMENT, req_body)
 
-    # pylint: disable=too-many-arguments,too-many-locals
     async def set_equipment(
         self,
         pool_id: int,
         equipment_id: int,
-        is_on: Union[int, bool],
+        is_on: int | bool,
         is_countdown_timer: bool = False,
         start_time_hours: int = 0,
         start_time_minutes: int = 0,
@@ -593,7 +594,6 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         await self._send_request(MessageType.SET_FILTER_SPEED, req_body)
 
-    # pylint: disable=too-many-arguments,too-many-locals
     async def set_light_show(
         self,
         pool_id: int,
