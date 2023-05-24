@@ -341,6 +341,25 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "pydantic-xml"
+version = "0.6.1"
+description = "pydantic xml extension"
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "pydantic_xml-0.6.1-py3-none-any.whl", hash = "sha256:50346c01b606bfc339882818e2359c77cc0d2ec80a2c3aac357a8a9d857d637a"},
+    {file = "pydantic_xml-0.6.1.tar.gz", hash = "sha256:85673e27a7c2309f970c0412ca4a1dfb9b39a932cb99eee2cc4eaa6c7001434a"},
+]
+
+[package.dependencies]
+pydantic = ">=1.9.0,<2.0.0"
+
+[package.extras]
+docs = ["Sphinx (>=5.3.0,<6.0.0)", "furo (>=2022.12.7,<2023.0.0)", "sphinx-copybutton (>=0.5.1,<0.6.0)", "sphinx_design (>=0.3.0,<0.4.0)", "toml (>=0.10.2,<0.11.0)"]
+lxml = ["lxml (>=4.9.1,<5.0.0)"]
+
+[[package]]
 name = "pylint"
 version = "2.17.4"
 description = "python code static checker"
@@ -593,4 +612,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "58b46335523a3ab875203bd2258543a04b3a6e13649caa15a9c32e6ee22a9ac3"
+content-hash = "b98bd4a3487b8aefb9f181b501d3b5404f6e113e0bc69ce289432ed86ce6410d"

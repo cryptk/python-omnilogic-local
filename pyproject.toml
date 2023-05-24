@@ -21,6 +21,7 @@ omnilogic = "pyomnilogic_local.cli:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 pydantic = "^1.10.7"
+pydantic-xml = "^0.6.1"
 xmltodict = "^0.13.0"
 
 [tool.poetry.group.dev.dependencies]

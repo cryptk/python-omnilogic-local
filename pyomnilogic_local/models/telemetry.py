@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 from pydantic import BaseModel, Field
-from pydantic.utils import GetterDict
+from xmltodict import parse as xml_parse
 
 from ..types import (
     BackyardState,
@@ -20,7 +20,6 @@ from ..types import (
     RelayStatus,
     ValveActuatorStatus,
 )
-from .const import XML_NS
 
 # Example telemetry XML data:
 #
@@ -39,126 +38,172 @@ from .const import XML_NS
 # </STATUS>
 
 
-class TelemetryGetter(GetterDict):
-    def get(self, key: str, default: Any = None) -> Any:
-        # print(key)
-        # foo = self._obj.find(f".//{key}", XML_NS).attrib
-        # print(foo)
-        try:
-            if len(self._obj.findall(f".//{key}", XML_NS)) > 1:
-                return [i.attrib for i in self._obj.findall(f".//{key}", XML_NS)]
-            return self._obj.find(f".//{key}", XML_NS).attrib
-        except AttributeError:
-            return default
-
-
 class TelemetryBackyard(BaseModel):
-    system_id: int = Field(alias="systemId")
-    status_version: int = Field(alias="statusVersion")
-    air_temp: int = Field(alias="airTemp")
-    state: BackyardState
-    config_checksum: int = Field(alias="ConfigChksum")
-    msp_version: str = Field(alias="mspVersion")
+    omni_type = "Backyard"
+    system_id: int = Field(alias="@systemId")
+    status_version: int = Field(alias="@statusVersion")
+    air_temp: int = Field(alias="@airTemp")
+    state: BackyardState = Field(alias="@state")
+    config_checksum: int = Field(alias="@ConfigChksum")
+    msp_version: str = Field(alias="@mspVersion")
 
 
 class TelemetryBOW(BaseModel):
-    system_id: int = Field(alias="systemId")
-    water_temp: int = Field(alias="waterTemp")
-    flow: int
+    omni_type = "BodyOfWater"
+    system_id: int = Field(alias="@systemId")
+    water_temp: int = Field(alias="@waterTemp")
+    flow: int = Field(alias="@flow")
 
 
 class TelemetryChlorinator(BaseModel):
-    system_id: int = Field(alias="systemId")
-    status: int
-    instant_salt_level: int = Field(alias="instantSaltLevel")
-    avg_salt_level: int = Field(alias="avgSaltLevel")
-    chlr_alert: int = Field(alias="chlrAlert")
-    chlr_error: int = Field(alias="chlrError")
-    sc_mode: int = Field(alias="scMode")
-    operating_state: int = Field(alias="operatingState")
-    timed_percent: int = Field(alias="Timed-Percent")
-    operating_mode: ChlorinatorOperatingMode = Field(alias="operatingMode")
+    omni_type = "Chlorinator"
+    system_id: int = Field(alias="@systemId")
+    status: int = Field(alias="@status")
+    instant_salt_level: int = Field(alias="@instantSaltLevel")
+    avg_salt_level: int = Field(alias="@avgSaltLevel")
+    chlr_alert: int = Field(alias="@chlrAlert")
+    chlr_error: int = Field(alias="@chlrError")
+    sc_mode: int = Field(alias="@scMode")
+    operating_state: int = Field(alias="@operatingState")
+    timed_percent: int = Field(alias="@Timed-Percent")
+    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
     enable: bool
 
 
 class TelemetryColorLogicLight(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: ColorLogicPowerStates = Field(alias="lightState")
-    show: ColorLogicShow = Field(alias="currentShow")
-    speed: ColorLogicSpeed = Field()
-    brightness: ColorLogicBrightness
-    special_effect: int = Field(alias="specialEffect")
+    omni_type = "ColorLogic-Light"
+    system_id: int = Field(alias="@systemId")
+    state: ColorLogicPowerStates = Field(alias="@lightState")
+    show: ColorLogicShow = Field(alias="@currentShow")
+    speed: ColorLogicSpeed = Field(alias="@speed")
+    brightness: ColorLogicBrightness = Field(alias="@brightness")
+    special_effect: int = Field(alias="@specialEffect")
 
 
 class TelemetryFilter(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: FilterState = Field(alias="filterState")
-    speed: int = Field(alias="filterSpeed")
-    valve_position: FilterValvePosition = Field(alias="valvePosition")
-    why_on: FilterWhyOn = Field(alias="whyFilterIsOn")
-    reported_speed: int = Field(alias="reportedFilterSpeed")
-    power: int
-    last_speed: int = Field(alias="lastSpeed")
+    omni_type = "Filter"
+    system_id: int = Field(alias="@systemId")
+    state: FilterState = Field(alias="@filterState")
+    speed: int = Field(alias="@filterSpeed")
+    valve_position: FilterValvePosition = Field(alias="@valvePosition")
+    why_on: FilterWhyOn = Field(alias="@whyFilterIsOn")
+    reported_speed: int = Field(alias="@reportedFilterSpeed")
+    power: int = Field(alias="@power")
+    last_speed: int = Field(alias="@lastSpeed")
 
 
 class TelemetryGroup(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: int = Field(alias="groupState")
+    omni_type = "Group"
+    system_id: int = Field(alias="@systemId")
+    state: int = Field(alias="@groupState")
 
 
 class TelemetryHeater(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: HeaterStatus = Field(alias="heaterState")
-    temp: int
-    enabled: bool = Field(alias="enable")
-    priority: int
-    maintain_for: int = Field(alias="maintainFor")
+    omni_type = "Heater"
+    system_id: int = Field(alias="@systemId")
+    state: HeaterStatus = Field(alias="@heaterState")
+    temp: int = Field(alias="@temp")
+    enabled: bool = Field(alias="@enable")
+    priority: int = Field(alias="@priority")
+    maintain_for: int = Field(alias="@maintainFor")
 
 
 class TelemetryPump(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: PumpStatus = Field(alias="pumpState")
-    speed: int = Field(alias="pummpSpeed")
-    last_speed: int = Field(alias="lastSpeed")
-    why_on: int = Field(alias="whyOn")
+    omni_type = "Pump"
+    system_id: int = Field(alias="@systemId")
+    state: PumpStatus = Field(alias="@pumpState")
+    speed: int = Field(alias="@pummpSpeed")
+    last_speed: int = Field(alias="@lastSpeed")
+    why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryRelay(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: RelayStatus = Field(alias="relayState")
-    why_on: int = Field(alias="whyOn")
+    omni_type = "Relay"
+    system_id: int = Field(alias="@systemId")
+    state: RelayStatus = Field(alias="@relayState")
+    why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
-    system_id: int = Field(alias="systemId")
-    state: ValveActuatorStatus = Field(alias="valveActuatorState")
-    why_on: int = Field(alias="whyOn")
+    omni_type = "ValveActuator"
+    system_id: int = Field(alias="@systemId")
+    state: ValveActuatorStatus = Field(alias="@valveActuatorState")
+    why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryVirtualHeater(BaseModel):
-    system_id: int = Field(alias="systemId")
-    current_set_point: int = Field(alias="Current-Set-Point")
-    enabled: bool = Field(alias="enable")
-    solar_set_point: int = Field(alias="SolarSetPoint")
-    mode: int = Field(alias="Mode")
-    silent_mode: int = Field(alias="SilentMode")
-    why_on: int = Field(alias="whyHeaterIsOn")
+    omni_type = "VirtualHeater"
+    system_id: int = Field(alias="@systemId")
+    current_set_point: int = Field(alias="@Current-Set-Point")
+    enabled: bool = Field(alias="@enable")
+    solar_set_point: int = Field(alias="@SolarSetPoint")
+    mode: int = Field(alias="@Mode")
+    silent_mode: int = Field(alias="@SilentMode")
+    why_on: int = Field(alias="@whyHeaterIsOn")
+
+
+TTelemetry = (
+    TelemetryBackyard
+    | TelemetryBOW
+    | TelemetryChlorinator
+    | TelemetryColorLogicLight
+    | TelemetryFilter
+    | TelemetryGroup
+    | TelemetryHeater
+    | TelemetryPump
+    | TelemetryRelay
+    | TelemetryValveActuator
+    | TelemetryVirtualHeater
+)
 
 
 class Telemetry(BaseModel):
-    # version: str
-    backyard: TelemetryBackyard = Field(alias="Backyard")
-    bow: TelemetryBOW = Field(alias="BodyOfWater")
-    chlorinator: list[TelemetryChlorinator] | TelemetryChlorinator = Field(alias="Chlorinator")
-    colorlogic_light: list[TelemetryColorLogicLight] | TelemetryColorLogicLight = Field(alias="ColorLogic-Light")
-    filter: list[TelemetryFilter] | TelemetryFilter = Field(alias="Filter")
-    group: list[TelemetryGroup] | TelemetryGroup = Field(alias="Group")
-    heater: list[TelemetryHeater] | TelemetryHeater = Field(alias="Heater")
-    pump: list[TelemetryPump] | TelemetryPump = Field(alias="Pump")
-    relay: list[TelemetryRelay] | TelemetryRelay = Field(alias="Relay")
-    valve_actuator: list[TelemetryValveActuator] | TelemetryValveActuator = Field(alias="ValveActuator")
-    virtual_heater: list[TelemetryVirtualHeater] | TelemetryVirtualHeater = Field(alias="VirtualHeater")
+    version: str = Field(alias="@version")
+    backyard: list[TelemetryBackyard] = Field(alias="Backyard")
+    bow: list[TelemetryBOW] = Field(alias="BodyOfWater")
+    chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator")
+    colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light")
+    filter: list[TelemetryFilter] | None = Field(alias="Filter")
+    group: list[TelemetryGroup] | None = Field(alias="Group")
+    heater: list[TelemetryHeater] | None = Field(alias="Heater")
+    pump: list[TelemetryPump] | None = Field(alias="Pump")
+    relay: list[TelemetryRelay] | None = Field(alias="Relay")
+    valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator")
+    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater")
 
     class Config:
         orm_mode = True
-        getter_dict = TelemetryGetter
+
+    @staticmethod
+    def load_xml(xml: str) -> Telemetry:
+        data = xml_parse(
+            xml,
+            # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
+            # everything into lists to make the parsing more consistent. This does mean that some things that would normally never be lists
+            # will become lists (I.E.: Backyard, VirtualHeater), but the upside is that we need far less conditional code to deal with the
+            # "maybe list maybe not" devices.
+            force_list=(
+                "Backyard",
+                "BodyOfWater",
+                "Chlorinator",
+                "ColorLogic-Light",
+                "Filter",
+                "Group",
+                "Heater",
+                "Pump",
+                "Relay",
+                "ValveActuator",
+                "VirtualHeater",
+            ),
+        )
+        return Telemetry.parse_obj(data["STATUS"])
+
+    def get_telem_by_systemid(self, system_id: int) -> TTelemetry | None:
+        for field_name, value in self:
+            if field_name == "version" or value is None:
+                continue
+            for model in value:
+                cast_model = cast(TTelemetry, model)
+                if cast_model.system_id == system_id:
+                    return cast_model
+        return None

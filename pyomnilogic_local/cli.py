@@ -3,10 +3,12 @@
 import asyncio
 import logging
 import os
-from xml.etree.ElementTree import fromstring as xmlfromstring
+from pprint import pprint
 
 from pyomnilogic_local.api import OmniLogicAPI
-from pyomnilogic_local.models.telemetry import Telemetry
+
+# from pyomnilogic_local.models.telemetry import Telemetry
+from pyomnilogic_local.models.mspconfig import MSPConfig
 
 POOL_ID = 7
 PUMP_EQUIPMENT_ID = 8
@@ -18,13 +20,20 @@ async def async_main() -> None:
 
     # Some basic calls to run some testing against the library
     # Fetch the MSPConfig data
-    # print(await omni.async_get_config())
+    config = await omni.async_get_config()
+    print(config)
+    parsed_config = MSPConfig.load_xml(config)
+    pprint(parsed_config)
+    # print(parsed_config)
+    # print(parsed_config.backyard[0].bow[0].filter[0])
+    # print(parsed_config.backyard[0].bow[0].filter[0].test())
     # Fetch the current telemetry data
-    telem = await omni.async_get_telemetry()
+    # telem = await omni.async_get_telemetry()
     # print(telem)
-    parsed_telem = Telemetry.from_orm(xmlfromstring(telem))
-    print(parsed_telem)
-    # pprint(parsed_telem.dict())
+    # parsed_telem = Telemetry.load_xml(xml=telem)
+    # print(parsed_telem.dict())
+    # print()
+    # print(parsed_telem.get_telem_by_systemid(18))
     # Fetch the current log configuration
     # print(await omni.async_get_log_config())
     # Fetch a list of current alarms

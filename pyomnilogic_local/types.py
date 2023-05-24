@@ -1,3 +1,5 @@
+from enum import Enum
+
 from .util import PrettyEnum
 
 
@@ -12,6 +14,11 @@ class BackyardState(str, PrettyEnum):
 class BodyOfWaterStatus(str, PrettyEnum):
     NO_FLOW = 0
     FLOW = 1
+
+
+class BodyOfWaterType(str, PrettyEnum):
+    POOL = "BOW_POOL"
+    SPA = "BOW_SPA"
 
 
 # Chlorinator status is a bitmask that we still need to figure out
@@ -110,6 +117,12 @@ class FilterState(str, PrettyEnum):
     FILTER_WAITING_TURN_OFF = 11
 
 
+class FilterType(str, PrettyEnum):
+    VARIABLE_SPEED = "FMT_VARIABLE_SPEED_PUMP"
+    DUAL_SPEED = "FMT_DUAL_SPEED"
+    SINGLE_SPEED = "FMT_SINGLE_SPEED"
+
+
 class FilterValvePosition(str, PrettyEnum):
     POOL_ONLY = 1
     SPA_ONLY = 2
@@ -143,7 +156,16 @@ class HeaterStatus(str, PrettyEnum):
     PAUSE = 2
 
 
-class MessageType(PrettyEnum):
+class HeaterType(str, PrettyEnum):
+    GAS = "HTR_GAS"
+    HEAT_PUMP = "HTR_HEAT_PUMP"
+    SOLAR = "HTR_SOLAR"
+    ELECTRIC = "HTR_ELECTRIC"
+    GEOTHERMAL = "HTR_GEOTHERMAL"
+    SMART = "HTR_SMART"
+
+
+class MessageType(Enum):
     XML_ACK = 0000
     REQUEST_CONFIGURATION = 1
     SET_FILTER_SPEED = 9
@@ -170,9 +192,51 @@ class PumpStatus(str, PrettyEnum):
     ON = 0
 
 
+class RelayFunction(str, PrettyEnum):
+    WATER_FEATURE = "RLY_WATER_FEATURE"
+    LIGHT = "RLY_LIGHT"
+    BACKYARD_LIGHT = "RLY_BACKYARD_LIGHT"
+    POOL_LIGHT = "RLY_POOL_LIGHT"
+    CLEANER = "RLY_CLEANER"
+    WATER_SLIDE = "RLY_WATER_SLIDE"
+    WATERFALL = "RLY_WATERFALL"
+    LAMINARS = "RLY_LAMINARS"
+    FOUNTAIN = "RLY_FOUNTAIN"
+    FIREPIT = "RLY_FIREPIT"
+    JETS = "RLY_JETS"
+    BLOWER = "RLY_BLOWER"
+    ACCESSORY = "RLY_ACCESSORY"
+    CLEANER_PRESSURE = "RLY_CLEANER_PRESSURE"
+    CLEANER_SUCTION = "RLY_CLEANER_SUCTION"
+    CLEANER_ROBOTIC = "RLY_CLEANER_ROBOTIC"
+    CLEANER_IN_FLOOR = "RLY_CLEANER_IN_FLOOR"
+
+
 class RelayStatus(str, PrettyEnum):
     OFF = 0
     ON = 1
+
+
+class RelayType(str, PrettyEnum):
+    VALVE_ACTUATOR = "RLY_VALVE_ACTUATOR"
+    HIGH_VOLTAGE = "RLY_HIGH_VOLTAGE_RELAY"
+    LOW_VOLTAGE = "RLY_LOW_VOLTAGE_RELAY"
+
+
+class SensorType(str, PrettyEnum):
+    AIR_TEMP = "SENSOR_AIR_TEMP"
+    SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
+    WATER_TEMP = "SENSOR_WATER_TEMP"
+    FLOW = "SENSOR_FLOW"
+
+
+class SensorUnits(str, PrettyEnum):
+    FAHRENHEIT = "UNITS_FAHRENHEIT"
+    CELSIUS = "UNITS_CELSIUS"
+    PPM = "UNITS_PPM"
+    GRAMS_PER_LITER = "UNITS_GRAMS_PER_LITER"
+    MILLIVOLTS = "UNITS_MILLIVOLTS"
+    NO_UNITS = "UNITS_NO_UNITS"
 
 
 class ValveActuatorStatus(str, PrettyEnum):
