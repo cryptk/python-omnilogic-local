@@ -195,7 +195,7 @@ class HeaterType(str, PrettyEnum):
 
 class PumpStatus(str, PrettyEnum):
     OFF = 0
-    ON = 0
+    ON = 1
 
 
 class RelayFunction(str, PrettyEnum):
