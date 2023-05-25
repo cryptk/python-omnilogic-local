@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-omnilogic-local"
-version = "0.0.5"
+version = "0.0.6"
 description = "A library for local control of Hayward OmniHub/OmniLogic pool controllers using their local API"
 authors = ["cryptk <cryptk@users.noreply.github.com>", "djtimca", "garionphx"]
 license = "Apache-2.0"
@@ -19,7 +19,17 @@ packages = [{include = "pyomnilogic_local"}]
 omnilogic = "pyomnilogic_local.cli:main"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
+pydantic = "^1.10.7"
+pydantic-xml = "^0.6.1"
+xmltodict = "^0.13.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.0.0"
+mypy = "^1.2.0"
+pylint = "^2.17.0"
+pydantic = "^1.10.7"
+pytest = "^7.3.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -42,13 +52,136 @@ forced_separate = [
 ]
 combine_as_imports = true
 
+[tool.mypy]
+python_version = "3.10"
+plugins = "pydantic.mypy"
+follow_imports = "silent"
+ignore_missing_imports = true
+local_partial_types = true
+strict_equality = true
+no_implicit_optional = true
+warn_incomplete_stub = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+enable_error_code = "ignore-without-code, redundant-self, truthy-iterable"
+disable_error_code = "annotation-unchecked"
+strict_concatenate = false
+check_untyped_defs = true
+disallow_incomplete_defs = true
+# disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unreachable = true
+no_implicit_reexport = true
+disallow_any_generics = true
+
+[tool.pylint.MAIN]
+py-version = "3.10"
+ignore = [
+    "tests",
+]
+# Use a conservative default here; 2 should speed up most setups and not hurt
+# any too bad. Override on command line as appropriate.
+jobs = 2
+load-plugins = [
+    "pylint.extensions.code_style",
+    "pylint.extensions.typing",
+]
+persistent = false
+extension-pkg-allow-list = [
+    "pydantic",
+    "av.audio.stream",
+    "av.stream",
+    "ciso8601",
+    "orjson",
+    "cv2",
+]
+fail-on = [
+    "I",
+]
+
+[tool.pylint.BASIC]
+class-const-naming-style = "any"
+good-names = [
+    "_",
+    "ev",
+    "ex",
+    "fp",
+    "i",
+    "id",
+    "j",
+    "k",
+    "Run",
+    "ip",
+]
+
+[tool.pylint.CODE_STYLE]
+max-line-length-suggestions = 72
+
 [tool.pylint."FORMAT"]
+expected-line-ending-format = "LF"
 # Maximum number of characters on a single line.
 max-line-length=140
 
 [tool.pylint."MESSAGES CONTROL"]
-#For now, we have a lot of thing missing docstrings, this is ok for now
-disable="missing-docstring"
+# Reasons disabled:
+# format - handled by black
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
+# too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
+# consider-using-f-string - str.format sometimes more readable
+# ---
+# Pylint CodeStyle plugin
+# consider-using-namedtuple-or-dataclass - too opinionated
+# consider-using-assignment-expr - decision to use := better left to devs
+disable = [
+    "format",
+    "abstract-method",
+    "cyclic-import",
+    "duplicate-code",
+    "inconsistent-return-statements",
+    "locally-disabled",
+    "not-context-manager",
+    "too-few-public-methods",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "too-many-statements",
+    "too-many-boolean-expressions",
+    "unused-argument",
+    "wrong-import-order",
+    "wrong-import-position",
+    "consider-using-f-string",
+    "consider-using-namedtuple-or-dataclass",
+    "consider-using-assignment-expr",
+    # The below are only here for now, we should fully document once the codebase stops fluctuating so much
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
+enable = [
+    "useless-suppression",  # temporarily every now and then to clean them up
+    "use-symbolic-message-instead",
+]
+
+[tool.pylint.REPORTS]
+score = false
 
 [tool.ruff]
 line-length = 140

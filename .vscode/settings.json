@@ -1,4 +1,9 @@
 {
   "files.trimTrailingWhitespace": true,
-  "editor.rulers": [140]
+  "editor.rulers": [140],
+  "python.formatting.provider": "black",
+  // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
+  "python.testing.pytestEnabled": false,
+  "python.linting.mypyEnabled": true,
+  "python.analysis.typeCheckingMode": "basic"
 }
