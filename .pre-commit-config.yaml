@@ -39,16 +39,16 @@ repos:
             -   id: ruff
                 args:
                     - --fix
-    -   repo: local
-        hooks:
-            -   id: pylint
-                name: pylint
-                entry: poetry run -- pylint
-                language: system
-                types: [python]
-    # -   repo: https://github.com/pre-commit/mirrors-mypy
-    #     rev: v1.2.0
+    # -   repo: local
     #     hooks:
-    #         -   id: mypy
-    #             exclude: cli.py
-    #             additional_dependencies: [ "pydantic" ]
+    #         -   id: pylint
+    #             name: pylint
+    #             entry: poetry run -- pylint
+    #             language: system
+    #             types: [python]
+    -   repo: https://github.com/pre-commit/mirrors-mypy
+        rev: v1.2.0
+        hooks:
+            -   id: mypy
+                exclude: cli.py
+                additional_dependencies: [ "pydantic" ]
