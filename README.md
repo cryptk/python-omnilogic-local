@@ -1,6 +1,5 @@
 # Pyomnilogic Local
 
-
 <p align="center">
   <a href="https://pypi.org/project/python-omnilogic-local/">
     <img src="https://img.shields.io/pypi/v/python-omnilogic-local.svg?logo=python&logoColor=fff&style=flat-square" alt="PyPI Version">
