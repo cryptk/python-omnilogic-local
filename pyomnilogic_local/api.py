@@ -134,7 +134,7 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
+        return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
     async def async_set_solar_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
         """async_set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
@@ -163,7 +163,7 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
+        return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
     async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
