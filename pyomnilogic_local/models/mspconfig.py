@@ -111,7 +111,7 @@ class MSPHeaterEquip(OmniBase):
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")
-    supports_cooling: Literal["yes", "no"] = Field(alias="SupportsCooling")
+    supports_cooling: Literal["yes", "no"] | None = Field(alias="SupportsCooling")
 
 
 # This is the entry for the VirtualHeater, it does not use OmniBase because it has no name attribute
