@@ -121,7 +121,7 @@ class MSPVirtualHeater(OmniBase):
     omni_type: OmniType = OmniType.VIRT_HEATER
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     set_point: int = Field(alias="Current-Set-Point")
-    solar_set_point: int = Field(alias="SolarSetPoint")
+    solar_set_point: int | None = Field(alias="SolarSetPoint")
     max_temp: int = Field(alias="Max-Settable-Water-Temp")
     min_temp: int = Field(alias="Min-Settable-Water-Temp")
     heater_equipment: list[MSPHeaterEquip] | None
