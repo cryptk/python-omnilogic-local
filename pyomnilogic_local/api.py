@@ -10,7 +10,13 @@ from .models.mspconfig import MSPConfig
 from .models.telemetry import Telemetry
 from .models.util import to_pydantic
 from .protocol import OmniLogicProtocol
-from .types import ColorLogicBrightness, ColorLogicShow, ColorLogicSpeed, MessageType
+from .types import (
+    ColorLogicBrightness,
+    ColorLogicShow,
+    ColorLogicSpeed,
+    HeaterMode,
+    MessageType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,6 +170,34 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
+
+    async def async_set_heater_mode(self, pool_id: int, equipment_id: int, mode: HeaterMode) -> None:
+        """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            enabled (bool, optional): Turn the heater on (True) or off (False)
+
+        Returns:
+            _type_: _description_
+        """
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetUIHeaterModeCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Mode", dataType="int", alias="Data")
+        parameter.text = str(mode.value)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
 
     async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller

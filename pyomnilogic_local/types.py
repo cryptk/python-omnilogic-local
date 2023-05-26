@@ -11,6 +11,7 @@ class MessageType(Enum):
     SET_HEATER_COMMAND = 11
     REQUEST_LOG_CONFIG = 31
     SET_SOLAR_SET_POINT_COMMAND = 40
+    SET_HEATER_MODE_COMMAND = 42
     SET_HEATER_ENABLED = 147
     SET_EQUIPMENT = 164
     CREATE_SCHEDULE = 230
@@ -222,6 +223,12 @@ class HeaterType(str, PrettyEnum):
     ELECTRIC = "HTR_ELECTRIC"
     GEOTHERMAL = "HTR_GEOTHERMAL"
     SMART = "HTR_SMART"
+
+
+class HeaterMode(PrettyEnum):
+    HEAT = 0
+    COOL = 1
+    AUTO = 2
 
 
 class PumpState(PrettyEnum):

@@ -15,6 +15,7 @@ from ..types import (
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
+    HeaterMode,
     HeaterState,
     OmniType,
     PumpState,
@@ -138,7 +139,7 @@ class TelemetryVirtualHeater(BaseModel):
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
     solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: int = Field(alias="@Mode")
+    mode: HeaterMode = Field(alias="@Mode")
     silent_mode: int = Field(alias="@SilentMode")
     why_on: int = Field(alias="@whyHeaterIsOn")
 
