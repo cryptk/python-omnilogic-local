@@ -5,6 +5,10 @@ import logging
 from typing import Literal, overload
 import xml.etree.ElementTree as ET
 
+from .models.filter_diagnostics import FilterDiagnostics
+from .models.mspconfig import MSPConfig
+from .models.telemetry import Telemetry
+from .models.util import to_pydantic
 from .protocol import OmniLogicProtocol
 from .types import ColorLogicBrightness, ColorLogicShow, ColorLogicSpeed, MessageType
 
@@ -52,6 +56,7 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.GET_ALARM_LIST, req_body, True)
 
+    @to_pydantic(pydantic_type=MSPConfig)
     async def async_get_config(self) -> str:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
@@ -62,6 +67,7 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
 
+    @to_pydantic(pydantic_type=FilterDiagnostics)
     async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int) -> str:
         """async_get_filter_diagnostics handles sending a GetUIFilterDiagnosticInfo XML API call to the Hayward Omni pool controller
 
@@ -90,6 +96,7 @@ class OmniLogicAPI:
     async def async_get_log_config(self) -> str:
         return await self.async_send_message(MessageType.REQUEST_LOG_CONFIG, None, True)
 
+    @to_pydantic(pydantic_type=Telemetry)
     async def async_get_telemetry(self) -> str:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 

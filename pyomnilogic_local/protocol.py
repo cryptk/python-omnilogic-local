@@ -113,7 +113,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
             # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
             try:
-                await asyncio.wait_for(self._wait_for_ack(message.id), 0.5)
+                await asyncio.wait_for(self._wait_for_ack(message.id), 1)
                 delivered = True
             except TimeoutError:
                 _LOGGER.debug("ACK not received, re-attempting delivery")
@@ -146,6 +146,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         # wait for the initial packet.
         message = await self.data_queue.get()
 
+        # If messages have to be re-transmitted, we can sometimes receive multiple ACKs.  The first one would be handled by
+        # self._ensure_sent, but if any subsequent ACKs are sent to us, we need to dump them and wait for a "real" message.
+        while message.type in [MessageType.ACK, MessageType.XML_ACK]:
+            message = await self.data_queue.get()
+
         await self._send_ack(message.id)
 
         # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
@@ -159,6 +164,9 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             data_fragments: dict[int, bytes] = {}
             while len(data_fragments) < leadmsg.msg_block_count:
                 resp = await self.data_queue.get()
+                # We only want to collect blockmessages here
+                if resp.type is not MessageType.MSP_BLOCKMESSAGE:
+                    continue
                 await self._send_ack(resp.id)
                 # remove an 8 byte header to get to the payload data
                 data_fragments[resp.id] = resp.payload[8:]
@@ -179,5 +187,5 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             comp_bytes = bytes.fromhex(retval.hex())
             retval = zlib.decompress(comp_bytes)
 
-        # return retval
-        return retval.decode("utf-8")
+        # For some API calls, the Omni null terminates the response, we are stripping that here to make parsing it later easier
+        return retval.decode("utf-8").strip("\x00")
