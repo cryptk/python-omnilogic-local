@@ -284,6 +284,7 @@ class SensorType(str, PrettyEnum):
     SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
     WATER_TEMP = "SENSOR_WATER_TEMP"
     FLOW = "SENSOR_FLOW"
+    EXT_INPUT = "SENSOR_EXT_INPUT"
 
 
 class SensorUnits(str, PrettyEnum):
