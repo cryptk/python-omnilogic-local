@@ -294,6 +294,7 @@ class SensorUnits(str, PrettyEnum):
     GRAMS_PER_LITER = "UNITS_GRAMS_PER_LITER"
     MILLIVOLTS = "UNITS_MILLIVOLTS"
     NO_UNITS = "UNITS_NO_UNITS"
+    ACTIVE_INACTIVE = "UNITS_ACTIVE_INACTIVE"
 
 
 class ValveActuatorState(PrettyEnum):
