@@ -136,6 +136,35 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
 
+    async def async_set_solar_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
+        """async_set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            equipment_id (int): Which equipment_id within that Pool to address
+            temperature (int): What temperature to request
+            unit (str): The temperature unit to use (either F or C)
+
+        Returns:
+            _type_: _description_
+        """
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetUISolarSetPointCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter.text = str(temperature)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
+
     async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
