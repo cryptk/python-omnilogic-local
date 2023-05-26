@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 
 from pydantic import BaseModel, Field
 from xmltodict import parse as xml_parse
@@ -9,16 +9,17 @@ from ..types import (
     BackyardState,
     ChlorinatorOperatingMode,
     ColorLogicBrightness,
-    ColorLogicPowerStates,
+    ColorLogicPowerState,
     ColorLogicShow,
     ColorLogicSpeed,
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
-    HeaterStatus,
-    PumpStatus,
-    RelayStatus,
-    ValveActuatorStatus,
+    HeaterState,
+    OmniType,
+    PumpState,
+    RelayState,
+    ValveActuatorState,
 )
 
 # Example telemetry XML data:
@@ -39,7 +40,7 @@ from ..types import (
 
 
 class TelemetryBackyard(BaseModel):
-    omni_type = "Backyard"
+    omni_type: OmniType = OmniType.BACKYARD
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
     air_temp: int = Field(alias="@airTemp")
@@ -48,15 +49,15 @@ class TelemetryBackyard(BaseModel):
     msp_version: str = Field(alias="@mspVersion")
 
 
-class TelemetryBOW(BaseModel):
-    omni_type = "BodyOfWater"
+class TelemetryBoW(BaseModel):
+    omni_type: OmniType = OmniType.BOW
     system_id: int = Field(alias="@systemId")
     water_temp: int = Field(alias="@waterTemp")
     flow: int = Field(alias="@flow")
 
 
 class TelemetryChlorinator(BaseModel):
-    omni_type = "Chlorinator"
+    omni_type: OmniType = OmniType.CHLORINATOR
     system_id: int = Field(alias="@systemId")
     status: int = Field(alias="@status")
     instant_salt_level: int = Field(alias="@instantSaltLevel")
@@ -71,9 +72,9 @@ class TelemetryChlorinator(BaseModel):
 
 
 class TelemetryColorLogicLight(BaseModel):
-    omni_type = "ColorLogic-Light"
+    omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
-    state: ColorLogicPowerStates = Field(alias="@lightState")
+    state: ColorLogicPowerState = Field(alias="@lightState")
     show: ColorLogicShow = Field(alias="@currentShow")
     speed: ColorLogicSpeed = Field(alias="@speed")
     brightness: ColorLogicBrightness = Field(alias="@brightness")
@@ -81,7 +82,7 @@ class TelemetryColorLogicLight(BaseModel):
 
 
 class TelemetryFilter(BaseModel):
-    omni_type = "Filter"
+    omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
     state: FilterState = Field(alias="@filterState")
     speed: int = Field(alias="@filterSpeed")
@@ -93,15 +94,15 @@ class TelemetryFilter(BaseModel):
 
 
 class TelemetryGroup(BaseModel):
-    omni_type = "Group"
+    omni_type: OmniType = OmniType.GROUP
     system_id: int = Field(alias="@systemId")
     state: int = Field(alias="@groupState")
 
 
 class TelemetryHeater(BaseModel):
-    omni_type = "Heater"
+    omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
-    state: HeaterStatus = Field(alias="@heaterState")
+    state: HeaterState = Field(alias="@heaterState")
     temp: int = Field(alias="@temp")
     enabled: bool = Field(alias="@enable")
     priority: int = Field(alias="@priority")
@@ -109,30 +110,30 @@ class TelemetryHeater(BaseModel):
 
 
 class TelemetryPump(BaseModel):
-    omni_type = "Pump"
+    omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
-    state: PumpStatus = Field(alias="@pumpState")
+    state: PumpState = Field(alias="@pumpState")
     speed: int = Field(alias="@pummpSpeed")
     last_speed: int = Field(alias="@lastSpeed")
     why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryRelay(BaseModel):
-    omni_type = "Relay"
+    omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
-    state: RelayStatus = Field(alias="@relayState")
+    state: RelayState = Field(alias="@relayState")
     why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
-    omni_type = "ValveActuator"
+    omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
-    state: ValveActuatorStatus = Field(alias="@valveActuatorState")
+    state: ValveActuatorState = Field(alias="@valveActuatorState")
     why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryVirtualHeater(BaseModel):
-    omni_type = "VirtualHeater"
+    omni_type: OmniType = OmniType.VIRT_HEATER
     system_id: int = Field(alias="@systemId")
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
@@ -142,9 +143,9 @@ class TelemetryVirtualHeater(BaseModel):
     why_on: int = Field(alias="@whyHeaterIsOn")
 
 
-TTelemetry = (
+TelemetryType: TypeAlias = (
     TelemetryBackyard
-    | TelemetryBOW
+    | TelemetryBoW
     | TelemetryChlorinator
     | TelemetryColorLogicLight
     | TelemetryFilter
@@ -159,8 +160,8 @@ TTelemetry = (
 
 class Telemetry(BaseModel):
     version: str = Field(alias="@version")
-    backyard: list[TelemetryBackyard] = Field(alias="Backyard")
-    bow: list[TelemetryBOW] = Field(alias="BodyOfWater")
+    backyard: TelemetryBackyard = Field(alias="Backyard")
+    bow: list[TelemetryBoW] = Field(alias="BodyOfWater")
     chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator")
     colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light")
     filter: list[TelemetryFilter] | None = Field(alias="Filter")
@@ -169,41 +170,68 @@ class Telemetry(BaseModel):
     pump: list[TelemetryPump] | None = Field(alias="Pump")
     relay: list[TelemetryRelay] | None = Field(alias="Relay")
     valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator")
-    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater")
+    virtual_heater: TelemetryVirtualHeater | None = Field(alias="VirtualHeater")
 
     class Config:
         orm_mode = True
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
+
+        TypeVar("KT")
+        TypeVar("VT", SupportsInt, Any)
+
+        @overload
+        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]:
+            ...
+
+        @overload
+        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]:
+            ...
+
+        def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
+            """Post process XML to attempt to convert values to int."""
+            newvalue: SupportsInt | Any
+
+            try:
+                newvalue = int(value)
+            except (ValueError, TypeError):
+                newvalue = value
+
+            return key, newvalue
+
         data = xml_parse(
             xml,
+            postprocessor=xml_postprocessor,
             # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
             # everything into lists to make the parsing more consistent. This does mean that some things that would normally never be lists
             # will become lists (I.E.: Backyard, VirtualHeater), but the upside is that we need far less conditional code to deal with the
             # "maybe list maybe not" devices.
             force_list=(
-                "Backyard",
-                "BodyOfWater",
-                "Chlorinator",
-                "ColorLogic-Light",
-                "Filter",
-                "Group",
-                "Heater",
-                "Pump",
-                "Relay",
-                "ValveActuator",
-                "VirtualHeater",
+                OmniType.BOW,
+                OmniType.CHLORINATOR,
+                OmniType.CL_LIGHT,
+                OmniType.FILTER,
+                OmniType.GROUP,
+                OmniType.HEATER,
+                OmniType.PUMP,
+                OmniType.RELAY,
+                OmniType.VALVE_ACTUATOR,
             ),
         )
         return Telemetry.parse_obj(data["STATUS"])
 
-    def get_telem_by_systemid(self, system_id: int) -> TTelemetry | None:
+    def get_telem_by_systemid(self, system_id: int) -> TelemetryType | None:
         for field_name, value in self:
             if field_name == "version" or value is None:
                 continue
-            for model in value:
-                cast_model = cast(TTelemetry, model)
+            if isinstance(value, list):
+                for model in value:
+                    cast_model = cast(TelemetryType, model)
+                    if cast_model.system_id == system_id:
+                        return cast_model
+            else:
+                cast_model = cast(TelemetryType, value)
                 if cast_model.system_id == system_id:
                     return cast_model
         return None

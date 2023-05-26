@@ -39,13 +39,11 @@ repos:
             -   id: ruff
                 args:
                     - --fix
-    # -   repo: local
-    #     hooks:
-    #         -   id: pylint
-    #             name: pylint
-    #             entry: poetry run -- pylint
-    #             language: system
-    #             types: [python]
+    -   repo: https://github.com/pylint-dev/pylint
+        rev: v2.17.0
+        hooks:
+            -   id: pylint
+                additional_dependencies: [ "pydantic", "xmltodict" ]
     -   repo: https://github.com/pre-commit/mirrors-mypy
         rev: v1.2.0
         hooks:

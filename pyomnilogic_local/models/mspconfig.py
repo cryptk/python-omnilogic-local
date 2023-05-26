@@ -1,15 +1,26 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Literal
+import sys
+from typing import Any, Literal, TypeAlias
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 
 from pydantic import BaseModel, Field
 from xmltodict import parse as xml_parse
 
 from ..types import (
     BodyOfWaterType,
+    ColorLogicLightType,
     FilterType,
     HeaterType,
+    OmniType,
+    PumpFunction,
+    PumpType,
     RelayFunction,
     RelayType,
     SensorType,
@@ -20,38 +31,46 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniBase(BaseModel):
+    _sub_devices: set[str] | None = None
     system_id: int = Field(alias="System-Id")
-    name: str = Field(alias="Name")
-
-
-class BOWMixin(BaseModel):
+    name: str | None = Field(alias="Name")
     bow_id: int | None
 
+    def without_subdevices(self) -> Self:
+        return self.copy(exclude=self._sub_devices)
+
     def propagate_bow_id(self, bow_id: int | None) -> None:
+        # First we set our own bow_id
         self.bow_id = bow_id
-        for field in self.__fields__:
-            devices = getattr(self, field)
-            try:
-                for device in devices:
-                    device.propogate_bow_id(bow_id)
-            except (AttributeError, TypeError):
-                # The child is not using the BOWMixin
-                pass
+        # If we have no devices under us, we have nothing to do
+        if self._sub_devices is None:
+            return
+        for subdevice_name in self._sub_devices:
+            subdevice = getattr(self, subdevice_name)
+            # If our subdevice is a list of subdevices ...
+            if isinstance(subdevice, list):
+                for device in subdevice:
+                    # ... then call propagate_bow_id on each of them ...
+                    device.propagate_bow_id(bow_id)
+            else:
+                # ... otherwise just call it on the single subdevice
+                subdevice.propagate_bow_id(bow_id)
 
 
 class MSPSystem(BaseModel):
+    omni_type: OmniType = OmniType.SYSTEM
     vsp_speed_format: Literal["RPM", "Percent"] = Field(alias="Msp-Vsp-Speed-Format")
     units: Literal["Standard", "Metric"] = Field(alias="Units")
 
 
-class MSPSensor(BOWMixin, OmniBase):
+class MSPSensor(OmniBase):
+    omni_type: OmniType = OmniType.SENSOR
     type: SensorType = Field(alias="Type")
     units: SensorUnits = Field(alias="Units")
 
 
-class MSPFilter(BOWMixin, BaseModel):
-    system_id: int = Field(alias="System-Id")
-    name: str = Field(alias="Name")
+class MSPFilter(OmniBase):
+    omni_type: OmniType = OmniType.FILTER
     type: FilterType = Field(alias="Filter-Type")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
@@ -64,12 +83,29 @@ class MSPFilter(BOWMixin, BaseModel):
     high_speed: int = Field(alias="Vsp-High-Pump-Speed")
 
 
-class MSPRelay(BOWMixin, OmniBase):
+class MSPPump(OmniBase):
+    omni_type: OmniType = OmniType.PUMP
+    type: PumpType = Field(alias="Type")
+    function: PumpFunction = Field(alias="Function")
+    max_percent: int = Field(alias="Max-Pump-Speed")
+    min_percent: int = Field(alias="Min-Pump-Speed")
+    max_rpm: int = Field(alias="Max-Pump-RPM")
+    min_rpm: int = Field(alias="Min-Pump-RPM")
+    # We should figure out how to coerce this field into a True/False
+    priming_enabled: Literal["yes", "no"] = Field(alias="Priming-Enabled")
+    low_speed: int = Field(alias="Vsp-Low-Pump-Speed")
+    medium_speed: int = Field(alias="Vsp-Medium-Pump-Speed")
+    high_speed: int = Field(alias="Vsp-High-Pump-Speed")
+
+
+class MSPRelay(OmniBase):
+    omni_type: OmniType = OmniType.RELAY
     type: RelayType = Field(alias="Type")
     function: RelayFunction = Field(alias="Function")
 
 
-class MSPHeaterEquip(BOWMixin, OmniBase):
+class MSPHeaterEquip(OmniBase):
+    omni_type: OmniType = OmniType.HEATER_EQUIP
     type: Literal["PET_HEATER"] = Field(alias="Type")
     heater_type: HeaterType = Field(alias="Heater-Type")
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
@@ -79,8 +115,10 @@ class MSPHeaterEquip(BOWMixin, OmniBase):
 
 
 # This is the entry for the VirtualHeater, it does not use OmniBase because it has no name attribute
-class MSPVirtualHeater(BOWMixin, BaseModel):
-    system_id: int = Field(alias="System-Id")
+class MSPVirtualHeater(OmniBase):
+    _sub_devices = {"heater_equipment"}
+
+    omni_type: OmniType = OmniType.VIRT_HEATER
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     set_point: int = Field(alias="Current-Set-Point")
     solar_set_point: int = Field(alias="SolarSetPoint")
@@ -93,17 +131,26 @@ class MSPVirtualHeater(BOWMixin, BaseModel):
 
         # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
         # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
-        heater_equip_data = [op for op in data.get("Operation", {}) if "Heater-Equipment" in op]
-        if heater_equip_data:
-            self.heater_equipment = [MSPHeaterEquip.parse_obj(equip["Heater-Equipment"]) for equip in heater_equip_data]
+        heater_equip_data = [op for op in data.get("Operation", {}) if OmniType.HEATER_EQUIP in op][0]
+        self.heater_equipment = [MSPHeaterEquip.parse_obj(equip) for equip in heater_equip_data[OmniType.HEATER_EQUIP]]
 
 
-class MSPBoW(BOWMixin, OmniBase):
+class MSPColorLogicLight(OmniBase):
+    omni_type: OmniType = OmniType.CL_LIGHT
+    type: ColorLogicLightType = Field(alias="Type")
+    v2_active: Literal["yes", "no"] = Field(alias="V2-Active")
+
+
+class MSPBoW(OmniBase):
+    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light"}
+
+    omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType = Field(alias="Type")
     filter: list[MSPFilter] | None = Field(alias="Filter")
     relay: list[MSPRelay] | None = Field(alias="Relay")
     heater: MSPVirtualHeater | None = Field(alias="Heater")
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
+    colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
@@ -113,19 +160,24 @@ class MSPBoW(BOWMixin, OmniBase):
 
 
 class MSPBackyard(OmniBase):
+    _sub_devices = {"sensor", "bow"}
+
+    omni_type: OmniType = OmniType.BACKYARD
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
     bow: list[MSPBoW] | None = Field(alias="Body-of-water")
 
 
-class MSPSchedule(BaseModel):
+class MSPSchedule(OmniBase):
+    omni_type: OmniType = OmniType.SCHEDULE
     system_id: int = Field(alias="schedule-system-id")
     bow_id: int = Field(alias="bow-system-id")
     equipment_id: int = Field(alias="equipment-id")
     enabled: bool = Field()
 
-    def __init__(self, **data: Any) -> None:
-        print(data)
-        super().__init__(**data)
+
+MSPConfigType: TypeAlias = (
+    MSPSystem | MSPSchedule | MSPBackyard | MSPBoW | MSPVirtualHeater | MSPHeaterEquip | MSPRelay | MSPFilter | MSPSensor
+)
 
 
 class MSPConfig(BaseModel):
@@ -141,16 +193,17 @@ class MSPConfig(BaseModel):
             xml,
             # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
             # everything that *could* be a list into a list to make the parsing more consistent.
-            force_list=("Body-of-water", "Sensor", "Filter", "Relay", "sche", "Favorites", "Groups"),
+            force_list=(
+                OmniType.BOW_MSP,
+                OmniType.CHLORINATOR,
+                OmniType.CL_LIGHT,
+                OmniType.FAVORITES,
+                OmniType.FILTER,
+                OmniType.GROUPS,
+                OmniType.HEATER_EQUIP,
+                OmniType.RELAY,
+                OmniType.SENSOR,
+                OmniType.SCHE,
+            ),
         )
         return MSPConfig.parse_obj(data["MSPConfig"])
-
-    # def get_telem_by_systemid(self, system_id: int) -> TTelemetry | None:
-    #     for field_name, value in self:
-    #         if field_name == "version" or value is None:
-    #             continue
-    #         for model in value:
-    #             cast_model = cast(TTelemetry, model)
-    #             if cast_model.system_id == system_id:
-    #                 return cast_model
-    #     return None
