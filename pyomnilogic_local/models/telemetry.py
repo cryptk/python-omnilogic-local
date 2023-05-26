@@ -190,7 +190,13 @@ class Telemetry(BaseModel):
             ...
 
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
-            """Post process XML to attempt to convert values to int."""
+            """Post process XML to attempt to convert values to int.
+
+            Pydantic can coerce values natively, but the Omni API returns values as strings of numbers (I.E. "2", "5", etc) and we need them
+            coerced into int enums.  Pydantic only seems to be able to handle one coercion, so it could coerce an int into an Enum, but it
+            cannot coerce a string into an int and then into the Enum. We help it out a little bit here by pre-emptively coercing any
+            string ints into an int, then pydantic handles the int to enum coercion if necessary.
+            """
             newvalue: SupportsInt | Any
 
             try:
