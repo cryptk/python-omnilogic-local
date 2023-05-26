@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2023-05-26)
+### Feature
+* Add solar set point support, fixes #9 ([#10](https://github.com/cryptk/python-omnilogic-local/issues/10)) ([`4bb1951`](https://github.com/cryptk/python-omnilogic-local/commit/4bb1951f97248cf027329934964c7f66622054ab))
+
 ## v0.1.0 (2023-05-26)
 ### Feature
 * Fix pylint in pre-commit ([`cf8067e`](https://github.com/cryptk/python-omnilogic-local/commit/cf8067e8b62cc4de7c452135f96a7cf7be8815cb))
