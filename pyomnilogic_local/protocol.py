@@ -101,8 +101,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
             # If the message that we received was either a LEADMESSAGE or a BLOCK MESSAGE, lets put it back and return,
             # The Omni is continuing on with life, lets not be clingy for an ACK that was dropped and will never come
-            # We will put this new message back into the queue and stop waiting for our ACK
-            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_BLOCKMESSAGE}:
+            # We will put this new message back into the queue and stop waiting for our ACK.
+            # The set below should include any message types that may be sent immediately after the Omni sends us an ACK.
+            # Example is:
+            # Us > Omni: MessageType.REQUEST_CONFIGURATION
+            # Omni > Us: MessageType.ACK
+            # Omni > Us: MessageType.MSP_LEADMESSAGE  <--- Sent immediately after an ACK
+            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
                 _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
                 await self.data_queue.put(message)
                 break
