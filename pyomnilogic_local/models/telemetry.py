@@ -15,6 +15,7 @@ from ..types import (
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
+    HeaterMode,
     HeaterState,
     OmniType,
     PumpState,
@@ -138,7 +139,7 @@ class TelemetryVirtualHeater(BaseModel):
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
     solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: int = Field(alias="@Mode")
+    mode: HeaterMode = Field(alias="@Mode")
     silent_mode: int = Field(alias="@SilentMode")
     why_on: int = Field(alias="@whyHeaterIsOn")
 
@@ -190,7 +191,13 @@ class Telemetry(BaseModel):
             ...
 
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
-            """Post process XML to attempt to convert values to int."""
+            """Post process XML to attempt to convert values to int.
+
+            Pydantic can coerce values natively, but the Omni API returns values as strings of numbers (I.E. "2", "5", etc) and we need them
+            coerced into int enums.  Pydantic only seems to be able to handle one coercion, so it could coerce an int into an Enum, but it
+            cannot coerce a string into an int and then into the Enum. We help it out a little bit here by pre-emptively coercing any
+            string ints into an int, then pydantic handles the int to enum coercion if necessary.
+            """
             newvalue: SupportsInt | Any
 
             try:

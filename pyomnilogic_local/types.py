@@ -11,6 +11,7 @@ class MessageType(Enum):
     SET_HEATER_COMMAND = 11
     REQUEST_LOG_CONFIG = 31
     SET_SOLAR_SET_POINT_COMMAND = 40
+    SET_HEATER_MODE_COMMAND = 42
     SET_HEATER_ENABLED = 147
     SET_EQUIPMENT = 164
     CREATE_SCHEDULE = 230
@@ -224,6 +225,12 @@ class HeaterType(str, PrettyEnum):
     SMART = "HTR_SMART"
 
 
+class HeaterMode(PrettyEnum):
+    HEAT = 0
+    COOL = 1
+    AUTO = 2
+
+
 class PumpState(PrettyEnum):
     OFF = 0
     ON = 1
@@ -277,6 +284,7 @@ class SensorType(str, PrettyEnum):
     SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
     WATER_TEMP = "SENSOR_WATER_TEMP"
     FLOW = "SENSOR_FLOW"
+    EXT_INPUT = "SENSOR_EXT_INPUT"
 
 
 class SensorUnits(str, PrettyEnum):
@@ -286,6 +294,7 @@ class SensorUnits(str, PrettyEnum):
     GRAMS_PER_LITER = "UNITS_GRAMS_PER_LITER"
     MILLIVOLTS = "UNITS_MILLIVOLTS"
     NO_UNITS = "UNITS_NO_UNITS"
+    ACTIVE_INACTIVE = "UNITS_ACTIVE_INACTIVE"
 
 
 class ValveActuatorState(PrettyEnum):

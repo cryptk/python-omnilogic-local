@@ -72,6 +72,11 @@ async def async_main() -> None:
     # Adjust solar heater set point
     # await omni.async_set_solar_heater(POOL_ID, HEATER_EQUIPMENT_ID, 90, "F")
 
+    # Set the heater to heat/cool/auto
+    # await omni.async_set_heater_mode(POOL_ID, HEATER_EQUIPMENT_ID, HeaterMode.HEAT)
+    # await omni.async_set_heater_mode(POOL_ID, HEATER_EQUIPMENT_ID, HeaterMode.COOL)
+    # await omni.async_set_heater_mode(POOL_ID, HEATER_EQUIPMENT_ID, HeaterMode.AUTO)
+
     # Turn a variable speed pump on to 50%
     # await omni.async_set_filter_speed(POOL_ID, PUMP_EQUIPMENT_ID, 50)
     # Turn the pump off

@@ -111,7 +111,7 @@ class MSPHeaterEquip(OmniBase):
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")
-    supports_cooling: Literal["yes", "no"] = Field(alias="SupportsCooling")
+    supports_cooling: Literal["yes", "no"] | None = Field(alias="SupportsCooling")
 
 
 # This is the entry for the VirtualHeater, it does not use OmniBase because it has no name attribute
@@ -121,7 +121,7 @@ class MSPVirtualHeater(OmniBase):
     omni_type: OmniType = OmniType.VIRT_HEATER
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     set_point: int = Field(alias="Current-Set-Point")
-    solar_set_point: int = Field(alias="SolarSetPoint")
+    solar_set_point: int | None = Field(alias="SolarSetPoint")
     max_temp: int = Field(alias="Max-Settable-Water-Temp")
     min_temp: int = Field(alias="Min-Settable-Water-Temp")
     heater_equipment: list[MSPHeaterEquip] | None
