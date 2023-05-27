@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.3 (2023-05-27)
+### Fix
+* Dropped acks when requesting config/telem throwing us into a death loop ([#15](https://github.com/cryptk/python-omnilogic-local/issues/15)) ([`4a4b51d`](https://github.com/cryptk/python-omnilogic-local/commit/4a4b51d76350b747464153b9f95041facc9e2a8f))
+
 ## v0.3.2 (2023-05-27)
 ### Fix
 * Don't propagate bow_id to devices that don't exist ([#14](https://github.com/cryptk/python-omnilogic-local/issues/14)) ([`f6e518f`](https://github.com/cryptk/python-omnilogic-local/commit/f6e518ff809bbec93ec18ffa7b834e88d5e59d99))
