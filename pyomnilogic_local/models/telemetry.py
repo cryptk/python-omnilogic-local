@@ -69,7 +69,7 @@ class TelemetryChlorinator(BaseModel):
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int = Field(alias="@Timed-Percent")
     operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
-    enable: bool
+    enable: bool = Field(alias="@enable")
 
 
 class TelemetryColorLogicLight(BaseModel):
