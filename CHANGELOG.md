@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.4 (2023-05-27)
+### Fix
+* Add MessageType.MSP_TELEMETRY_UPDATE to _wait_for_ack to prevent deathloops ([#16](https://github.com/cryptk/python-omnilogic-local/issues/16)) ([`8a65727`](https://github.com/cryptk/python-omnilogic-local/commit/8a6572768df1a6b2fa006b74c67825f68cdc579d))
+
 ## v0.3.3 (2023-05-27)
 ### Fix
 * Dropped acks when requesting config/telem throwing us into a death loop ([#15](https://github.com/cryptk/python-omnilogic-local/issues/15)) ([`4a4b51d`](https://github.com/cryptk/python-omnilogic-local/commit/4a4b51d76350b747464153b9f95041facc9e2a8f))
