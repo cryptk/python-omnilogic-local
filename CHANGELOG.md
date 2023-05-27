@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2023-05-27)
+### Feature
+* More functionality ([#12](https://github.com/cryptk/python-omnilogic-local/issues/12)) ([`20c4fa1`](https://github.com/cryptk/python-omnilogic-local/commit/20c4fa1e494b932259aff1592ea123baf5a4ea93))
+
 ## v0.2.1 (2023-05-26)
 ### Fix
 * Correct message types for setting heater and solar temperature ([#11](https://github.com/cryptk/python-omnilogic-local/issues/11)) ([`361d6b7`](https://github.com/cryptk/python-omnilogic-local/commit/361d6b7971168d35174719d84fa196471eeb3078))
