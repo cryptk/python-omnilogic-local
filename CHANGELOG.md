@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.2 (2023-05-27)
+### Fix
+* Don't propagate bow_id to devices that don't exist ([#14](https://github.com/cryptk/python-omnilogic-local/issues/14)) ([`f6e518f`](https://github.com/cryptk/python-omnilogic-local/commit/f6e518ff809bbec93ec18ffa7b834e88d5e59d99))
+
 ## v0.3.1 (2023-05-27)
 ### Fix
 * Chlorinator telemetry enable parsing ([#13](https://github.com/cryptk/python-omnilogic-local/issues/13)) ([`4efd0d8`](https://github.com/cryptk/python-omnilogic-local/commit/4efd0d89f873cf8fad97f849f29df59fa892e395))
