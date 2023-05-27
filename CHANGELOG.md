@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (2023-05-27)
+### Fix
+* Chlorinator telemetry enable parsing ([#13](https://github.com/cryptk/python-omnilogic-local/issues/13)) ([`4efd0d8`](https://github.com/cryptk/python-omnilogic-local/commit/4efd0d89f873cf8fad97f849f29df59fa892e395))
+
 ## v0.3.0 (2023-05-27)
 ### Feature
 * More functionality ([#12](https://github.com/cryptk/python-omnilogic-local/issues/12)) ([`20c4fa1`](https://github.com/cryptk/python-omnilogic-local/commit/20c4fa1e494b932259aff1592ea123baf5a4ea93))
