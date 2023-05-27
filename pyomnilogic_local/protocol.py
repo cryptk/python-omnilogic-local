@@ -98,8 +98,16 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     async def _wait_for_ack(self, ack_id: int) -> None:
         message = await self.data_queue.get()
         while message.id != ack_id:
-            _LOGGER.debug("We received a message that is not our ACK, lets put it back")
-            await self.data_queue.put(message)
+            _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
+            # If the message that we received was either a LEADMESSAGE or a BLOCK MESSAGE, lets put it back and return,
+            # The Omni is continuing on with life, lets not be clingy for an ACK that was dropped and will never come
+            # We will put this new message back into the queue and stop waiting for our ACK
+            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_BLOCKMESSAGE}:
+                _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
+                await self.data_queue.put(message)
+                break
+            # In theory, we should never get to this spot, but it's mostly here to cause the code to wait forever so that asyncio will
+            # eventually time out waiting for it, that way we can deal with the dropped packets
             message = await self.data_queue.get()
 
     async def _ensure_sent(self, message: OmniLogicMessage) -> None:
@@ -113,7 +121,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
             # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
             try:
-                await asyncio.wait_for(self._wait_for_ack(message.id), 1)
+                await asyncio.wait_for(self._wait_for_ack(message.id), 0.25)
                 delivered = True
             except TimeoutError:
                 _LOGGER.debug("ACK not received, re-attempting delivery")
