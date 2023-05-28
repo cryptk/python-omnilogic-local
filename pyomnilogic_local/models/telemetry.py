@@ -45,7 +45,7 @@ class TelemetryBackyard(BaseModel):
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
     air_temp: int = Field(alias="@airTemp")
-    state: BackyardState = Field(alias="@state")
+    state: BackyardState | int = Field(alias="@state")
     config_checksum: int = Field(alias="@ConfigChksum")
     msp_version: str = Field(alias="@mspVersion")
 
@@ -68,27 +68,27 @@ class TelemetryChlorinator(BaseModel):
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int = Field(alias="@Timed-Percent")
-    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
+    operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
 
 class TelemetryColorLogicLight(BaseModel):
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
-    state: ColorLogicPowerState = Field(alias="@lightState")
-    show: ColorLogicShow = Field(alias="@currentShow")
-    speed: ColorLogicSpeed = Field(alias="@speed")
-    brightness: ColorLogicBrightness = Field(alias="@brightness")
+    state: ColorLogicPowerState | int = Field(alias="@lightState")
+    show: ColorLogicShow | int = Field(alias="@currentShow")
+    speed: ColorLogicSpeed | int = Field(alias="@speed")
+    brightness: ColorLogicBrightness | int = Field(alias="@brightness")
     special_effect: int = Field(alias="@specialEffect")
 
 
 class TelemetryFilter(BaseModel):
     omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
-    state: FilterState = Field(alias="@filterState")
+    state: FilterState | int = Field(alias="@filterState")
     speed: int = Field(alias="@filterSpeed")
-    valve_position: FilterValvePosition = Field(alias="@valvePosition")
-    why_on: FilterWhyOn = Field(alias="@whyFilterIsOn")
+    valve_position: FilterValvePosition | int = Field(alias="@valvePosition")
+    why_on: FilterWhyOn | int = Field(alias="@whyFilterIsOn")
     reported_speed: int = Field(alias="@reportedFilterSpeed")
     power: int = Field(alias="@power")
     last_speed: int = Field(alias="@lastSpeed")
@@ -103,7 +103,7 @@ class TelemetryGroup(BaseModel):
 class TelemetryHeater(BaseModel):
     omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
-    state: HeaterState = Field(alias="@heaterState")
+    state: HeaterState | int = Field(alias="@heaterState")
     temp: int = Field(alias="@temp")
     enabled: bool = Field(alias="@enable")
     priority: int = Field(alias="@priority")
@@ -113,7 +113,7 @@ class TelemetryHeater(BaseModel):
 class TelemetryPump(BaseModel):
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
-    state: PumpState = Field(alias="@pumpState")
+    state: PumpState | int = Field(alias="@pumpState")
     speed: int = Field(alias="@pummpSpeed")
     last_speed: int = Field(alias="@lastSpeed")
     why_on: int = Field(alias="@whyOn")
@@ -122,14 +122,14 @@ class TelemetryPump(BaseModel):
 class TelemetryRelay(BaseModel):
     omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
-    state: RelayState = Field(alias="@relayState")
+    state: RelayState | int = Field(alias="@relayState")
     why_on: int = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
-    state: ValveActuatorState = Field(alias="@valveActuatorState")
+    state: ValveActuatorState | int = Field(alias="@valveActuatorState")
     why_on: int = Field(alias="@whyOn")
 
 
@@ -139,7 +139,7 @@ class TelemetryVirtualHeater(BaseModel):
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
     solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: HeaterMode = Field(alias="@Mode")
+    mode: HeaterMode | int = Field(alias="@Mode")
     silent_mode: int = Field(alias="@SilentMode")
     why_on: int = Field(alias="@whyHeaterIsOn")
 
