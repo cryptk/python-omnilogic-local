@@ -67,13 +67,13 @@ class MSPSystem(BaseModel):
 
 class MSPSensor(OmniBase):
     omni_type: OmniType = OmniType.SENSOR
-    type: SensorType = Field(alias="Type")
-    units: SensorUnits = Field(alias="Units")
+    type: SensorType | str = Field(alias="Type")
+    units: SensorUnits | str = Field(alias="Units")
 
 
 class MSPFilter(OmniBase):
     omni_type: OmniType = OmniType.FILTER
-    type: FilterType = Field(alias="Filter-Type")
+    type: FilterType | str = Field(alias="Filter-Type")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
@@ -87,8 +87,8 @@ class MSPFilter(OmniBase):
 
 class MSPPump(OmniBase):
     omni_type: OmniType = OmniType.PUMP
-    type: PumpType = Field(alias="Type")
-    function: PumpFunction = Field(alias="Function")
+    type: PumpType | str = Field(alias="Type")
+    function: PumpFunction | str = Field(alias="Function")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
@@ -102,14 +102,14 @@ class MSPPump(OmniBase):
 
 class MSPRelay(OmniBase):
     omni_type: OmniType = OmniType.RELAY
-    type: RelayType = Field(alias="Type")
-    function: RelayFunction = Field(alias="Function")
+    type: RelayType | str = Field(alias="Type")
+    function: RelayFunction | str = Field(alias="Function")
 
 
 class MSPHeaterEquip(OmniBase):
     omni_type: OmniType = OmniType.HEATER_EQUIP
     type: Literal["PET_HEATER"] = Field(alias="Type")
-    heater_type: HeaterType = Field(alias="Heater-Type")
+    heater_type: HeaterType | str = Field(alias="Heater-Type")
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")
@@ -139,7 +139,7 @@ class MSPVirtualHeater(OmniBase):
 
 class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
-    type: ColorLogicLightType = Field(alias="Type")
+    type: ColorLogicLightType | str = Field(alias="Type")
     v2_active: Literal["yes", "no"] = Field(alias="V2-Active")
 
 
@@ -147,7 +147,7 @@ class MSPBoW(OmniBase):
     _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light"}
 
     omni_type: OmniType = OmniType.BOW
-    type: BodyOfWaterType = Field(alias="Type")
+    type: BodyOfWaterType | str = Field(alias="Type")
     filter: list[MSPFilter] | None = Field(alias="Filter")
     relay: list[MSPRelay] | None = Field(alias="Relay")
     heater: MSPVirtualHeater | None = Field(alias="Heater")
