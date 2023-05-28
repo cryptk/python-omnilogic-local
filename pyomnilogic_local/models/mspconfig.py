@@ -167,6 +167,7 @@ class MSPBackyard(OmniBase):
     omni_type: OmniType = OmniType.BACKYARD
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
     bow: list[MSPBoW] | None = Field(alias="Body-of-water")
+    relay: list[MSPRelay] | None = Field(alias="Relay")
 
 
 class MSPSchedule(OmniBase):
