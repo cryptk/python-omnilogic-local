@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.1 (2023-05-28)
+### Fix
+* Allow pydantic to fall back to int/str if value is not in an Enum ([#18](https://github.com/cryptk/python-omnilogic-local/issues/18)) ([`9db06b4`](https://github.com/cryptk/python-omnilogic-local/commit/9db06b4828e2623cba191c80c73ff3f7bd0804df))
+
 ## v0.4.0 (2023-05-28)
 ### Feature
 * Add support for relays attached to backyards ([#17](https://github.com/cryptk/python-omnilogic-local/issues/17)) ([`2275ce9`](https://github.com/cryptk/python-omnilogic-local/commit/2275ce9d2920294d3873ca8326bd6ca49c8a1c0a))
