@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-05-28)
+### Feature
+* Add support for relays attached to backyards ([#17](https://github.com/cryptk/python-omnilogic-local/issues/17)) ([`2275ce9`](https://github.com/cryptk/python-omnilogic-local/commit/2275ce9d2920294d3873ca8326bd6ca49c8a1c0a))
+
 ## v0.3.4 (2023-05-27)
 ### Fix
 * Add MessageType.MSP_TELEMETRY_UPDATE to _wait_for_ack to prevent deathloops ([#16](https://github.com/cryptk/python-omnilogic-local/issues/16)) ([`8a65727`](https://github.com/cryptk/python-omnilogic-local/commit/8a6572768df1a6b2fa006b74c67825f68cdc579d))
