@@ -38,6 +38,16 @@ class OmniLogicAPI:
         ...
 
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
+        """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
+
+        Args:
+            message_type (MessageType): A selection from MessageType indicating what type of communication you are sending
+            message (str | None): The XML body of the message to deliver
+            need_response (bool, optional): Should a response be received and returned to the caller. Defaults to False.
+
+        Returns:
+            str | None: The response body sent from the Omni if need_response indicates that a response will be sent
+        """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=(self.controller_ip, self.controller_port))
 
@@ -53,6 +63,11 @@ class OmniLogicAPI:
         return resp
 
     async def async_get_alarm_list(self) -> str:
+        """Retrieve a list of alarms from the Omni.
+
+        Returns:
+            str: An XML body indicating any alarms that are present
+        """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -64,6 +79,14 @@ class OmniLogicAPI:
 
     @to_pydantic(pydantic_type=MSPConfig)
     async def async_get_config(self) -> str:
+        """Retrieve the MSPConfig from the Omni, optionally parse it into a pydantic model.
+
+        Args:
+            raw (bool): Do not parse the response into a Pydantic model, just return the raw XML. Defaults to False.
+
+        Returns:
+            MSPConfig|str: Either a parsed .models.mspconfig.MSPConfig object or a str depending on arg raw
+        """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -75,14 +98,14 @@ class OmniLogicAPI:
 
     @to_pydantic(pydantic_type=FilterDiagnostics)
     async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int) -> str:
-        """async_get_filter_diagnostics handles sending a GetUIFilterDiagnosticInfo XML API call to the Hayward Omni pool controller
+        """Retrieve filter diagnostics from the Omni, optionally parse it into a pydantic model.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
 
         Returns:
-            _type_: _description_
+            FilterDiagnostics|str: Either a parsed .models.mspconfig.FilterDiagnostics object or a str depending on arg raw
         """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
@@ -100,10 +123,20 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
 
     async def async_get_log_config(self) -> str:
+        """Retrieve the logging configuration from the Omni.
+
+        Returns:
+            str: An XML body describing the logging configuration
+        """
         return await self.async_send_message(MessageType.REQUEST_LOG_CONFIG, None, True)
 
     @to_pydantic(pydantic_type=Telemetry)
     async def async_get_telemetry(self) -> str:
+        """Retrieve the current telemetry data from the Omni, optionally parse it into a pydantic model.
+
+        Returns:
+            Telemetry|str: Either a parsed .models.telemetry.Telemetry object or a str depending on arg raw
+        """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -114,7 +147,7 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
 
     async def async_set_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
-        """async_set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
+        """Set the temperature for a heater on the Omni
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -123,7 +156,7 @@ class OmniLogicAPI:
             unit (str): The temperature unit to use (either F or C)
 
         Returns:
-            _type_: _description_
+            None
         """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
@@ -143,7 +176,7 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
     async def async_set_solar_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
-        """async_set_heater handles sending a SetUIHeaterCmd XML API call to the Hayward Omni pool controller
+        """Set the solar set point for a heater on the Omni.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -152,7 +185,7 @@ class OmniLogicAPI:
             unit (str): The temperature unit to use (either F or C)
 
         Returns:
-            _type_: _description_
+            None
         """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
@@ -172,15 +205,15 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
     async def async_set_heater_mode(self, pool_id: int, equipment_id: int, mode: HeaterMode) -> None:
-        """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
+        """Set what mode (Heat/Cool/Auto) the heater should use.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
-            enabled (bool, optional): Turn the heater on (True) or off (False)
+            mode (HeaterMode): What mode should the heater operate under
 
         Returns:
-            _type_: _description_
+            None
         """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
@@ -240,13 +273,14 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ) -> None:
-        """async_set_equipment handles sending a SetUIEquipmentCmd XML API call to the Hayward Omni pool controller
+        """Control a piece of equipment, turning it on/off or setting a value (E.g.: filter speed), optionally scheduling it.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
             is_on (Union[int,bool]): For most equipment items, True/False to turn on/off.
                 For Variable Speed Pumps, you can optionally provide an int from 0-100 to set the speed percentage with 0 being Off.
+                The interpretation of value depends on the piece of equipment being targeted.
             is_countdown_timer (bool, optional): For potential future use, included to be "API complete". Defaults to False.
             startTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
             startTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
@@ -265,7 +299,7 @@ class OmniLogicAPI:
         parameter.text = str(pool_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="equipmentId", dataType="int")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="isOn", dataType="int")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="isOn", dataType="int", alias="Data")
         parameter.text = str(int(is_on))
         parameter = ET.SubElement(parameters_element, "Parameter", name="IsCountDownTimer", dataType="bool")
         parameter.text = str(int(is_countdown_timer))
@@ -287,7 +321,7 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
 
     async def async_set_filter_speed(self, pool_id: int, equipment_id: int, speed: int) -> None:
-        """async_set_filter_speed handles sending a SetUIFilterSpeedCmd XML API call to the Hayward Omni pool controller
+        """Set the speed for a variable speed filter/pump.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -328,7 +362,7 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ) -> None:
-        """async_set_light_show handles sending a SetStandAloneLightShow XML API call to the Hayward Omni pool controller
+        """Set the desired light show/speed/brightness for a ColorLogic light.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address

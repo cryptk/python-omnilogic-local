@@ -49,14 +49,14 @@ async def async_main() -> None:
     # b2=chr(diags.get_param_by_name("DisplayFWRevisionB2"))
     # b3=chr(diags.get_param_by_name("DisplayFWRevisionB3"))
     # b4=chr(diags.get_param_by_name("DisplayFWRevisionB4"))
-    # # b5 and b6 are whitespace and a null terminator
-    # # b5=chr(diags.get_param_by_name("DisplayFWRevisionB5"))
-    # # b6=chr(diags.get_param_by_name("DisplayFWRevisionB6"))
+    # b5 and b6 are whitespace and a null terminator
+    # b5=chr(diags.get_param_by_name("DisplayFWRevisionB5"))
+    # b6=chr(diags.get_param_by_name("DisplayFWRevisionB6"))
     # print(f"{b1}{b2}.{b3}.{b4}")
-    # # Decode the filter power consumption (don't do this, it's returned already decoded in the telemetry)
+    # Decode the filter power consumption (don't do this, it's returned already decoded in the telemetry)
     # p1=diags.get_param_by_name("PowerMSB")
     # p2=diags.get_param_by_name("PowerLSB")
-    # # The f-string below converts the bytes to hex and displays them.  Just get this value from the telemetry, it's easier
+    # The f-string below converts the bytes to hex and displays them.  Just get this value from the telemetry, it's easier
     # print(f"{p1:x}{p2:x}")
 
     # Fetch logging configuration
