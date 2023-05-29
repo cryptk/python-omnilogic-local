@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.2 (2023-05-29)
+### Fix
+* Mark v2_active field on CL lights as optional ([#21](https://github.com/cryptk/python-omnilogic-local/issues/21)) ([`fa46542`](https://github.com/cryptk/python-omnilogic-local/commit/fa4654289681e90d22fe33f32ff5c90e23a932e4))
+
+### Documentation
+* Improve lots of docstrings ([#19](https://github.com/cryptk/python-omnilogic-local/issues/19)) ([`03cc05c`](https://github.com/cryptk/python-omnilogic-local/commit/03cc05c6c521f6e734d86fc10aee5667a9f77c4e))
+
 ## v0.4.1 (2023-05-28)
 ### Fix
 * Allow pydantic to fall back to int/str if value is not in an Enum ([#18](https://github.com/cryptk/python-omnilogic-local/issues/18)) ([`9db06b4`](https://github.com/cryptk/python-omnilogic-local/commit/9db06b4828e2623cba191c80c73ff3f7bd0804df))
