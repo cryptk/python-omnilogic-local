@@ -140,7 +140,7 @@ class MSPVirtualHeater(OmniBase):
 class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
     type: ColorLogicLightType | str = Field(alias="Type")
-    v2_active: Literal["yes", "no"] = Field(alias="V2-Active")
+    v2_active: Literal["yes", "no"] | None = Field(alias="V2-Active")
 
 
 class MSPBoW(OmniBase):
