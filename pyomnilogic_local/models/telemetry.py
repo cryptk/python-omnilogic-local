@@ -5,6 +5,7 @@ from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 from pydantic import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
+from ..exceptions import OmniParsingException
 from ..types import (
     BackyardState,
     ChlorinatorOperatingMode,
@@ -17,7 +18,6 @@ from ..types import (
     FilterWhyOn,
     HeaterMode,
     HeaterState,
-    OmniParsingException,
     OmniType,
     PumpState,
     RelayState,
@@ -47,8 +47,9 @@ class TelemetryBackyard(BaseModel):
     status_version: int = Field(alias="@statusVersion")
     air_temp: int = Field(alias="@airTemp")
     state: BackyardState | int = Field(alias="@state")
-    config_checksum: int = Field(alias="@ConfigChksum")
-    msp_version: str = Field(alias="@mspVersion")
+    # The below two fields are only available for telemetry with a status_version >= 11
+    config_checksum: int | None = Field(alias="@ConfigChksum")
+    msp_version: str | None = Field(alias="@mspVersion")
 
 
 class TelemetryBoW(BaseModel):
@@ -115,7 +116,7 @@ class TelemetryPump(BaseModel):
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
     state: PumpState | int = Field(alias="@pumpState")
-    speed: int = Field(alias="@pummpSpeed")
+    speed: int = Field(alias="@pumpSpeed")
     last_speed: int = Field(alias="@lastSpeed")
     why_on: int = Field(alias="@whyOn")
 
@@ -225,6 +226,7 @@ class Telemetry(BaseModel):
                 OmniType.PUMP,
                 OmniType.RELAY,
                 OmniType.VALVE_ACTUATOR,
+                OmniType.VIRT_HEATER,
             ),
         )
         try:

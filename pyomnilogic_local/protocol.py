@@ -9,8 +9,9 @@ import zlib
 
 from typing_extensions import Self
 
+from .exceptions import OmniTimeoutException
 from .models.leadmessage import LeadMessage
-from .types import ClientType, MessageType, OmniTimeoutException
+from .types import ClientType, MessageType
 
 _LOGGER = logging.getLogger(__name__)
 

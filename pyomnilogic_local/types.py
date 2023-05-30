@@ -121,7 +121,7 @@ class ColorLogicShow(PrettyEnum):
     USA = 14
     MARDI_GRAS = 15
     COOL_CABARET = 16
-    #### THESE SHOW IN THE APP AFTER SETTING, BUT MAY NOT MATCH ALL LIGHTS
+    #### The below options only work on lights that support OmniDirect / V2-Active in MSPConfig
     YELLOW = 17
     ORANGE = 18
     GOLD = 19
@@ -300,15 +300,3 @@ class SensorUnits(str, PrettyEnum):
 class ValveActuatorState(PrettyEnum):
     OFF = 0
     ON = 1
-
-
-class OmniLogicException(Exception):
-    pass
-
-
-class OmniTimeoutException(OmniLogicException):
-    pass
-
-
-class OmniParsingException(OmniLogicException):
-    pass

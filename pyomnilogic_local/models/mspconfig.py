@@ -4,20 +4,19 @@ import logging
 import sys
 from typing import Any, Literal, TypeAlias
 
-from ..types import OmniParsingException
-
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-
 from pydantic import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
+from ..exceptions import OmniParsingException
 from ..types import (
     BodyOfWaterType,
     ColorLogicLightType,
+    ColorLogicShow,
     FilterType,
     HeaterType,
     OmniType,
@@ -143,6 +142,11 @@ class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
     type: ColorLogicLightType | str = Field(alias="Type")
     v2_active: Literal["yes", "no"] | None = Field(alias="V2-Active")
+    effects: list[ColorLogicShow] | None
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self.effects = list(ColorLogicShow) if self.v2_active == "yes" else [show for show in ColorLogicShow if show.value <= 16]
 
 
 class MSPBoW(OmniBase):
