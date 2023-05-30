@@ -4,13 +4,15 @@ import logging
 import sys
 from typing import Any, Literal, TypeAlias
 
+from ..types import OmniParsingException
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..types import (
@@ -209,4 +211,7 @@ class MSPConfig(BaseModel):
                 OmniType.SCHE,
             ),
         )
-        return MSPConfig.parse_obj(data["MSPConfig"])
+        try:
+            return MSPConfig.parse_obj(data["MSPConfig"])
+        except ValidationError as exc:
+            raise OmniParsingException(f"Failed to parse MSP Configuration: {exc}") from exc
