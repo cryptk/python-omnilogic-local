@@ -10,7 +10,7 @@ import zlib
 from typing_extensions import Self
 
 from .models.leadmessage import LeadMessage
-from .types import ClientType, MessageType
+from .types import ClientType, MessageType, OmniTimeoutException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ class OmniLogicMessage:
     client_type: ClientType = ClientType.SIMPLE
     version: str = "1.19"
     timestamp: int | None
-    reserved_1: int
-    compressed: int
-    reserved_2: int
+    reserved_1: int = 0
+    compressed: int = 0
+    reserved_2: int = 0
 
     def __init__(self, msg_id: int, msg_type: MessageType, payload: str | None = None, version: str = "1.19") -> None:
         self.id = msg_id
@@ -52,6 +52,11 @@ class OmniLogicMessage:
         )
         return header + self.payload
 
+    def __repr__(self) -> str:
+        if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
+            return f"ID: {self.id}, Type: {self.type}, Compressed: {self.compressed}"
+        return f"ID: {self.id}, Type: {self.type}, Compressed: {self.compressed}, Body: {self.payload[:-1].decode('utf-8')}"
+
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
         # split the header and data
@@ -73,6 +78,10 @@ class OmniLogicMessage:
 
 class OmniLogicProtocol(asyncio.DatagramProtocol):
     transport: asyncio.DatagramTransport
+    # The omni will re-transmit a packet every 2 seconds if it does not receive an ACK.  We pad that just a touch to be safe
+    _omni_retransmit_time = 2.1
+    # The omni will re-transmit 5 times (a total of 6 attempts including the initial) if it does not receive an ACK
+    _omni_retransmit_count = 5
 
     def __init__(self) -> None:
         self.data_queue = asyncio.Queue[OmniLogicMessage]()
@@ -86,10 +95,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
         message = OmniLogicMessage.from_bytes(data)
-        if message.compressed:
-            _LOGGER.debug("Received compressed message ID: %s, Type: %s", message.id, message.type)
-        else:
-            _LOGGER.debug("Received Message ID: %s, Type: %s", message.id, message.type)
+        _LOGGER.debug("Received Message %s", str(message))
         self.data_queue.put_nowait(message)
 
     def error_received(self, exc: Exception) -> None:
@@ -115,9 +121,8 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # eventually time out waiting for it, that way we can deal with the dropped packets
             message = await self.data_queue.get()
 
-    async def _ensure_sent(self, message: OmniLogicMessage) -> None:
-        delivered = False
-        while not delivered:
+    async def _ensure_sent(self, message: OmniLogicMessage, max_attempts: int = 5) -> None:
+        for attempt in range(0, max_attempts):
             self.transport.sendto(bytes(message))
 
             # If the message that we just sent is an ACK, we do not need to wait to receive an ACK, we are done
@@ -127,9 +132,12 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
             try:
                 await asyncio.wait_for(self._wait_for_ack(message.id), 0.25)
-                delivered = True
-            except TimeoutError:
-                _LOGGER.debug("ACK not received, re-attempting delivery")
+                return
+            except TimeoutError as exc:
+                if attempt < 4:
+                    _LOGGER.debug("ACK not received, re-attempting delivery")
+                else:
+                    raise OmniTimeoutException("Failed to receive acknowledgement of command, max retries exceeded") from exc
 
     async def send_and_receive(self, msg_type: MessageType, payload: str | None, msg_id: int | None = None) -> str:
         await self.send_message(msg_type, payload, msg_id)
@@ -141,9 +149,9 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         if not msg_id:
             msg_id = random.randrange(2**32)
 
-        _LOGGER.debug("Sending Message ID: %s, Message Type: %s, Request Body: %s", msg_id, msg_type.name, payload)
-
         message = OmniLogicMessage(msg_id, msg_type, payload)
+
+        _LOGGER.debug("Sending Message %s", str(message))
 
         await self._ensure_sent(message)
 
@@ -170,17 +178,27 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         if message.type == MessageType.MSP_LEADMESSAGE:
             leadmsg = LeadMessage.from_orm(ET.fromstring(message.payload[:-1]))
 
+            _LOGGER.debug("Will receive %s blockmessages", leadmsg.msg_block_count)
+
             # Wait for the block data data
             retval: bytes = b""
             # If we received a LeadMessage, continue to receive messages until we have all of our data
             # Fragments of data may arrive out of order, so we store them in a buffer as they arrive and sort them after
             data_fragments: dict[int, bytes] = {}
             while len(data_fragments) < leadmsg.msg_block_count:
-                resp = await self.data_queue.get()
+                # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
+                try:
+                    resp = await asyncio.wait_for(self.data_queue.get(), self._omni_retransmit_time * self._omni_retransmit_count)
+                except TimeoutError as exc:
+                    raise OmniTimeoutException from exc
+
                 # We only want to collect blockmessages here
                 if resp.type is not MessageType.MSP_BLOCKMESSAGE:
+                    _LOGGER.debug("Received a message other than a blockmessage: %s", resp.type)
                     continue
+
                 await self._send_ack(resp.id)
+
                 # remove an 8 byte header to get to the payload data
                 data_fragments[resp.id] = resp.payload[8:]
 

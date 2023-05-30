@@ -300,3 +300,15 @@ class SensorUnits(str, PrettyEnum):
 class ValveActuatorState(PrettyEnum):
     OFF = 0
     ON = 1
+
+
+class OmniLogicException(Exception):
+    pass
+
+
+class OmniTimeoutException(OmniLogicException):
+    pass
+
+
+class OmniParsingException(OmniLogicException):
+    pass

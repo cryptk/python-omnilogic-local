@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..types import (
@@ -17,6 +17,7 @@ from ..types import (
     FilterWhyOn,
     HeaterMode,
     HeaterState,
+    OmniParsingException,
     OmniType,
     PumpState,
     RelayState,
@@ -226,7 +227,10 @@ class Telemetry(BaseModel):
                 OmniType.VALVE_ACTUATOR,
             ),
         )
-        return Telemetry.parse_obj(data["STATUS"])
+        try:
+            return Telemetry.parse_obj(data["STATUS"])
+        except ValidationError as exc:
+            raise OmniParsingException(f"Failed to parse Telemetry: {exc}") from exc
 
     def get_telem_by_systemid(self, system_id: int) -> TelemetryType | None:
         for field_name, value in self:

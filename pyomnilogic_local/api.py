@@ -54,9 +54,9 @@ class OmniLogicAPI:
         resp: str | None = None
         try:
             if need_response:
-                resp = await asyncio.wait_for(protocol.send_and_receive(message_type, message), self.response_timeout)
+                resp = await protocol.send_and_receive(message_type, message)
             else:
-                await asyncio.wait_for(protocol.send_message(message_type, message), self.response_timeout)
+                await protocol.send_message(message_type, message)
         finally:
             transport.close()
 
