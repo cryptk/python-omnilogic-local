@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2023-05-30)
+### Feature
+* Improve logging and message retransmission behavior ([#24](https://github.com/cryptk/python-omnilogic-local/issues/24)) ([`2712c6d`](https://github.com/cryptk/python-omnilogic-local/commit/2712c6dd6102afec56d19ceddfdc81c9e69aa840))
+
 ## v0.4.2 (2023-05-29)
 ### Fix
 * Mark v2_active field on CL lights as optional ([#21](https://github.com/cryptk/python-omnilogic-local/issues/21)) ([`fa46542`](https://github.com/cryptk/python-omnilogic-local/commit/fa4654289681e90d22fe33f32ff5c90e23a932e4))
