@@ -173,7 +173,7 @@ class Telemetry(BaseModel):
     pump: list[TelemetryPump] | None = Field(alias="Pump")
     relay: list[TelemetryRelay] | None = Field(alias="Relay")
     valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator")
-    virtual_heater: TelemetryVirtualHeater | None = Field(alias="VirtualHeater")
+    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater")
 
     class Config:
         orm_mode = True
