@@ -5,6 +5,7 @@ from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 from pydantic import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
+from ..exceptions import OmniParsingException
 from ..types import (
     BackyardState,
     ChlorinatorOperatingMode,
@@ -17,7 +18,6 @@ from ..types import (
     FilterWhyOn,
     HeaterMode,
     HeaterState,
-    OmniParsingException,
     OmniType,
     PumpState,
     RelayState,
