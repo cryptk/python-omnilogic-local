@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.2 (2023-05-30)
+### Fix
+* Non-compressed, non-segmented responses were missing the first few characters ([#28](https://github.com/cryptk/python-omnilogic-local/issues/28)) ([`f1f6913`](https://github.com/cryptk/python-omnilogic-local/commit/f1f6913a322f97c059887ac5b9b9dd35abf2f928))
+
 ## v0.6.1 (2023-05-30)
 ### Fix
 * Virtual heaters are always a list now ([#27](https://github.com/cryptk/python-omnilogic-local/issues/27)) ([`f8df720`](https://github.com/cryptk/python-omnilogic-local/commit/f8df7200630d58fc2ccb3c868b2bc3ffaf8b07a4))
