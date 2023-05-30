@@ -212,7 +212,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             retval = message.payload
         # A short response, no LeadMessage and no compression...
         else:
-            retval = message.payload[8:]
+            retval = message.payload
 
         # Decompress the returned data if necessary
         if message.compressed:
