@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2023-05-30)
+### Feature
+* More improvements ([#26](https://github.com/cryptk/python-omnilogic-local/issues/26)) ([`62a4af4`](https://github.com/cryptk/python-omnilogic-local/commit/62a4af44ab5b7081d1d2c9ece9962305a98bd0a7))
+
 ## v0.5.1 (2023-05-30)
 ### Fix
 * Cleanup message logging, allow slightly longer for ACK timeout ([#25](https://github.com/cryptk/python-omnilogic-local/issues/25)) ([`68f5fdc`](https://github.com/cryptk/python-omnilogic-local/commit/68f5fdca080cca97723467a2537a1e38185078ea))
