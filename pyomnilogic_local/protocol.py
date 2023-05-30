@@ -54,8 +54,8 @@ class OmniLogicMessage:
 
     def __repr__(self) -> str:
         if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
-            return f"ID: {self.id}, Type: {self.type}, Compressed: {self.compressed}"
-        return f"ID: {self.id}, Type: {self.type}, Compressed: {self.compressed}, Body: {self.payload[:-1].decode('utf-8')}"
+            return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}"
+        return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Body: {self.payload[:-1].decode('utf-8')}"
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
@@ -131,7 +131,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
             # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
             try:
-                await asyncio.wait_for(self._wait_for_ack(message.id), 0.25)
+                await asyncio.wait_for(self._wait_for_ack(message.id), 0.5)
                 return
             except TimeoutError as exc:
                 if attempt < 4:
