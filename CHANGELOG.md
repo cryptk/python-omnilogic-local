@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.1 (2023-05-30)
+### Fix
+* Virtual heaters are always a list now ([#27](https://github.com/cryptk/python-omnilogic-local/issues/27)) ([`f8df720`](https://github.com/cryptk/python-omnilogic-local/commit/f8df7200630d58fc2ccb3c868b2bc3ffaf8b07a4))
+
 ## v0.6.0 (2023-05-30)
 ### Feature
 * More improvements ([#26](https://github.com/cryptk/python-omnilogic-local/issues/26)) ([`62a4af4`](https://github.com/cryptk/python-omnilogic-local/commit/62a4af44ab5b7081d1d2c9ece9962305a98bd0a7))
