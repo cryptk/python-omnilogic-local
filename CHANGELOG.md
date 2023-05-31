@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.0 (2023-05-31)
+### Feature
+* Some cleanup and initial work towards tests ([#30](https://github.com/cryptk/python-omnilogic-local/issues/30)) ([`37ff4a6`](https://github.com/cryptk/python-omnilogic-local/commit/37ff4a6f875c63ec6ede5dc2040e6bc68317b93e))
+
 ## v0.7.0 (2023-05-31)
 ### Feature
 * Add pump parsing to MSPConfig ([#29](https://github.com/cryptk/python-omnilogic-local/issues/29)) ([`4f54859`](https://github.com/cryptk/python-omnilogic-local/commit/4f54859fea32a21f346434846d23a4f6d5b99304))
