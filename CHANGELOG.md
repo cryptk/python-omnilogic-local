@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2023-05-31)
+### Feature
+* Add pump parsing to MSPConfig ([#29](https://github.com/cryptk/python-omnilogic-local/issues/29)) ([`4f54859`](https://github.com/cryptk/python-omnilogic-local/commit/4f54859fea32a21f346434846d23a4f6d5b99304))
+
 ## v0.6.2 (2023-05-30)
 ### Fix
 * Non-compressed, non-segmented responses were missing the first few characters ([#28](https://github.com/cryptk/python-omnilogic-local/issues/28)) ([`f1f6913`](https://github.com/cryptk/python-omnilogic-local/commit/f1f6913a322f97c059887ac5b9b9dd35abf2f928))
