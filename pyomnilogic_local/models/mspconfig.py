@@ -54,10 +54,9 @@ class OmniBase(BaseModel):
                     # ... then call propagate_bow_id on each of them ...
                     if device is not None:
                         device.propagate_bow_id(bow_id)
-            else:
-                # ... otherwise just call it on the single subdevice
-                if subdevice is not None:
-                    subdevice.propagate_bow_id(bow_id)
+            # ... otherwise just call it on the single subdevice
+            elif subdevice is not None:
+                subdevice.propagate_bow_id(bow_id)
 
 
 class MSPSystem(BaseModel):
