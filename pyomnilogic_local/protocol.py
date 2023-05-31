@@ -23,9 +23,9 @@ class OmniLogicMessage:
     payload: bytes
     client_type: ClientType = ClientType.SIMPLE
     version: str = "1.19"
-    timestamp: int | None
+    timestamp: int | None = int(time.time())
     reserved_1: int = 0
-    compressed: int = 0
+    compressed: bool = False
     reserved_2: int = 0
 
     def __init__(self, msg_id: int, msg_type: MessageType, payload: str | None = None, version: str = "1.19") -> None:
@@ -43,31 +43,34 @@ class OmniLogicMessage:
         header = struct.pack(
             self.header_format,
             self.id,  # Msg id
-            int(time.time_ns() / (10**9)),  # Timestamp
+            self.timestamp,
             bytes(self.version, "ascii"),  # version string
             self.type.value,  # OpID/msgType
             self.client_type.value,  # Client type
             0,  # reserved
-            0,  # compressed
+            self.compressed,  # compressed
             0,  # reserved
         )
         return header + self.payload
 
     def __repr__(self) -> str:
         if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
-            return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}"
-        return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Body: {self.payload[:-1].decode('utf-8')}"
+            return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}"
+        return (
+            f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}, "
+            f"Body: {self.payload[:-1].decode('utf-8')}"
+        )
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
         # split the header and data
-        header = data[0:24]
+        header = data[:24]
         rdata: bytes = data[24:]
 
         msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2 = struct.unpack(cls.header_format, header)
-        message = cls(msg_id=msg_id, msg_type=MessageType(msg_type), version=vers)
+        message = cls(msg_id=msg_id, msg_type=MessageType(msg_type), version=vers.decode("utf-8"))
         message.timestamp = tstamp
-        message.client_type = client_type
+        message.client_type = ClientType(int(client_type))
         message.reserved_1 = res1
         # There are some messages that are ALWAYS compressed although they do not return a 1 in their LeadMessage
         message.compressed = compressed == 1 or message.type in [MessageType.MSP_TELEMETRY_UPDATE]
@@ -176,7 +179,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self._send_ack(message.id)
 
         # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
-        if message.type == MessageType.MSP_LEADMESSAGE:
+        if message.type is MessageType.MSP_LEADMESSAGE:
             leadmsg = LeadMessage.from_orm(ET.fromstring(message.payload[:-1]))
 
             _LOGGER.debug("Will receive %s blockmessages", leadmsg.msg_block_count)
@@ -207,10 +210,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             for _, data in sorted(data_fragments.items()):
                 retval += data
 
-        # If we did not receive a LeadMessage, but the message is compressed anyway...
-        elif message.compressed:
-            retval = message.payload
-        # A short response, no LeadMessage and no compression...
+        # We did not receive a LeadMessage, so our payload is just this one packet
         else:
             retval = message.payload
 

@@ -32,6 +32,7 @@ class MessageType(Enum):
 class ClientType(Enum):
     XML = 0
     SIMPLE = 1
+    OMNI = 3
 
 
 class OmniType(str, Enum):
