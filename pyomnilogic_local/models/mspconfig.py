@@ -150,7 +150,7 @@ class MSPColorLogicLight(OmniBase):
 
 
 class MSPBoW(OmniBase):
-    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light"}
+    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump"}
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
@@ -159,6 +159,7 @@ class MSPBoW(OmniBase):
     heater: MSPVirtualHeater | None = Field(alias="Heater")
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
+    pump: list[MSPPump] | None = Field(alias="Pump")
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
