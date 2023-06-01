@@ -6,6 +6,7 @@
   </a>
   <img src="https://img.shields.io/pypi/pyversions/python-omnilogic-local.svg?style=flat-square&logo=python&amp;logoColor=fff" alt="Supported Python versions">
   <img src="https://img.shields.io/pypi/l/python-omnilogic-local.svg?style=flat-square" alt="License">
+  <a href="https://www.buymeacoffee.com/cryptk" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 20px !important;" ></a>
 </p>
 
 A library implementing the UDP XML Local Control api for Hayward OmniLogic and OmniHub pool controllers
