@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0 (2023-06-07)
+### Feature
+* Support chlorinator on/off switch ([#34](https://github.com/cryptk/python-omnilogic-local/issues/34)) ([`f8398d6`](https://github.com/cryptk/python-omnilogic-local/commit/f8398d6411dab181ea2e36777f2cb83cbfbb7dd1))
+
 ## v0.8.1 (2023-06-07)
 ### Fix
 * Force pumps to always parse as a list ([#32](https://github.com/cryptk/python-omnilogic-local/issues/32)) ([`074c5e8`](https://github.com/cryptk/python-omnilogic-local/commit/074c5e82b9510e15cd711482147f095d2735ad42))
