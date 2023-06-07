@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.0 (2023-06-07)
+### Feature
+* Improve set chlor params ([#36](https://github.com/cryptk/python-omnilogic-local/issues/36)) ([`97767f3`](https://github.com/cryptk/python-omnilogic-local/commit/97767f37bf9fb8b922a6754cfbea90743e68bf25))
+
 ## v0.9.0 (2023-06-07)
 ### Feature
 * Support chlorinator on/off switch ([#34](https://github.com/cryptk/python-omnilogic-local/issues/34)) ([`f8398d6`](https://github.com/cryptk/python-omnilogic-local/commit/f8398d6411dab181ea2e36777f2cb83cbfbb7dd1))
