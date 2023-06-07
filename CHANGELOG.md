@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.1 (2023-06-07)
+### Fix
+* Force pumps to always parse as a list ([#32](https://github.com/cryptk/python-omnilogic-local/issues/32)) ([`074c5e8`](https://github.com/cryptk/python-omnilogic-local/commit/074c5e82b9510e15cd711482147f095d2735ad42))
+
+### Documentation
+* Add buy me a coffee to README.md ([#31](https://github.com/cryptk/python-omnilogic-local/issues/31)) ([`9009f2c`](https://github.com/cryptk/python-omnilogic-local/commit/9009f2c5d3801ff1338cde3caf5419bd6a89162d))
+
 ## v0.8.0 (2023-05-31)
 ### Feature
 * Some cleanup and initial work towards tests ([#30](https://github.com/cryptk/python-omnilogic-local/issues/30)) ([`37ff4a6`](https://github.com/cryptk/python-omnilogic-local/commit/37ff4a6f875c63ec6ede5dc2040e6bc68317b93e))
