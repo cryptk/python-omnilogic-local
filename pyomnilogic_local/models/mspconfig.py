@@ -210,6 +210,7 @@ class MSPConfig(BaseModel):
                 OmniType.FILTER,
                 OmniType.GROUPS,
                 OmniType.HEATER_EQUIP,
+                OmniType.PUMP,
                 OmniType.RELAY,
                 OmniType.SENSOR,
                 OmniType.SCHE,
