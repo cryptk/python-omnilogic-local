@@ -87,6 +87,10 @@ class ChlorinatorOperatingMode(PrettyEnum):
     ORP = 2
 
 
+class ChlorinatorDispenserType(str, PrettyEnum):
+    SALT = "SALT_DISPENSING"
+
+
 class ColorLogicSpeed(PrettyEnum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1

@@ -415,7 +415,7 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
 
-    async def set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
+    async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -431,7 +431,7 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
 
-    async def set_chlorinator_params(
+    async def async_set_chlorinator_params(
         self,
         pool_id: int,
         equipment_id: int,
@@ -472,7 +472,7 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
 
-    async def set_chlorinator_superchlorinate(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+    async def async_set_chlorinator_superchlorinate(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
