@@ -414,3 +414,78 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
+
+    async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetCHLOREnable"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
+        parameter.text = str(int(enabled))
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
+
+    async def async_set_chlorinator_params(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        cfg_state: int,
+        op_mode: int,
+        bow_type: int,
+        cell_type: int,
+        timed_percent: int,
+        sc_timeout: int,
+        orp_timeout: int,
+    ) -> None:
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetCHLORParams"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CfgState", dataType="byte", alias="Data1")
+        parameter.text = str(cfg_state)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="OpMode", dataType="byte", alias="Data2")
+        parameter.text = str(op_mode)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="BOWType", dataType="byte", alias="Data3")
+        parameter.text = str(bow_type)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CellType", dataType="byte", alias="Data4")
+        parameter.text = str(cell_type)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="TimedPercent", dataType="byte", alias="Data5")
+        parameter.text = str(timed_percent)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="SCTimeout", dataType="byte", unit="hour", alias="Data6")
+        parameter.text = str(sc_timeout)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ORPTimout", dataType="byte", unit="hour", alias="Data7")
+        parameter.text = str(orp_timeout)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
+
+    async def async_set_chlorinator_superchlorinate(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetUISuperCHLORCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="IsOn", dataType="byte", alias="Data1")
+        parameter.text = str(int(enabled))
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)

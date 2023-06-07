@@ -15,6 +15,7 @@ from xmltodict import parse as xml_parse
 from ..exceptions import OmniParsingException
 from ..types import (
     BodyOfWaterType,
+    ChlorinatorDispenserType,
     ColorLogicLightType,
     ColorLogicShow,
     FilterType,
@@ -137,6 +138,30 @@ class MSPVirtualHeater(OmniBase):
         self.heater_equipment = [MSPHeaterEquip.parse_obj(equip) for equip in heater_equip_data[OmniType.HEATER_EQUIP]]
 
 
+class MSPChlorinatorEquip(OmniBase):
+    omni_type: OmniType = OmniType.CHLORINATOR_EQUIP
+    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+
+
+class MSPChlorinator(OmniBase):
+    _sub_devices = {"chlorinator_equipment"}
+
+    omni_type: OmniType = OmniType.CHLORINATOR
+    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+    timed_percent: int = Field(alias="Timed-Percent")
+    superchlor_timeout: int = Field(alias="SuperChlor-Timeout")
+    dispenser_type: ChlorinatorDispenserType | str = Field(alias="Dispenser-Type")
+    chlorinator_equipment: list[MSPChlorinatorEquip] | None
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+
+        # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
+        # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
+        chlorinator_equip_data = [op for op in data.get("Operation", {}) if OmniType.CHLORINATOR_EQUIP in op][0]
+        self.chlorinator_equipment = [MSPChlorinatorEquip.parse_obj(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]]
+
+
 class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
     type: ColorLogicLightType | str = Field(alias="Type")
@@ -149,7 +174,7 @@ class MSPColorLogicLight(OmniBase):
 
 
 class MSPBoW(OmniBase):
-    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump"}
+    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator"}
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
@@ -159,6 +184,7 @@ class MSPBoW(OmniBase):
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
     pump: list[MSPPump] | None = Field(alias="Pump")
+    chlorinator: MSPChlorinator | None = Field(alias="Chlorinator")
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
@@ -204,7 +230,7 @@ class MSPConfig(BaseModel):
             # everything that *could* be a list into a list to make the parsing more consistent.
             force_list=(
                 OmniType.BOW_MSP,
-                OmniType.CHLORINATOR,
+                OmniType.CHLORINATOR_EQUIP,
                 OmniType.CL_LIGHT,
                 OmniType.FAVORITES,
                 OmniType.FILTER,
