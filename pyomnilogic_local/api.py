@@ -489,3 +489,15 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)
+
+    async def async_restore_idle_state(self) -> None:
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "RestoreIdleState"
+
+        ET.SubElement(body_element, "Parameters")
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)

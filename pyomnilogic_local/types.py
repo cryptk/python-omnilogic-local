@@ -61,6 +61,7 @@ class OmniType(str, Enum):
     VIRT_HEATER = "VirtualHeater"
 
 
+# Backyard/BoW
 class BackyardState(PrettyEnum):
     OFF = 0
     ON = 1
@@ -79,6 +80,7 @@ class BodyOfWaterType(str, PrettyEnum):
     SPA = "BOW_SPA"
 
 
+# Chlorinators
 # Chlorinator status is a bitmask that we still need to figure out
 # class ChlorinatorStatus(str,Enum):
 #     pass
@@ -91,6 +93,7 @@ class ChlorinatorDispenserType(str, PrettyEnum):
     SALT = "SALT_DISPENSING"
 
 
+# Lights
 class ColorLogicSpeed(PrettyEnum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1
@@ -157,6 +160,7 @@ class ColorLogicLightType(str, PrettyEnum):
     TWO_FIVE = "COLOR_LOGIC_2_5"
 
 
+# Chemistry Sense and Dispense
 class CSADStatus(PrettyEnum):
     NOT_DISPENSING = 0
     DISPENSING = 1
@@ -170,6 +174,7 @@ class CSADMode(PrettyEnum):
     DISPENSING_OFF = 4
 
 
+# Filters
 class FilterState(PrettyEnum):
     OFF = 0
     ON = 1
@@ -218,6 +223,7 @@ class FilterWhyOn(PrettyEnum):
     FREEZE_PROTECT = 15
 
 
+# Heaters
 class HeaterState(PrettyEnum):
     OFF = 0
     ON = 1
@@ -239,6 +245,7 @@ class HeaterMode(PrettyEnum):
     AUTO = 2
 
 
+# Pumps
 class PumpState(PrettyEnum):
     OFF = 0
     ON = 1
@@ -246,16 +253,28 @@ class PumpState(PrettyEnum):
 
 class PumpType(str, PrettyEnum):
     SINGLE_SPEED = "PMP_SINGLE_SPEED"
+    DUAL_SPEED = "PMP_DUAL_SPEED"
     VARIABLE_SPEED = "PMP_VARIABLE_SPEED_PUMP"
 
 
 class PumpFunction(str, PrettyEnum):
-    WATERFALL = "PMP_WATERFALL"
-    BLOWER = "PMP_BLOWER"
-    JETS = "PMP_JETS"
+    PUMP = "PMP_PUMP"
+    WATER_FEATURE = "PMP_WATER_FEATURE"
     CLEANER = "PMP_CLEANER"
+    WATER_SLIDE = "PMP_WATER_SLIDE"
+    WATERFALL = "PMP_WATERFALL"
+    LAMINARS = "PMP_LAMINARS"
+    FOUNTAIN = "PMP_FOUNTAIN"
+    JETS = "PMP_JETS"
+    BLOWER = "PMP_BLOWER"
+    ACCESSORY = "PMP_ACCESSORY"
+    CLEANER_PRESSURE = "PMP_CLEANER_PRESSURE"
+    CLEANER_SUCTION = "PMP_CLEANER_SUCTION"
+    CLEANER_ROBOTIC = "PMP_CLEANER_ROBOTIC"
+    CLEANER_IN_FLOOR = "PMP_CLEANER_IN_FLOOR"
 
 
+# Relays
 class RelayFunction(str, PrettyEnum):
     WATER_FEATURE = "RLY_WATER_FEATURE"
     LIGHT = "RLY_LIGHT"
@@ -287,11 +306,13 @@ class RelayType(str, PrettyEnum):
     LOW_VOLTAGE = "RLY_LOW_VOLTAGE_RELAY"
 
 
+# Sensors
 class SensorType(str, PrettyEnum):
     AIR_TEMP = "SENSOR_AIR_TEMP"
     SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
     WATER_TEMP = "SENSOR_WATER_TEMP"
     FLOW = "SENSOR_FLOW"
+    ORP = "SENSOR_ORP"
     EXT_INPUT = "SENSOR_EXT_INPUT"
 
 
@@ -305,6 +326,7 @@ class SensorUnits(str, PrettyEnum):
     ACTIVE_INACTIVE = "UNITS_ACTIVE_INACTIVE"
 
 
+# Valve Actuators
 class ValveActuatorState(PrettyEnum):
     OFF = 0
     ON = 1
