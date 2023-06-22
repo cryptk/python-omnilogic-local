@@ -62,16 +62,21 @@ class TelemetryBoW(BaseModel):
 class TelemetryChlorinator(BaseModel):
     omni_type: OmniType = OmniType.CHLORINATOR
     system_id: int = Field(alias="@systemId")
-    status: int = Field(alias="@status")
+    status_raw: int = Field(alias="@status")
     instant_salt_level: int = Field(alias="@instantSaltLevel")
     avg_salt_level: int = Field(alias="@avgSaltLevel")
     chlr_alert: int = Field(alias="@chlrAlert")
     chlr_error: int = Field(alias="@chlrError")
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
-    timed_percent: int = Field(alias="@Timed-Percent")
+    timed_percent: int | None = Field(alias="@Timed-Percent")
     operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
+
+    # Still need to do a bit more work to determine if a chlorinator is actively chlorinating
+    # @property
+    # def active(self) -> bool:
+    #     return self.status_raw & 4 == 4 # Check if bit 4 is set, which means the chlorinator is currently chlorinating
 
 
 class TelemetryColorLogicLight(BaseModel):
