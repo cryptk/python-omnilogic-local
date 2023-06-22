@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.0 (2023-06-22)
+
+### Feature
+
+* Add restore idle state API call, ref #2 ([#38](https://github.com/cryptk/python-omnilogic-local/issues/38)) ([`0a46fa2`](https://github.com/cryptk/python-omnilogic-local/commit/0a46fa24dbcde33fb5d27d0821066d1340d2c6a9))
+
+### Fix
+
+* Adjust restore idle state message type, fixes #2 ([#39](https://github.com/cryptk/python-omnilogic-local/issues/39)) ([`8524069`](https://github.com/cryptk/python-omnilogic-local/commit/8524069aebe35ec2216e389ce3cd6833ee5cf914))
+
+### Documentation
+
+* Add license ([#37](https://github.com/cryptk/python-omnilogic-local/issues/37)) ([`8c8ca6d`](https://github.com/cryptk/python-omnilogic-local/commit/8c8ca6d18a313c3bba0121ea1740e0568ed90c6c))
+
 ## v0.10.0 (2023-06-07)
 ### Feature
 * Improve set chlor params ([#36](https://github.com/cryptk/python-omnilogic-local/issues/36)) ([`97767f3`](https://github.com/cryptk/python-omnilogic-local/commit/97767f37bf9fb8b922a6754cfbea90743e68bf25))
