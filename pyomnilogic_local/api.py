@@ -500,4 +500,4 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)
+        return await self.async_send_message(MessageType.RESTORE_IDLE_STATE, req_body, False)
