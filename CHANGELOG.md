@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.0 (2023-06-23)
+
+### Feature
+
+* Add support for SetUISpilloverCmd, fixes: #42 ([#43](https://github.com/cryptk/python-omnilogic-local/issues/43)) ([`435c55d`](https://github.com/cryptk/python-omnilogic-local/commit/435c55de4c2594d1cd89d872c215360337be44ef))
+
 ## v0.11.2 (2023-06-23)
 
 ### Fix
