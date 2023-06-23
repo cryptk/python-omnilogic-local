@@ -222,6 +222,9 @@ class FilterWhyOn(PrettyEnum):
     TIMER_SPILLOVER = 13
     TIMER_ON = 14
     FREEZE_PROTECT = 15
+    UNKNOWN_16 = 16
+    UNKNOWN_17 = 17
+    UNKNOWN_18 = 18
 
 
 # Heaters
