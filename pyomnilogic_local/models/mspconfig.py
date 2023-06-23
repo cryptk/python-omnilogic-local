@@ -134,8 +134,8 @@ class MSPVirtualHeater(OmniBase):
 
         # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
         # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
-        heater_equip_data = [op for op in data.get("Operation", {}) if OmniType.HEATER_EQUIP in op][0]
-        self.heater_equipment = [MSPHeaterEquip.parse_obj(equip) for equip in heater_equip_data[OmniType.HEATER_EQUIP]]
+        heater_equip_data = [op[OmniType.HEATER_EQUIP] for op in data.get("Operation", {}) if OmniType.HEATER_EQUIP in op]
+        self.heater_equipment = [MSPHeaterEquip.parse_obj(equip) for equip in heater_equip_data]
 
 
 class MSPChlorinatorEquip(OmniBase):
@@ -235,7 +235,6 @@ class MSPConfig(BaseModel):
                 OmniType.FAVORITES,
                 OmniType.FILTER,
                 OmniType.GROUPS,
-                OmniType.HEATER_EQUIP,
                 OmniType.PUMP,
                 OmniType.RELAY,
                 OmniType.SENSOR,
