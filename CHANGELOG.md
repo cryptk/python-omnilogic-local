@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.1 (2023-06-23)
+
+### Fix
+
+* Enable parsing of multiple heater equipments ([#40](https://github.com/cryptk/python-omnilogic-local/issues/40)) ([`6601300`](https://github.com/cryptk/python-omnilogic-local/commit/6601300207e163adff52d47edf331d2318a32ca5))
+
 ## v0.11.0 (2023-06-22)
 
 ### Feature
