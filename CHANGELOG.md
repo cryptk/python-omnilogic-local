@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.2 (2023-06-23)
+
+### Fix
+
+* Add missing enum entries for filter why on ([#41](https://github.com/cryptk/python-omnilogic-local/issues/41)) ([`a702924`](https://github.com/cryptk/python-omnilogic-local/commit/a702924796de6ee6d25ef0ef493144cf518f3e51))
+
 ## v0.11.1 (2023-06-23)
 
 ### Fix
