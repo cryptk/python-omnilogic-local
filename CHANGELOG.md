@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.1 (2023-11-17)
+
+### Fix
+
+* Fix versions ([#45](https://github.com/cryptk/python-omnilogic-local/issues/45)) ([`16355e1`](https://github.com/cryptk/python-omnilogic-local/commit/16355e104250cc7082371a08ab513cc94155846c))
+* Add missing data for spillover support ([#44](https://github.com/cryptk/python-omnilogic-local/issues/44)) ([`35610d5`](https://github.com/cryptk/python-omnilogic-local/commit/35610d51a19a1529057a6912bd5a5c6ba31aed09))
+
 ## v0.12.0 (2023-06-23)
 
 ### Feature
