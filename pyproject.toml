@@ -43,6 +43,9 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length=140
 
+[tool.codespell]
+skip = "poetry.lock"
+
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
 profile = "black"
@@ -91,7 +94,7 @@ warn_required_dynamic_aliases = true
 warn_untyped_fields = true
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
@@ -105,11 +108,6 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "pydantic",
-    "av.audio.stream",
-    "av.stream",
-    "ciso8601",
-    "orjson",
-    "cv2",
 ]
 fail-on = [
     "I",
