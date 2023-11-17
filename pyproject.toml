@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-omnilogic-local"
-version = "0.12.0"
+version = "0.13.0"
 description = "A library for local control of Hayward OmniHub/OmniLogic pool controllers using their local API"
 authors = ["cryptk <cryptk@users.noreply.github.com>", "djtimca", "garionphx"]
 license = "Apache-2.0"
@@ -91,7 +91,7 @@ warn_required_dynamic_aliases = true
 warn_untyped_fields = true
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
@@ -105,11 +105,6 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "pydantic",
-    "av.audio.stream",
-    "av.stream",
-    "ciso8601",
-    "orjson",
-    "cv2",
 ]
 fail-on = [
     "I",

@@ -185,7 +185,6 @@ class Telemetry(BaseModel):
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
-
         TypeVar("KT")
         TypeVar("VT", SupportsInt, Any)
 

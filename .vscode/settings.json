@@ -1,7 +1,6 @@
 {
   "files.trimTrailingWhitespace": true,
   "editor.rulers": [140],
-  "python.formatting.provider": "black",
   // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
   "python.testing.pytestEnabled": true,
   "python.testing.pytestArgs": [
@@ -9,6 +8,9 @@
     "--cov-report=xml:coverage.xml",
     "tests"
   ],
-  "python.linting.mypyEnabled": true,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  }
 }

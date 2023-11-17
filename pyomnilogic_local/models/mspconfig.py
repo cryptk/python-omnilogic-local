@@ -178,6 +178,7 @@ class MSPBoW(OmniBase):
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
+    supports_spillover: Literal["yes", "no"] = Field(alias="Supports-Spillover")
     filter: list[MSPFilter] | None = Field(alias="Filter")
     relay: list[MSPRelay] | None = Field(alias="Relay")
     heater: MSPVirtualHeater | None = Field(alias="Heater")
