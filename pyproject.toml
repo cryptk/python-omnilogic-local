@@ -43,9 +43,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length=140
 
-[tool.codespell]
-skip = "poetry.lock"
-
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
 profile = "black"

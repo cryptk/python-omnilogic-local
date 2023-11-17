@@ -33,6 +33,7 @@ repos:
         rev: v2.2.6
         hooks:
             -   id: codespell
+                exclude: poetry.lock
     -   repo: https://github.com/charliermarsh/ruff-pre-commit
         rev: v0.1.6
         hooks:
@@ -50,4 +51,5 @@ repos:
         hooks:
             -   id: mypy
                 exclude: cli.py
-                additional_dependencies: [ "pydantic" ]
+                # There is work that needs to happen to update to pydantic >= 2.0
+                additional_dependencies: [ "pydantic<2.0.0" ]
