@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.13.0 (2024-06-07)
+
+### Feature
+
+* Add support for CSAD units ([#47](https://github.com/cryptk/python-omnilogic-local/issues/47)) ([`7e1f189`](https://github.com/cryptk/python-omnilogic-local/commit/7e1f189db8d53081b18863a81cdace00167868df))
+
 ## v0.12.1 (2023-11-17)
 
 ### Fix
