@@ -166,7 +166,7 @@ class MSPChlorinator(OmniBase):
 class MSPCSAD(OmniBase):
     omni_type: OmniType = OmniType.CSAD
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
-    csad_type: CSADType | str = Field(alias="Type")
+    type: CSADType | str = Field(alias="Type")
     target_value: float = Field(alias="TargetValue")
 
 
