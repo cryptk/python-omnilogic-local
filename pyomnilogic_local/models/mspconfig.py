@@ -18,6 +18,7 @@ from ..types import (
     ChlorinatorDispenserType,
     ColorLogicLightType,
     ColorLogicShow,
+    CSADType,
     FilterType,
     HeaterType,
     OmniType,
@@ -162,6 +163,13 @@ class MSPChlorinator(OmniBase):
         self.chlorinator_equipment = [MSPChlorinatorEquip.parse_obj(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]]
 
 
+class MSPCSAD(OmniBase):
+    omni_type: OmniType = OmniType.CSAD
+    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+    csad_type: CSADType | str = Field(alias="Type")
+    target_value: float = Field(alias="TargetValue")
+
+
 class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
     type: ColorLogicLightType | str = Field(alias="Type")
@@ -174,7 +182,7 @@ class MSPColorLogicLight(OmniBase):
 
 
 class MSPBoW(OmniBase):
-    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator"}
+    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
@@ -186,6 +194,7 @@ class MSPBoW(OmniBase):
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
     pump: list[MSPPump] | None = Field(alias="Pump")
     chlorinator: MSPChlorinator | None = Field(alias="Chlorinator")
+    csad: list[MSPCSAD] | None = Field(alias="CSAD")
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
@@ -232,6 +241,7 @@ class MSPConfig(BaseModel):
             force_list=(
                 OmniType.BOW_MSP,
                 OmniType.CHLORINATOR_EQUIP,
+                OmniType.CSAD,
                 OmniType.CL_LIGHT,
                 OmniType.FAVORITES,
                 OmniType.FILTER,
