@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.13.1 (2024-06-07)
+
+### Fix
+
+* Change CSAD type parameter from csad_type to type ([#48](https://github.com/cryptk/python-omnilogic-local/issues/48)) ([`5d9779b`](https://github.com/cryptk/python-omnilogic-local/commit/5d9779bcb83eaf1ae0c70f7424007a2026c41926))
+
 ## v0.13.0 (2024-06-07)
 
 ### Feature
