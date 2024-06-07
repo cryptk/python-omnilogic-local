@@ -46,6 +46,7 @@ class OmniType(str, Enum):
     BOW_MSP = "Body-of-water"
     CHLORINATOR = "Chlorinator"
     CHLORINATOR_EQUIP = "Chlorinator-Equipment"
+    CSAD = "CSAD"
     CL_LIGHT = "ColorLogic-Light"
     FAVORITES = "Favorites"
     FILTER = "Filter"
@@ -160,6 +161,11 @@ class ColorLogicLightType(str, PrettyEnum):
     UCL = "COLOR_LOGIC_UCL"
     FOUR_ZERO = "COLOR_LOGIC_4_0"
     TWO_FIVE = "COLOR_LOGIC_2_5"
+
+
+class CSADType(str, PrettyEnum):
+    ACID = "ACID"
+    CO2 = "CO2"
 
 
 # Chemistry Sense and Dispense

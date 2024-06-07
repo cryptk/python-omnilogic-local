@@ -13,6 +13,7 @@ from ..types import (
     ColorLogicPowerState,
     ColorLogicShow,
     ColorLogicSpeed,
+    CSADMode,
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
@@ -77,6 +78,15 @@ class TelemetryChlorinator(BaseModel):
     # @property
     # def active(self) -> bool:
     #     return self.status_raw & 4 == 4 # Check if bit 4 is set, which means the chlorinator is currently chlorinating
+
+
+class TelemetryCSAD(BaseModel):
+    omni_type: OmniType = OmniType.CSAD
+    system_id: int = Field(alias="@systemId")
+    status_raw: int = Field(alias="@status")
+    ph: float = Field(alias="@ph")
+    orp: int = Field(alias="@orp")
+    mode: CSADMode | int = Field(alias="@mode")
 
 
 class TelemetryColorLogicLight(BaseModel):
@@ -172,6 +182,7 @@ class Telemetry(BaseModel):
     bow: list[TelemetryBoW] = Field(alias="BodyOfWater")
     chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator")
     colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light")
+    csad: list[TelemetryCSAD] | None = Field(alias="CSAD")
     filter: list[TelemetryFilter] | None = Field(alias="Filter")
     group: list[TelemetryGroup] | None = Field(alias="Group")
     heater: list[TelemetryHeater] | None = Field(alias="Heater")
@@ -223,6 +234,7 @@ class Telemetry(BaseModel):
             force_list=(
                 OmniType.BOW,
                 OmniType.CHLORINATOR,
+                OmniType.CSAD,
                 OmniType.CL_LIGHT,
                 OmniType.FILTER,
                 OmniType.GROUP,
