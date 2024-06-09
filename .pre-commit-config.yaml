@@ -41,7 +41,7 @@ repos:
                 args:
                     - --fix
     -   repo: https://github.com/pylint-dev/pylint
-        rev: v3.0.1
+        rev: v3.2.3
         hooks:
             -   id: pylint
                 # There is work that needs to happen to update to pydantic >= 2.0
