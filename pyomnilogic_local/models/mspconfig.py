@@ -168,6 +168,9 @@ class MSPCSAD(OmniBase):
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     type: CSADType | str = Field(alias="Type")
     target_value: float = Field(alias="TargetValue")
+    calibration_value: float = Field(alias="CalibrationValue")
+    ph_low_alarm_value: float = Field(alias="PHLowAlarmLevel")
+    ph_high_alarm_value: float = Field(alias="PHHighAlarmLevel")
 
 
 class MSPColorLogicLight(OmniBase):
