@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.13.2 (2024-06-09)
+
+### Fix
+
+* Add missing data parameters for CSAD units ([#49](https://github.com/cryptk/python-omnilogic-local/issues/49)) ([`cd61158`](https://github.com/cryptk/python-omnilogic-local/commit/cd611587b7a7d1a2572deaf4fd149a3b88aad430))
+
 ## v0.13.1 (2024-06-07)
 
 ### Fix
