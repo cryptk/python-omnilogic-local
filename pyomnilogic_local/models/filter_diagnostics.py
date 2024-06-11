@@ -31,7 +31,7 @@ class FilterDiagnostics(BaseModel):
             xml,
             # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
             # everything that *could* be a list into a list to make the parsing more consistent.
-            force_list=("Parameter", "Parameters"),
+            force_list=("Parameter"),
         )
         # The XML nests the Parameter entries under a Parameters entry, this is annoying to work with.  Here we are adjusting the data to
         # remove that extra level in the data
