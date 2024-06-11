@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.0 (2024-06-11)
+
+### Feature
+
+* Add support for ColorLogic lights in backyards ([#50](https://github.com/cryptk/python-omnilogic-local/issues/50)) ([`05f110e`](https://github.com/cryptk/python-omnilogic-local/commit/05f110e8846f77291fd2dda48ee56fbedc018b96))
+
 ## v0.13.2 (2024-06-09)
 
 ### Fix
