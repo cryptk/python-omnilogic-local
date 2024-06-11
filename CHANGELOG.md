@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.1 (2024-06-11)
+
+### Fix
+
+* Parameters for filter diagnostics is not a list ([#51](https://github.com/cryptk/python-omnilogic-local/issues/51)) ([`de9bea1`](https://github.com/cryptk/python-omnilogic-local/commit/de9bea175aa382c0634b6feb4246f3145dd9db01))
+
 ## v0.14.0 (2024-06-11)
 
 ### Feature
