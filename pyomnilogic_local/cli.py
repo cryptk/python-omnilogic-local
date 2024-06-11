@@ -18,44 +18,43 @@ RELAY_SYSTEM_ID = 13
 
 
 async def async_main() -> None:
-    diags: FilterDiagnostics  # noqa: F842
-    mspconfig: MSPConfig  # noqa: F842
-    telem: Telemetry  # noqa: F842
+    filter_diags: FilterDiagnostics  # pylint: disable=unused-variable # noqa: F842
+    mspconfig: MSPConfig
+    telem: Telemetry
 
     omni = OmniLogicAPI(os.environ.get("OMNILOGIC_HOST", "127.0.0.1"), 10444, 5.0)
+    get_raw = os.environ.get("OMNILOGIC_RAW", False)
 
     # Some basic calls to run some testing against the library
 
-    # Fetch the MSPConfig data parsed into a model
-    mspconfig = await omni.async_get_config()
-    # Fetch the MSPConfig data as the raw XML
-    # mspconfig = await omni.async_get_config(raw=True)
-    print(mspconfig)
+    # Fetch the MSPConfig data
+    mspconfig = await omni.async_get_config(raw=get_raw)  # pylint: disable=unexpected-keyword-arg
 
-    # Fetch the current telemetry data parsed into a model
-    telem = await omni.async_get_telemetry()
-    # Fetch the current telemetry data as the raw XML
-    # telem = await omni.async_get_telemetry(raw=True)
-    print(telem)
+    # Fetch the current telemetry data
+    telem = await omni.async_get_telemetry(raw=get_raw)  # pylint: disable=unexpected-keyword-arg
 
     # Fetch a list of current alarms
     # print(await omni.async_get_alarm_list())
 
     # Fetch diagnostic data for a filter pump
-    diags = await omni.async_get_filter_diagnostics(POOL_ID, PUMP_EQUIPMENT_ID)
-    print(diags)
+    # filter_diags = await omni.async_get_filter_diagnostics(POOL_ID, PUMP_EQUIPMENT_ID, raw=get_raw)
+
+    print(mspconfig)
+    print(telem)
+    # print(filter_diags)
+
     # Decode the filter display revision
-    # b1=chr(diags.get_param_by_name("DisplayFWRevisionB1"))
-    # b2=chr(diags.get_param_by_name("DisplayFWRevisionB2"))
-    # b3=chr(diags.get_param_by_name("DisplayFWRevisionB3"))
-    # b4=chr(diags.get_param_by_name("DisplayFWRevisionB4"))
+    # b1=chr(filter_diags.get_param_by_name("DisplayFWRevisionB1"))
+    # b2=chr(filter_diags.get_param_by_name("DisplayFWRevisionB2"))
+    # b3=chr(filter_diags.get_param_by_name("DisplayFWRevisionB3"))
+    # b4=chr(filter_diags.get_param_by_name("DisplayFWRevisionB4"))
     # b5 and b6 are whitespace and a null terminator
-    # b5=chr(diags.get_param_by_name("DisplayFWRevisionB5"))
-    # b6=chr(diags.get_param_by_name("DisplayFWRevisionB6"))
+    # b5=chr(filter_diags.get_param_by_name("DisplayFWRevisionB5"))
+    # b6=chr(filter_diags.get_param_by_name("DisplayFWRevisionB6"))
     # print(f"{b1}{b2}.{b3}.{b4}")
     # Decode the filter power consumption (don't do this, it's returned already decoded in the telemetry)
-    # p1=diags.get_param_by_name("PowerMSB")
-    # p2=diags.get_param_by_name("PowerLSB")
+    # p1=filter_diags.get_param_by_name("PowerMSB")
+    # p2=filter_diags.get_param_by_name("PowerLSB")
     # The f-string below converts the bytes to hex and displays them.  Just get this value from the telemetry, it's easier
     # print(f"{p1:x}{p2:x}")
 
