@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.2 (2024-06-11)
+
+### Fix
+
+* Quick edit to make pulling raw data from controllers easier ([#53](https://github.com/cryptk/python-omnilogic-local/issues/53)) ([`bdad40d`](https://github.com/cryptk/python-omnilogic-local/commit/bdad40de6568f49f82e0e93a8f5adf02b3688264))
+
 ## v0.14.1 (2024-06-11)
 
 ### Fix
