@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from xmltodict import parse as xml_parse
 
 
@@ -23,7 +23,7 @@ class FilterDiagnostics(BaseModel):
         orm_mode = True
 
     def get_param_by_name(self, name: str) -> int:
-        return [param.value for param in self.parameters if param.name == name][0]  # pylint: disable=not-an-iterable
+        return [param.value for param in self.parameters if param.name == name][0]
 
     @staticmethod
     def load_xml(xml: str) -> FilterDiagnostics:

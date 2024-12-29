@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic.v1 import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
