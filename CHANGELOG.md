@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.3 (2024-12-29)
+
+### Fix
+
+* Remove pylint suppression ([#55](https://github.com/cryptk/python-omnilogic-local/issues/55)) ([`abe2045`](https://github.com/cryptk/python-omnilogic-local/commit/abe2045272e12c1c54cdd533bd73476bb723f01b))
+
 ## v0.14.2 (2024-06-11)
 
 ### Fix
