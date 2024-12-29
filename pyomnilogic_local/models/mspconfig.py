@@ -9,7 +9,7 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic.v1 import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
