@@ -19,7 +19,7 @@ packages = [{include = "pyomnilogic_local"}]
 omnilogic = "pyomnilogic_local.cli:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.13"
 pydantic = ">=1.10.17"
 xmltodict = "^0.13.0"
 
