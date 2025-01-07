@@ -2,7 +2,7 @@ from collections.abc import Awaitable, Callable
 import logging
 from typing import Any, Literal, TypeVar, cast, overload
 
-from pydantic.utils import GetterDict
+from pydantic.v1.utils import GetterDict
 
 from .const import XML_NS
 from .filter_diagnostics import FilterDiagnostics
