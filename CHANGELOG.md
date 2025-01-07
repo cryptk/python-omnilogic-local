@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.4 (2025-01-07)
+
+### Fix
+
+* Import path for GetterDict, fixes #56 ([#57](https://github.com/cryptk/python-omnilogic-local/issues/57)) ([`d48979f`](https://github.com/cryptk/python-omnilogic-local/commit/d48979f0a3dce369f4a91229a1f4f9dd1d512045))
+
 ## v0.14.3 (2024-12-29)
 
 ### Fix
