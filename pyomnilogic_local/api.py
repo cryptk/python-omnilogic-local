@@ -436,12 +436,12 @@ class OmniLogicAPI:
         pool_id: int,
         equipment_id: int,
         timed_percent: int,
+        cell_type: int,
+        op_mode: int,
+        sc_timeout: int,
+        bow_type: int,
+        orp_timeout: int,
         cfg_state: int = 3,
-        op_mode: int = 1,
-        bow_type: int = 0,
-        cell_type: int = 4,
-        sc_timeout: int = 24,
-        orp_timeout: int = 24,
     ) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 

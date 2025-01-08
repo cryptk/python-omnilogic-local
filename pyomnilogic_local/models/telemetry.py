@@ -71,7 +71,7 @@ class TelemetryChlorinator(BaseModel):
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int | None = Field(alias="@Timed-Percent")
-    operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
+    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
     # Still need to do a bit more work to determine if a chlorinator is actively chlorinating

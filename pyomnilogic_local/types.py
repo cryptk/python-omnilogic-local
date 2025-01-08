@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 from .util import PrettyEnum
 
@@ -87,13 +87,32 @@ class BodyOfWaterType(str, PrettyEnum):
 # Chlorinator status is a bitmask that we still need to figure out
 # class ChlorinatorStatus(str,Enum):
 #     pass
-class ChlorinatorOperatingMode(PrettyEnum):
+class ChlorinatorOperatingMode(IntEnum):
+    DISABLED = 0
     TIMED = 1
     ORP = 2
 
 
 class ChlorinatorDispenserType(str, PrettyEnum):
     SALT = "SALT_DISPENSING"
+
+
+class ChlorinatorCellType(PrettyEnum):
+    T3 = "CELL_TYPE_T3"
+    T5 = "CELL_TYPE_T5"
+    T9 = "CELL_TYPE_T9"
+    T15 = "CELL_TYPE_T15"
+
+    # There is probably an easier way to do this
+    def __int__(self) -> int:
+        return ChlorinatorCellInt[self.name].value
+
+
+class ChlorinatorCellInt(IntEnum):
+    T3 = 1
+    T5 = 2
+    T9 = 3
+    T15 = 4
 
 
 # Lights

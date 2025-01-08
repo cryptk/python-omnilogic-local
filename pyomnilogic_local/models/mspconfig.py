@@ -15,6 +15,7 @@ from xmltodict import parse as xml_parse
 from ..exceptions import OmniParsingException
 from ..types import (
     BodyOfWaterType,
+    ChlorinatorCellType,
     ChlorinatorDispenserType,
     ColorLogicLightType,
     ColorLogicShow,
@@ -151,7 +152,9 @@ class MSPChlorinator(OmniBase):
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     timed_percent: int = Field(alias="Timed-Percent")
     superchlor_timeout: int = Field(alias="SuperChlor-Timeout")
+    orp_timeout: int = Field(alias="ORP-Timeout")
     dispenser_type: ChlorinatorDispenserType | str = Field(alias="Dispenser-Type")
+    cell_type: ChlorinatorCellType = Field(alias="Cell-Type")
     chlorinator_equipment: list[MSPChlorinatorEquip] | None
 
     def __init__(self, **data: Any) -> None:
