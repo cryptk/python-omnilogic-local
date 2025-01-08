@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.6 (2025-01-08)
+
+### Fix
+
+* Adjust required python version to allow CI to work ([#61](https://github.com/cryptk/python-omnilogic-local/issues/61)) ([`77cb63e`](https://github.com/cryptk/python-omnilogic-local/commit/77cb63ede0f533a228d96c57e1fdc8438a92a054))
+
 ## v0.14.5 (2025-01-08)
 
 ### Fix
