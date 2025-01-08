@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.14.5 (2025-01-08)
+
+### Fix
+
+* Change how we handle SetCHLORParams so that we don't override settings unintentionally ([#59](https://github.com/cryptk/python-omnilogic-local/issues/59)) ([`0f3a055`](https://github.com/cryptk/python-omnilogic-local/commit/0f3a055c13b3a0a78fc3a07fb76e34b531423410))
+
 ## v0.14.4 (2025-01-07)
 
 ### Fix
