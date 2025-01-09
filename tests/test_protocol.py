@@ -1,5 +1,5 @@
+from pyomnilogic_local.omnitypes import ClientType, MessageType
 from pyomnilogic_local.protocol import OmniLogicMessage
-from pyomnilogic_local.types import ClientType, MessageType
 
 
 def test_parse_basic_ack() -> None:

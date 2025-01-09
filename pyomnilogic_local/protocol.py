@@ -11,7 +11,7 @@ from typing_extensions import Self
 
 from .exceptions import OmniTimeoutException
 from .models.leadmessage import LeadMessage
-from .types import ClientType, MessageType
+from .omnitypes import ClientType, MessageType
 
 _LOGGER = logging.getLogger(__name__)
 

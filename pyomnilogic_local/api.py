@@ -9,14 +9,14 @@ from .models.filter_diagnostics import FilterDiagnostics
 from .models.mspconfig import MSPConfig
 from .models.telemetry import Telemetry
 from .models.util import to_pydantic
-from .protocol import OmniLogicProtocol
-from .types import (
+from .omnitypes import (
     ColorLogicBrightness,
     ColorLogicShow,
     ColorLogicSpeed,
     HeaterMode,
     MessageType,
 )
+from .protocol import OmniLogicProtocol
 
 _LOGGER = logging.getLogger(__name__)
 

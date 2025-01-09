@@ -13,7 +13,7 @@ from pydantic.v1 import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
-from ..types import (
+from ..omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,

@@ -87,14 +87,19 @@ class BodyOfWaterType(str, PrettyEnum):
 # Chlorinator status is a bitmask that we still need to figure out
 # class ChlorinatorStatus(str,Enum):
 #     pass
+
+
+# I have seen one pool that had an operatingMode of 3, I am not sure what that means, perhaps that is an OFF mode
 class ChlorinatorOperatingMode(IntEnum):
     DISABLED = 0
     TIMED = 1
     ORP = 2
+    OFF = 3
 
 
 class ChlorinatorDispenserType(str, PrettyEnum):
     SALT = "SALT_DISPENSING"
+    LIQUID = "LIQUID_DISPENSING"
 
 
 class ChlorinatorCellType(PrettyEnum):
@@ -102,6 +107,7 @@ class ChlorinatorCellType(PrettyEnum):
     T5 = "CELL_TYPE_T5"
     T9 = "CELL_TYPE_T9"
     T15 = "CELL_TYPE_T15"
+    LIQUID = "CELL_TYPE_LIQUID"
 
     # There is probably an easier way to do this
     def __int__(self) -> int:
