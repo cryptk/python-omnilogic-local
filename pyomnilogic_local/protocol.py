@@ -123,10 +123,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Us > Omni: MessageType.REQUEST_CONFIGURATION
             # Omni > Us: MessageType.ACK
             # Omni > Us: MessageType.MSP_LEADMESSAGE  <--- Sent immediately after an ACK
-            if message.type in {
-                MessageType.MSP_LEADMESSAGE,
-                MessageType.MSP_TELEMETRY_UPDATE,
-            }:
+            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
                 _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
                 await self.data_queue.put(message)
                 break

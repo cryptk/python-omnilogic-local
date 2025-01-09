@@ -15,12 +15,7 @@ def test_parse_basic_ack() -> None:
 def test_create_basic_ack() -> None:
     """Validate that we can create a valid basic ACK packet"""
     bytes_ack = b"\x99_\xd1l\x00\x00\x00\x00dv\x8f\xc11.20\x00\x00\x03\xea\x03\x00\x00\x00"
-    message = OmniLogicMessage(
-        2573193580,
-        MessageType.ACK,
-        payload=None,
-        version="1.20",
-    )
+    message = OmniLogicMessage(2573193580, MessageType.ACK, payload=None, version="1.20")
     message.client_type = ClientType.OMNI
     message.timestamp = 1685491649
     assert bytes(message) == bytes_ack
@@ -59,12 +54,7 @@ def test_create_leadmessage() -> None:
         '<Parameter name="MsgBlockCount" dataType="int">4</Parameter><Parameter name="Type" dataType="int">0</Parameter></Parameters>'
         "</Response>"
     )
-    message = OmniLogicMessage(
-        36982,
-        MessageType.MSP_LEADMESSAGE,
-        payload=payload_leadmessage,
-        version="1.20",
-    )
+    message = OmniLogicMessage(36982, MessageType.MSP_LEADMESSAGE, payload=payload_leadmessage, version="1.20")
     message.client_type = ClientType.OMNI
     message.timestamp = 1685492417
     message.compressed = True

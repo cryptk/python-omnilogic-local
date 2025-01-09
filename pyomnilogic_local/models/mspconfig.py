@@ -188,16 +188,7 @@ class MSPColorLogicLight(OmniBase):
 
 
 class MSPBoW(OmniBase):
-    _sub_devices = {
-        "filter",
-        "relay",
-        "heater",
-        "sensor",
-        "colorlogic_light",
-        "pump",
-        "chlorinator",
-        "csad",
-    }
+    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
@@ -219,12 +210,7 @@ class MSPBoW(OmniBase):
 
 
 class MSPBackyard(OmniBase):
-    _sub_devices = {
-        "sensor",
-        "bow",
-        "colorlogic_light",
-        "relay",
-    }
+    _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
 
     omni_type: OmniType = OmniType.BACKYARD
     sensor: list[MSPSensor] | None = Field(alias="Sensor")
@@ -235,8 +221,8 @@ class MSPBackyard(OmniBase):
 
 class MSPSchedule(OmniBase):  # type: ignore[override]
     omni_type: OmniType = OmniType.SCHEDULE
-    system_id: int = int(Field(alias="schedule-system-id"))
-    bow_id: int | None = int(Field(alias="bow-system-id"))
+    system_id: int = Field(alias="schedule-system-id")
+    bow_id: int = Field(alias="bow-system-id")
     equipment_id: int = Field(alias="equipment-id")
     enabled: bool = Field()
 

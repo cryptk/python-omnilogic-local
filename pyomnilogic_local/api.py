@@ -48,13 +48,7 @@ class OmniLogicAPI:
             str | None: The response body sent from the Omni if need_response indicates that a response will be sent
         """
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(
-            OmniLogicProtocol,
-            remote_addr=(
-                self.controller_ip,
-                self.controller_port,
-            ),
-        )
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=(self.controller_ip, self.controller_port))
 
         resp: str | None = None
         try:
