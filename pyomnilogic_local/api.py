@@ -1,9 +1,10 @@
+# pylint: disable=too-many-positional-arguments
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Literal, overload
 import xml.etree.ElementTree as ET
+from typing import Literal, overload
 
 from .models.filter_diagnostics import FilterDiagnostics
 from .models.mspconfig import MSPConfig
@@ -30,14 +31,27 @@ class OmniLogicAPI:
         self._protocol_factory = OmniLogicProtocol
 
     @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str:
-        ...
+    async def async_send_message(
+        self,
+        message_type: MessageType,
+        message: str | None,
+        need_response: Literal[True],
+    ) -> str: ...
 
     @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None:
-        ...
+    async def async_send_message(
+        self,
+        message_type: MessageType,
+        message: str | None,
+        need_response: Literal[False],
+    ) -> None: ...
 
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
+    async def async_send_message(
+        self,
+        message_type: MessageType,
+        message: str | None,
+        need_response: bool = False,
+    ) -> str | None:
         """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
 
         Args:
@@ -166,9 +180,22 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="HeaterID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="Temp",
+            dataType="int",
+            unit=unit,
+            alias="Data",
+        )
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -195,9 +222,22 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="HeaterID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="Temp",
+            dataType="int",
+            unit=unit,
+            alias="Data",
+        )
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -223,7 +263,13 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="HeaterID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Mode", dataType="int", alias="Data")
         parameter.text = str(mode.value)
@@ -251,9 +297,21 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="HeaterID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="Enabled",
+            dataType="bool",
+            alias="Data",
+        )
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -336,10 +394,23 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="FilterID", dataType="int", alias="equipment_id")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="FilterID",
+            dataType="int",
+            alias="equipment_id",
+        )
         parameter.text = str(equipment_id)
         # NOTE: Despite the API calling it RPM here, the speed value is a percentage from 1-100
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Speed", dataType="int", unit="RPM", alias="Data")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="Speed",
+            dataType="int",
+            unit="RPM",
+            alias="Data",
+        )
         parameter.text = str(speed)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -387,7 +458,13 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="LightID", dataType="int", alias="equipment_id")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="LightID",
+            dataType="int",
+            alias="equipment_id",
+        )
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Show", dataType="byte")
         parameter.text = str(show.value)
@@ -424,7 +501,13 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="Enabled",
+            dataType="bool",
+            alias="Data",
+        )
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -451,21 +534,71 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="ChlorID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="CfgState", dataType="byte", alias="Data1")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="CfgState",
+            dataType="byte",
+            alias="Data1",
+        )
         parameter.text = str(cfg_state)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="OpMode", dataType="byte", alias="Data2")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="OpMode",
+            dataType="byte",
+            alias="Data2",
+        )
         parameter.text = str(op_mode)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="BOWType", dataType="byte", alias="Data3")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="BOWType",
+            dataType="byte",
+            alias="Data3",
+        )
         parameter.text = str(bow_type)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="CellType", dataType="byte", alias="Data4")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="CellType",
+            dataType="byte",
+            alias="Data4",
+        )
         parameter.text = str(cell_type)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="TimedPercent", dataType="byte", alias="Data5")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="TimedPercent",
+            dataType="byte",
+            alias="Data5",
+        )
         parameter.text = str(timed_percent)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="SCTimeout", dataType="byte", unit="hour", alias="Data6")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="SCTimeout",
+            dataType="byte",
+            unit="hour",
+            alias="Data6",
+        )
         parameter.text = str(sc_timeout)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="ORPTimout", dataType="byte", unit="hour", alias="Data7")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="ORPTimout",
+            dataType="byte",
+            unit="hour",
+            alias="Data7",
+        )
         parameter.text = str(orp_timeout)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -481,7 +614,13 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
+        parameter = ET.SubElement(
+            parameters_element,
+            "Parameter",
+            name="ChlorID",
+            dataType="int",
+            alias="EquipmentID",
+        )
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="IsOn", dataType="byte", alias="Data1")
         parameter.text = str(int(enabled))

@@ -200,12 +200,10 @@ class Telemetry(BaseModel):
         TypeVar("VT", SupportsInt, Any)
 
         @overload
-        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]:
-            ...
+        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
 
         @overload
-        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]:
-            ...
+        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
 
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
             """Post process XML to attempt to convert values to int.

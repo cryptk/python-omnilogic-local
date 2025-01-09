@@ -188,7 +188,16 @@ class MSPColorLogicLight(OmniBase):
 
 
 class MSPBoW(OmniBase):
-    _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
+    _sub_devices = {
+        "filter",
+        "relay",
+        "heater",
+        "sensor",
+        "colorlogic_light",
+        "pump",
+        "chlorinator",
+        "csad",
+    }
 
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")

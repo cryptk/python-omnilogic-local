@@ -3,9 +3,9 @@ import logging
 import random
 import struct
 import time
-from typing import Any, cast
 import xml.etree.ElementTree as ET
 import zlib
+from typing import Any, cast
 
 from typing_extensions import Self
 
@@ -28,7 +28,13 @@ class OmniLogicMessage:
     compressed: bool = False
     reserved_2: int = 0
 
-    def __init__(self, msg_id: int, msg_type: MessageType, payload: str | None = None, version: str = "1.19") -> None:
+    def __init__(
+        self,
+        msg_id: int,
+        msg_type: MessageType,
+        payload: str | None = None,
+        version: str = "1.19",
+    ) -> None:
         self.id = msg_id
         self.type = msg_type
         # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
@@ -117,7 +123,10 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Us > Omni: MessageType.REQUEST_CONFIGURATION
             # Omni > Us: MessageType.ACK
             # Omni > Us: MessageType.MSP_LEADMESSAGE  <--- Sent immediately after an ACK
-            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
+            if message.type in {
+                MessageType.MSP_LEADMESSAGE,
+                MessageType.MSP_TELEMETRY_UPDATE,
+            }:
                 _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
                 await self.data_queue.put(message)
                 break
@@ -192,7 +201,10 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             while len(data_fragments) < leadmsg.msg_block_count:
                 # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
                 try:
-                    resp = await asyncio.wait_for(self.data_queue.get(), self._omni_retransmit_time * self._omni_retransmit_count)
+                    resp = await asyncio.wait_for(
+                        self.data_queue.get(),
+                        self._omni_retransmit_time * self._omni_retransmit_count,
+                    )
                 except TimeoutError as exc:
                     raise OmniTimeoutException from exc
 
