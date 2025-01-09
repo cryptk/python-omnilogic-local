@@ -219,7 +219,12 @@ class MSPBoW(OmniBase):
 
 
 class MSPBackyard(OmniBase):
-    _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
+    _sub_devices = {
+        "sensor",
+        "bow",
+        "colorlogic_light",
+        "relay",
+    }
 
     omni_type: OmniType = OmniType.BACKYARD
     sensor: list[MSPSensor] | None = Field(alias="Sensor")

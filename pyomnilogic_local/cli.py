@@ -21,7 +21,11 @@ async def async_main() -> None:
     mspconfig: MSPConfig
     telem: Telemetry
 
-    omni = OmniLogicAPI(os.environ.get("OMNILOGIC_HOST", "127.0.0.1"), 10444, 5.0)
+    omni = OmniLogicAPI(
+        os.environ.get("OMNILOGIC_HOST", "127.0.0.1"),
+        10444,
+        5.0,
+    )
     get_raw = os.environ.get("OMNILOGIC_RAW", False)
 
     # Some basic calls to run some testing against the library
@@ -94,7 +98,10 @@ async def async_main() -> None:
 
 
 def main() -> None:
-    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s: %(message)s",
+        level=logging.DEBUG,
+    )
     asyncio.run(async_main())
 
 

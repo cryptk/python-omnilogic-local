@@ -24,7 +24,9 @@ F = TypeVar("F", bound=Callable[..., Awaitable[str]])
 TPydanticTypes = Telemetry | MSPConfig | FilterDiagnostics
 
 
-def to_pydantic(pydantic_type: type[TPydanticTypes]) -> Callable[..., Any]:
+def to_pydantic(
+    pydantic_type: type[TPydanticTypes],
+) -> Callable[..., Any]:
     def inner(func: F, *args: Any, **kwargs: Any) -> F:
         """Wrap an API function that returns XML and parse it into a Pydantic model"""
 

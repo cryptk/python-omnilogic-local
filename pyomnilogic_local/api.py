@@ -31,27 +31,12 @@ class OmniLogicAPI:
         self._protocol_factory = OmniLogicProtocol
 
     @overload
-    async def async_send_message(
-        self,
-        message_type: MessageType,
-        message: str | None,
-        need_response: Literal[True],
-    ) -> str: ...
+    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
 
     @overload
-    async def async_send_message(
-        self,
-        message_type: MessageType,
-        message: str | None,
-        need_response: Literal[False],
-    ) -> None: ...
+    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None: ...
 
-    async def async_send_message(
-        self,
-        message_type: MessageType,
-        message: str | None,
-        need_response: bool = False,
-    ) -> str | None:
+    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
         """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
 
         Args:
@@ -63,7 +48,13 @@ class OmniLogicAPI:
             str | None: The response body sent from the Omni if need_response indicates that a response will be sent
         """
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=(self.controller_ip, self.controller_port))
+        transport, protocol = await loop.create_datagram_endpoint(
+            OmniLogicProtocol,
+            remote_addr=(
+                self.controller_ip,
+                self.controller_port,
+            ),
+        )
 
         resp: str | None = None
         try:
@@ -111,7 +102,11 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
 
     @to_pydantic(pydantic_type=FilterDiagnostics)
-    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int) -> str:
+    async def async_get_filter_diagnostics(
+        self,
+        pool_id: int,
+        equipment_id: int,
+    ) -> str:
         """Retrieve filter diagnostics from the Omni, optionally parse it into a pydantic model.
 
         Args:
@@ -160,7 +155,13 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
 
-    async def async_set_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
+    async def async_set_heater(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        temperature: int,
+        unit: str,
+    ) -> None:
         """Set the temperature for a heater on the Omni
 
         Args:
@@ -180,29 +181,22 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="HeaterID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="Temp",
-            dataType="int",
-            unit=unit,
-            alias="Data",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
-    async def async_set_solar_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
+    async def async_set_solar_heater(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        temperature: int,
+        unit: str,
+    ) -> None:
         """Set the solar set point for a heater on the Omni.
 
         Args:
@@ -222,29 +216,21 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="HeaterID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="Temp",
-            dataType="int",
-            unit=unit,
-            alias="Data",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
-    async def async_set_heater_mode(self, pool_id: int, equipment_id: int, mode: HeaterMode) -> None:
+    async def async_set_heater_mode(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        mode: HeaterMode,
+    ) -> None:
         """Set what mode (Heat/Cool/Auto) the heater should use.
 
         Args:
@@ -263,13 +249,7 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="HeaterID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Mode", dataType="int", alias="Data")
         parameter.text = str(mode.value)
@@ -278,7 +258,12 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
 
-    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+    async def async_set_heater_enable(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        enabled: int | bool,
+    ) -> None:
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
         Args:
@@ -297,21 +282,9 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="HeaterID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="Enabled",
-            dataType="bool",
-            alias="Data",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -394,23 +367,10 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="FilterID",
-            dataType="int",
-            alias="equipment_id",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="FilterID", dataType="int", alias="equipment_id")
         parameter.text = str(equipment_id)
         # NOTE: Despite the API calling it RPM here, the speed value is a percentage from 1-100
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="Speed",
-            dataType="int",
-            unit="RPM",
-            alias="Data",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Speed", dataType="int", unit="RPM", alias="Data")
         parameter.text = str(speed)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -458,13 +418,7 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="LightID",
-            dataType="int",
-            alias="equipment_id",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="LightID", dataType="int", alias="equipment_id")
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="Show", dataType="byte")
         parameter.text = str(show.value)
@@ -501,13 +455,7 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="Enabled",
-            dataType="bool",
-            alias="Data",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -534,78 +482,33 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="ChlorID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="CfgState",
-            dataType="byte",
-            alias="Data1",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CfgState", dataType="byte", alias="Data1")
         parameter.text = str(cfg_state)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="OpMode",
-            dataType="byte",
-            alias="Data2",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="OpMode", dataType="byte", alias="Data2")
         parameter.text = str(op_mode)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="BOWType",
-            dataType="byte",
-            alias="Data3",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="BOWType", dataType="byte", alias="Data3")
         parameter.text = str(bow_type)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="CellType",
-            dataType="byte",
-            alias="Data4",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CellType", dataType="byte", alias="Data4")
         parameter.text = str(cell_type)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="TimedPercent",
-            dataType="byte",
-            alias="Data5",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="TimedPercent", dataType="byte", alias="Data5")
         parameter.text = str(timed_percent)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="SCTimeout",
-            dataType="byte",
-            unit="hour",
-            alias="Data6",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="SCTimeout", dataType="byte", unit="hour", alias="Data6")
         parameter.text = str(sc_timeout)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="ORPTimout",
-            dataType="byte",
-            unit="hour",
-            alias="Data7",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ORPTimout", dataType="byte", unit="hour", alias="Data7")
         parameter.text = str(orp_timeout)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
 
-    async def async_set_chlorinator_superchlorinate(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+    async def async_set_chlorinator_superchlorinate(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        enabled: int | bool,
+    ) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")
@@ -614,13 +517,7 @@ class OmniLogicAPI:
         parameters_element = ET.SubElement(body_element, "Parameters")
         parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
         parameter.text = str(pool_id)
-        parameter = ET.SubElement(
-            parameters_element,
-            "Parameter",
-            name="ChlorID",
-            dataType="int",
-            alias="EquipmentID",
-        )
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="IsOn", dataType="byte", alias="Data1")
         parameter.text = str(int(enabled))

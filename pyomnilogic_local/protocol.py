@@ -73,7 +73,7 @@ class OmniLogicMessage:
         header = data[:24]
         rdata: bytes = data[24:]
 
-        msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2 = struct.unpack(cls.header_format, header)
+        (msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2) = struct.unpack(cls.header_format, header)
         message = cls(msg_id=msg_id, msg_type=MessageType(msg_type), version=vers.decode("utf-8"))
         message.timestamp = tstamp
         message.client_type = ClientType(int(client_type))
@@ -134,7 +134,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # eventually time out waiting for it, that way we can deal with the dropped packets
             message = await self.data_queue.get()
 
-    async def _ensure_sent(self, message: OmniLogicMessage, max_attempts: int = 5) -> None:
+    async def _ensure_sent(
+        self,
+        message: OmniLogicMessage,
+        max_attempts: int = 5,
+    ) -> None:
         for attempt in range(0, max_attempts):
             self.transport.sendto(bytes(message))
 
@@ -152,12 +156,22 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                 else:
                     raise OmniTimeoutException("Failed to receive acknowledgement of command, max retries exceeded") from exc
 
-    async def send_and_receive(self, msg_type: MessageType, payload: str | None, msg_id: int | None = None) -> str:
+    async def send_and_receive(
+        self,
+        msg_type: MessageType,
+        payload: str | None,
+        msg_id: int | None = None,
+    ) -> str:
         await self.send_message(msg_type, payload, msg_id)
         return await self._receive_file()
 
     # Send a message that you do NOT need a response to
-    async def send_message(self, msg_type: MessageType, payload: str | None, msg_id: int | None = None) -> None:
+    async def send_message(
+        self,
+        msg_type: MessageType,
+        payload: str | None,
+        msg_id: int | None = None,
+    ) -> None:
         # If we aren't sending a specific msg_id, lets randomize it
         if not msg_id:
             msg_id = random.randrange(2**32)
@@ -201,10 +215,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             while len(data_fragments) < leadmsg.msg_block_count:
                 # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
                 try:
-                    resp = await asyncio.wait_for(
-                        self.data_queue.get(),
-                        self._omni_retransmit_time * self._omni_retransmit_count,
-                    )
+                    resp = await asyncio.wait_for(self.data_queue.get(), self._omni_retransmit_time * self._omni_retransmit_count)
                 except TimeoutError as exc:
                     raise OmniTimeoutException from exc
 
