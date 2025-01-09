@@ -6,7 +6,7 @@ from pydantic.v1 import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
-from ..types import (
+from ..omnitypes import (
     BackyardState,
     ChlorinatorOperatingMode,
     ColorLogicBrightness,
@@ -71,7 +71,7 @@ class TelemetryChlorinator(BaseModel):
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int | None = Field(alias="@Timed-Percent")
-    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
+    operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
     # Still need to do a bit more work to determine if a chlorinator is actively chlorinating
@@ -200,12 +200,10 @@ class Telemetry(BaseModel):
         TypeVar("VT", SupportsInt, Any)
 
         @overload
-        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]:
-            ...
+        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
 
         @overload
-        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]:
-            ...
+        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
 
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
             """Post process XML to attempt to convert values to int.

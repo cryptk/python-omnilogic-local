@@ -3,15 +3,15 @@ import logging
 import random
 import struct
 import time
-from typing import Any, cast
 import xml.etree.ElementTree as ET
 import zlib
+from typing import Any, cast
 
 from typing_extensions import Self
 
 from .exceptions import OmniTimeoutException
 from .models.leadmessage import LeadMessage
-from .types import ClientType, MessageType
+from .omnitypes import ClientType, MessageType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,13 @@ class OmniLogicMessage:
     compressed: bool = False
     reserved_2: int = 0
 
-    def __init__(self, msg_id: int, msg_type: MessageType, payload: str | None = None, version: str = "1.19") -> None:
+    def __init__(
+        self,
+        msg_id: int,
+        msg_type: MessageType,
+        payload: str | None = None,
+        version: str = "1.19",
+    ) -> None:
         self.id = msg_id
         self.type = msg_type
         # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
@@ -67,7 +73,7 @@ class OmniLogicMessage:
         header = data[:24]
         rdata: bytes = data[24:]
 
-        msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2 = struct.unpack(cls.header_format, header)
+        (msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2) = struct.unpack(cls.header_format, header)
         message = cls(msg_id=msg_id, msg_type=MessageType(msg_type), version=vers.decode("utf-8"))
         message.timestamp = tstamp
         message.client_type = ClientType(int(client_type))
@@ -125,7 +131,11 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # eventually time out waiting for it, that way we can deal with the dropped packets
             message = await self.data_queue.get()
 
-    async def _ensure_sent(self, message: OmniLogicMessage, max_attempts: int = 5) -> None:
+    async def _ensure_sent(
+        self,
+        message: OmniLogicMessage,
+        max_attempts: int = 5,
+    ) -> None:
         for attempt in range(0, max_attempts):
             self.transport.sendto(bytes(message))
 
@@ -143,12 +153,22 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                 else:
                     raise OmniTimeoutException("Failed to receive acknowledgement of command, max retries exceeded") from exc
 
-    async def send_and_receive(self, msg_type: MessageType, payload: str | None, msg_id: int | None = None) -> str:
+    async def send_and_receive(
+        self,
+        msg_type: MessageType,
+        payload: str | None,
+        msg_id: int | None = None,
+    ) -> str:
         await self.send_message(msg_type, payload, msg_id)
         return await self._receive_file()
 
     # Send a message that you do NOT need a response to
-    async def send_message(self, msg_type: MessageType, payload: str | None, msg_id: int | None = None) -> None:
+    async def send_message(
+        self,
+        msg_type: MessageType,
+        payload: str | None,
+        msg_id: int | None = None,
+    ) -> None:
         # If we aren't sending a specific msg_id, lets randomize it
         if not msg_id:
             msg_id = random.randrange(2**32)

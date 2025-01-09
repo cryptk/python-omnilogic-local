@@ -23,6 +23,7 @@ class FilterDiagnostics(BaseModel):
         orm_mode = True
 
     def get_param_by_name(self, name: str) -> int:
+        # pylint: disable=not-an-iterable
         return [param.value for param in self.parameters if param.name == name][0]
 
     @staticmethod

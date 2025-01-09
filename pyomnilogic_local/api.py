@@ -1,22 +1,23 @@
+# pylint: disable=too-many-positional-arguments
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Literal, overload
 import xml.etree.ElementTree as ET
+from typing import Literal, overload
 
 from .models.filter_diagnostics import FilterDiagnostics
 from .models.mspconfig import MSPConfig
 from .models.telemetry import Telemetry
 from .models.util import to_pydantic
-from .protocol import OmniLogicProtocol
-from .types import (
+from .omnitypes import (
     ColorLogicBrightness,
     ColorLogicShow,
     ColorLogicSpeed,
     HeaterMode,
     MessageType,
 )
+from .protocol import OmniLogicProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,10 @@ class OmniLogicAPI:
         self._protocol_factory = OmniLogicProtocol
 
     @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str:
-        ...
+    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
 
     @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None:
-        ...
+    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None: ...
 
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
         """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
@@ -97,7 +96,11 @@ class OmniLogicAPI:
         return await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
 
     @to_pydantic(pydantic_type=FilterDiagnostics)
-    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int) -> str:
+    async def async_get_filter_diagnostics(
+        self,
+        pool_id: int,
+        equipment_id: int,
+    ) -> str:
         """Retrieve filter diagnostics from the Omni, optionally parse it into a pydantic model.
 
         Args:
@@ -146,7 +149,13 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
 
-    async def async_set_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
+    async def async_set_heater(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        temperature: int,
+        unit: str,
+    ) -> None:
         """Set the temperature for a heater on the Omni
 
         Args:
@@ -175,7 +184,13 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
-    async def async_set_solar_heater(self, pool_id: int, equipment_id: int, temperature: int, unit: str) -> None:
+    async def async_set_solar_heater(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        temperature: int,
+        unit: str,
+    ) -> None:
         """Set the solar set point for a heater on the Omni.
 
         Args:
@@ -204,7 +219,12 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
-    async def async_set_heater_mode(self, pool_id: int, equipment_id: int, mode: HeaterMode) -> None:
+    async def async_set_heater_mode(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        mode: HeaterMode,
+    ) -> None:
         """Set what mode (Heat/Cool/Auto) the heater should use.
 
         Args:
@@ -232,7 +252,12 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
 
-    async def async_set_heater_enable(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+    async def async_set_heater_enable(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        enabled: int | bool,
+    ) -> None:
         """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
 
         Args:
@@ -472,7 +497,12 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
 
-    async def async_set_chlorinator_superchlorinate(self, pool_id: int, equipment_id: int, enabled: int | bool) -> None:
+    async def async_set_chlorinator_superchlorinate(
+        self,
+        pool_id: int,
+        equipment_id: int,
+        enabled: int | bool,
+    ) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
 
         name_element = ET.SubElement(body_element, "Name")

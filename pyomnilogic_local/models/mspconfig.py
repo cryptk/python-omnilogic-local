@@ -13,7 +13,7 @@ from pydantic.v1 import BaseModel, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
-from ..types import (
+from ..omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,
@@ -219,7 +219,7 @@ class MSPBackyard(OmniBase):
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
 
 
-class MSPSchedule(OmniBase):
+class MSPSchedule(OmniBase):  # type: ignore[override]
     omni_type: OmniType = OmniType.SCHEDULE
     system_id: int = Field(alias="schedule-system-id")
     bow_id: int = Field(alias="bow-system-id")

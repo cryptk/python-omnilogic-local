@@ -8,6 +8,7 @@
     "--cov-report=xml:coverage.xml",
     "tests"
   ],
+  "mypy-type-checker.importStrategy": "fromEnvironment",
   "python.analysis.typeCheckingMode": "basic",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
