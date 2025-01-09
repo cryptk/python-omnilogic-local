@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.15.1 (2025-01-09)
+
+### Fix
+
+* Relax the python version requirement until I update semantic-release ([#63](https://github.com/cryptk/python-omnilogic-local/issues/63)) ([`59fcf98`](https://github.com/cryptk/python-omnilogic-local/commit/59fcf9890e653b7fe35fb03430bef166ffd7a9eb))
+
 ## v0.15.0 (2025-01-09)
 
 ### Feature
