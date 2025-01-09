@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.15.0 (2025-01-09)
+
+### Feature
+
+* More csad ([#62](https://github.com/cryptk/python-omnilogic-local/issues/62)) ([`c3e39df`](https://github.com/cryptk/python-omnilogic-local/commit/c3e39df6730cab3cbd5d9ef9ff4d2c597f4f3ea8))
+
 ## v0.14.6 (2025-01-08)
 
 ### Fix
