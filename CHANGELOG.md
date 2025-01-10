@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.15.2 (2025-01-10)
+
+### Fix
+
+* Bring back the omnilogic command ([#65](https://github.com/cryptk/python-omnilogic-local/issues/65)) ([`68d2173`](https://github.com/cryptk/python-omnilogic-local/commit/68d2173a9ef7b8ec40ba6f55c653f21d8d31fa5d))
+
 ## v0.15.1 (2025-01-09)
 
 ### Fix
