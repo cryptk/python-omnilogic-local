@@ -1,6 +1,6 @@
 [project]
 name = "python-omnilogic-local"
-version = "0.15.2"
+version = "0.16.0"
 description = "A library for local control of Hayward OmniHub/OmniLogic pool controllers using their local API"
 authors = [
     {name = "Chris Jowett",email = "421501+cryptk@users.noreply.github.com"},

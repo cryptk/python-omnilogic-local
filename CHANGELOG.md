@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.16.0 (2025-01-10)
+
+### Feature
+
+* Implement RunGroupCmd ([#64](https://github.com/cryptk/python-omnilogic-local/issues/64)) ([`9c765f9`](https://github.com/cryptk/python-omnilogic-local/commit/9c765f9401e4ca3776a7964e848472fa28d6f9ea))
+
 ## v0.15.2 (2025-01-10)
 
 ### Fix
