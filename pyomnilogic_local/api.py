@@ -572,3 +572,44 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.SET_SPILLOVER, req_body, False)
+
+    async def async_set_group_enable(
+        self,
+        group_id: int,
+        enabled: int | bool,
+        is_countdown_timer: bool = False,
+        start_time_hours: int = 0,
+        start_time_minutes: int = 0,
+        end_time_hours: int = 0,
+        end_time_minutes: int = 0,
+        days_active: int = 0,
+        recurring: bool = False,
+    ) -> None:
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "RunGroupCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="GroupID", dataType="int")
+        parameter.text = str(group_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Data", dataType="int")
+        parameter.text = str(int(enabled))
+        parameter = ET.SubElement(parameters_element, "Parameter", name="IsCountDownTimer", dataType="bool")
+        parameter.text = str(int(is_countdown_timer))
+        parameter = ET.SubElement(parameters_element, "Parameter", name="StartTimeHours", dataType="int")
+        parameter.text = str(start_time_hours)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="StartTimeMinutes", dataType="int")
+        parameter.text = str(start_time_minutes)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="EndTimeHours", dataType="int")
+        parameter.text = str(end_time_hours)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="EndTimeMinutes", dataType="int")
+        parameter.text = str(end_time_minutes)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="DaysActive", dataType="int")
+        parameter.text = str(days_active)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
+        parameter.text = str(int(recurring))
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        return await self.async_send_message(MessageType.RUN_GROUP_CMD, req_body, False)
