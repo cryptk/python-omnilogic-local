@@ -15,6 +15,9 @@ dependencies = [
     "xmltodict (>=0.13.0,<0.14.0)"
 ]
 
+[project.scripts]
+omnilogic = "pyomnilogic_local.cli:main"
+
 [tool.poetry]
 packages = [{include = "pyomnilogic_local"}]
 
