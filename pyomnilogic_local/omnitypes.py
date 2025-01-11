@@ -64,6 +64,9 @@ class OmniType(str, Enum):
     VALVE_ACTUATOR = "ValveActuator"
     VIRT_HEATER = "VirtualHeater"
 
+    def __str__(self) -> str:
+        return OmniType[self.name].value
+
 
 # Backyard/BoW
 class BackyardState(PrettyEnum):
@@ -173,6 +176,9 @@ class ColorLogicShow(PrettyEnum):
     WARM_WHITE = 25
     BRIGHT_YELLOW = 26
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class ColorLogicPowerState(PrettyEnum):
     OFF = 0
@@ -187,6 +193,9 @@ class ColorLogicLightType(str, PrettyEnum):
     UCL = "COLOR_LOGIC_UCL"
     FOUR_ZERO = "COLOR_LOGIC_4_0"
     TWO_FIVE = "COLOR_LOGIC_2_5"
+
+    def __str__(self) -> str:
+        return ColorLogicLightType[self.name].value
 
 
 class CSADType(str, PrettyEnum):
