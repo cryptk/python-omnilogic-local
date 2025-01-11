@@ -12,11 +12,12 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "pydantic (>=1.10.17)",
-    "xmltodict (>=0.13.0,<0.14.0)"
+    "xmltodict (>=0.13.0,<0.14.0)",
+    "click (>=8.0.0,<8.1.0)",
 ]
 
 [project.scripts]
-omnilogic = "pyomnilogic_local.cli:main"
+omnilogic = "pyomnilogic_local.cli.cli:entrypoint"
 
 [tool.poetry]
 packages = [{include = "pyomnilogic_local"}]
@@ -41,7 +42,9 @@ profile = "black"
 
 [tool.mypy]
 python_version = "3.13"
-plugins = "pydantic.mypy"
+plugins = [
+    "pydantic.mypy",
+]
 follow_imports = "silent"
 strict = true
 ignore_missing_imports = true
@@ -56,6 +59,9 @@ warn_untyped_fields = true
 
 [tool.pylint.MAIN]
 py-version = "3.13"
+extension-pkg-allow-list = [
+    "pydantic",
+]
 ignore = [
     "tests",
 ]
