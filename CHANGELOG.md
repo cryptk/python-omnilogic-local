@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.19.0 (2025-01-15)
+
+### Feature
+
+* Add support for more cell types ([#69](https://github.com/cryptk/python-omnilogic-local/issues/69)) ([`29e36f9`](https://github.com/cryptk/python-omnilogic-local/commit/29e36f9ba5961011fda9d337ea3299e980f0cb74))
+
 ## v0.18.0 (2025-01-15)
 
 ### Feature
