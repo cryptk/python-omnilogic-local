@@ -174,6 +174,12 @@ class MSPCSAD(OmniBase):
     calibration_value: float = Field(alias="CalibrationValue")
     ph_low_alarm_value: float = Field(alias="PHLowAlarmLevel")
     ph_high_alarm_value: float = Field(alias="PHHighAlarmLevel")
+    orp_target_level: int = Field(alias="ORP-Target-Level")
+    orp_runtime_level: int = Field(alias="ORP-Runtime-Level")
+    orp_low_alarm_level: int = Field(alias="ORP-Low-Alarm-Level")
+    orp_high_alarm_level: int = Field(alias="ORP-High-Alarm-Level")
+    orp_forced_on_time: int = Field(alias="ORP-Forced-On-Time")
+    orp_forced_enabled: bool = Field(alias="ORP-Forced-Enabled")
 
 
 class MSPColorLogicLight(OmniBase):
