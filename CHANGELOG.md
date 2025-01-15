@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.18.0 (2025-01-15)
+
+### Feature
+
+* Add more msp_config data for ORP settings ([#68](https://github.com/cryptk/python-omnilogic-local/issues/68)) ([`d1ade32`](https://github.com/cryptk/python-omnilogic-local/commit/d1ade32de0fbaac44dfaabe81f7413ea76b180e5))
+
 ## v0.17.0 (2025-01-15)
 
 ### Feature
