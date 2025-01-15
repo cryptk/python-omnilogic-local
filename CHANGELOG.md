@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.17.0 (2025-01-15)
+
+### Feature
+
+* Begin to add new CLI utility, ref #66 ([#67](https://github.com/cryptk/python-omnilogic-local/issues/67)) ([`6410c81`](https://github.com/cryptk/python-omnilogic-local/commit/6410c81eea621925b210b3fc893f303f67093575))
+
 ## v0.16.0 (2025-01-10)
 
 ### Feature
