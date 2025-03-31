@@ -34,7 +34,15 @@ class MessageType(Enum):
     MSP_LEADMESSAGE = 1998
     MSP_BLOCKMESSAGE = 1999
 
-
+    SET_DATE_TIME = 101
+    CLEAR_UI_ALARM = 303
+    SET_SCHEDULE = 232
+    EDIT_SCHEDULE = 233
+    SetUISystemStateCmd = 268    
+    RESET_STANDALONE_LIGHT = 309
+    GET_CHLOR_RELAY_POLARITY = 174
+    GET_CHLOR_MEASUREMENT= 163
+    
 class ClientType(Enum):
     XML = 0
     SIMPLE = 1
