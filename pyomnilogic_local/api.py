@@ -439,6 +439,31 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
         return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
+        
+    async def async_reset_standalone_light(
+        self,
+        pool_id: int,
+        light_id: int
+    ) -> None:
+        """Reset ColorLogic light (Sync).
+
+        Args:
+            pool_id (int): The Pool/BodyOfWater ID that you want to address
+            light_id (int): Which light_id within that Pool to address
+        """
+        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "ResetStandAloneLight"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="PoolID", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="LightID", dataType="int", alias="equipment_id")
+        parameter.text = str(light_id)       
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        return await self.async_send_message(MessageType.RESET_STANDALONE_LIGHT, req_body, False)
 
     async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
