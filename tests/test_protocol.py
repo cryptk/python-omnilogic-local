@@ -1,5 +1,11 @@
+import asyncio
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from pyomnilogic_local.exceptions import OmniTimeoutException
 from pyomnilogic_local.omnitypes import ClientType, MessageType
-from pyomnilogic_local.protocol import OmniLogicMessage
+from pyomnilogic_local.protocol import OmniLogicMessage, OmniLogicProtocol
 
 
 def test_parse_basic_ack() -> None:
@@ -59,3 +65,48 @@ def test_create_leadmessage() -> None:
     message.timestamp = 1685492417
     message.compressed = True
     assert bytes(message) == bytes_leadmessage
+
+
+def test_datagram_received_with_corrupt_data(caplog: pytest.LogCaptureFixture) -> None:
+    """Test that corrupt datagram data is handled gracefully and logged."""
+    protocol = OmniLogicProtocol()
+    # Provide invalid/corrupt data (too short for header)
+    corrupt_data = b"short"
+    with caplog.at_level("ERROR"):
+        protocol.datagram_received(corrupt_data, ("127.0.0.1", 12345))
+    assert any("Failed to parse incoming datagram" in r.message for r in caplog.records)
+
+
+def test_datagram_received_queue_overflow(caplog: pytest.LogCaptureFixture) -> None:
+    """Test that queue overflow is handled and logged."""
+    protocol = OmniLogicProtocol()
+    # Fill the queue to capacity
+    protocol.data_queue = asyncio.Queue(maxsize=1)
+    protocol.data_queue.put_nowait(OmniLogicMessage(1, MessageType.ACK))
+    # Now send another valid message
+    valid_data = bytes(OmniLogicMessage(2, MessageType.ACK))
+    with caplog.at_level("ERROR"):
+        protocol.datagram_received(valid_data, ("127.0.0.1", 12345))
+    assert any("Data queue is full" in r.message for r in caplog.records)
+
+
+@pytest.mark.asyncio  # type: ignore[misc]
+async def test_ensure_sent_timeout_and_retry_logs(caplog: pytest.LogCaptureFixture) -> None:
+    """Test that _ensure_sent logs retries and raises on repeated timeout."""
+    protocol = OmniLogicProtocol()
+    protocol.transport = MagicMock()
+
+    # Patch _wait_for_ack to always timeout using patch.object
+    async def always_timeout(*args: object, **kwargs: object) -> None:
+        await asyncio.sleep(0)
+        raise TimeoutError()
+
+    message = OmniLogicMessage(123, MessageType.REQUEST_CONFIGURATION)
+    with patch.object(protocol, "_wait_for_ack", always_timeout):
+        with caplog.at_level("WARNING"):
+            with pytest.raises(OmniTimeoutException):
+                await protocol._ensure_sent(message, max_attempts=3)  # pylint: disable=protected-access
+    # Should log retries and final error
+    assert any("attempt 1/3" in r.message for r in caplog.records)
+    assert any("attempt 2/3" in r.message for r in caplog.records)
+    assert any("after 3 attempts" in r.message for r in caplog.records)
