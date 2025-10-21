@@ -9,11 +9,11 @@ authors = [
 ]
 license = {text = "Apache-2.0"}
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.12"
 dependencies = [
-    "pydantic (>=1.10.17)",
-    "xmltodict (>=0.13.0,<0.14.0)",
-    "click (>=8.0.0,<8.1.0)",
+    "pydantic >=1.10.17,<2.0.0",
+    "xmltodict >=0.13.0,<2.0.0",
+    "click >=8.0.0,<8.4.0",
 ]
 
 [project.scripts]
@@ -23,11 +23,11 @@ omnilogic = "pyomnilogic_local.cli.cli:entrypoint"
 packages = [{include = "pyomnilogic_local"}]
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.8.0"
-mypy = "^1.14.0"
-pylint = "^3.3.3"
+pre-commit = "^4.0.0"
+mypy = "^1.18.2"
+pylint = "^4.0.0"
 pytest = "^8.0.0"
-pytest-cov = "^4.1.0"
+pytest-cov = "^7.0.0"
 pytest-asyncio = "^1.2.0"
 
 [build-system]
@@ -44,7 +44,7 @@ profile = "black"
 [tool.mypy]
 python_version = "3.13"
 plugins = [
-    "pydantic.mypy",
+    "pydantic.v1.mypy",
 ]
 follow_imports = "silent"
 strict = true

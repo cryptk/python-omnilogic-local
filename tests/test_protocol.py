@@ -90,7 +90,7 @@ def test_datagram_received_queue_overflow(caplog: pytest.LogCaptureFixture) -> N
     assert any("Data queue is full" in r.message for r in caplog.records)
 
 
-@pytest.mark.asyncio  # type: ignore[misc]
+@pytest.mark.asyncio
 async def test_ensure_sent_timeout_and_retry_logs(caplog: pytest.LogCaptureFixture) -> None:
     """Test that _ensure_sent logs retries and raises on repeated timeout."""
     protocol = OmniLogicProtocol()

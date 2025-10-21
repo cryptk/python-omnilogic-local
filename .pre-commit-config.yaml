@@ -1,7 +1,7 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 exclude: "CHANGELOG.md"
-default_stages: [ commit ]
+default_stages: [ pre-commit ]
 
 repos:
     -   repo: https://github.com/pre-commit/pre-commit-hooks
@@ -53,4 +53,5 @@ repos:
         hooks:
             -   id: mypy
                 exclude: cli.py
-                additional_dependencies: [ "pydantic>=1.10.17" ]
+                additional_dependencies: [ "pydantic>=1.10.17", "pytest>=8.0.0" ]
+                args: [ "--config-file=./pyproject.toml", "--follow-imports=silent", "--strict", "--ignore-missing-imports", "--disallow-subclassing-any", "--no-warn-return-any" ]
