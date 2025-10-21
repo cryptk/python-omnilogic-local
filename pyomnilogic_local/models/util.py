@@ -21,11 +21,10 @@ class ParameterGetter(GetterDict):
 
 
 F = TypeVar("F", bound=Callable[..., Awaitable[str]])
-TPydanticTypes = Telemetry | MSPConfig | FilterDiagnostics
 
 
 def to_pydantic(
-    pydantic_type: type[TPydanticTypes],
+    pydantic_type: type[Telemetry | MSPConfig | FilterDiagnostics],
 ) -> Callable[..., Any]:
     def inner(func: F, *args: Any, **kwargs: Any) -> F:
         """Wrap an API function that returns XML and parse it into a Pydantic model"""
@@ -34,9 +33,9 @@ def to_pydantic(
         async def wrapper(*args: Any, raw: Literal[True], **kwargs: Any) -> str: ...
 
         @overload
-        async def wrapper(*args: Any, raw: Literal[False], **kwargs: Any) -> TPydanticTypes: ...
+        async def wrapper(*args: Any, raw: Literal[False], **kwargs: Any) -> Telemetry | MSPConfig | FilterDiagnostics: ...
 
-        async def wrapper(*args: Any, raw: bool = False, **kwargs: Any) -> TPydanticTypes | str:
+        async def wrapper(*args: Any, raw: bool = False, **kwargs: Any) -> Telemetry | MSPConfig | FilterDiagnostics | str:
             resp_body = await func(*args, **kwargs)
             if raw:
                 return resp_body
