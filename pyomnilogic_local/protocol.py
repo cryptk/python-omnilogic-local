@@ -17,6 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniLogicMessage:
+    """
+    Represents a protocol message for communication with the OmniLogic controller.
+    Handles serialization and deserialization of message headers and payloads.
+    """
+
     header_format = "!LQ4sLBBBB"
     id: int
     type: MessageType
@@ -35,6 +40,14 @@ class OmniLogicMessage:
         payload: str | None = None,
         version: str = "1.19",
     ) -> None:
+        """
+        Initialize a new OmniLogicMessage.
+        Args:
+            msg_id: Unique message identifier.
+            msg_type: Type of message being sent.
+            payload: Optional string payload (XML or command body).
+            version: Protocol version string.
+        """
         self.id = msg_id
         self.type = msg_type
         # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
@@ -46,6 +59,11 @@ class OmniLogicMessage:
         self.version = version
 
     def __bytes__(self) -> bytes:
+        """
+        Serialize the message to bytes for UDP transmission.
+        Returns:
+            Byte representation of the message.
+        """
         header = struct.pack(
             self.header_format,
             self.id,  # Msg id
@@ -60,6 +78,9 @@ class OmniLogicMessage:
         return header + self.payload
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the message for debugging.
+        """
         if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
             return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}"
         return (
@@ -69,6 +90,13 @@ class OmniLogicMessage:
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
+        """
+        Parse a message from its byte representation.
+        Args:
+            data: Byte data received from the controller.
+        Returns:
+            OmniLogicMessage instance.
+        """
         # split the header and data
         header = data[:24]
         rdata: bytes = data[24:]
@@ -87,6 +115,11 @@ class OmniLogicMessage:
 
 
 class OmniLogicProtocol(asyncio.DatagramProtocol):
+    """
+    Asyncio DatagramProtocol implementation for OmniLogic UDP communication.
+    Handles message sending, receiving, retries, and block message reassembly.
+    """
+
     transport: asyncio.DatagramTransport
     # The omni will re-transmit a packet every 2 seconds if it does not receive an ACK.  We pad that just a touch to be safe
     _omni_retransmit_time = 2.1
@@ -94,24 +127,50 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     _omni_retransmit_count = 5
 
     def __init__(self) -> None:
+        """
+        Initialize the protocol handler and message queue.
+        """
         self.data_queue = asyncio.Queue[OmniLogicMessage]()
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
+        """
+        Called when a UDP connection is made.
+        """
         self.transport = cast(asyncio.DatagramTransport, transport)
 
     def connection_lost(self, exc: Exception | None) -> None:
+        """
+        Called when the UDP connection is lost or closed.
+        """
         if exc:
             raise exc
 
     def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
-        message = OmniLogicMessage.from_bytes(data)
-        _LOGGER.debug("Received Message %s", str(message))
-        self.data_queue.put_nowait(message)
+        """
+        Called when a datagram is received from the controller.
+        Parses the message and puts it on the queue. Handles corrupt or unexpected data gracefully.
+        """
+        try:
+            message = OmniLogicMessage.from_bytes(data)
+            _LOGGER.debug("Received Message %s from %s", str(message), addr)
+            try:
+                self.data_queue.put_nowait(message)
+            except asyncio.QueueFull:
+                _LOGGER.error("Data queue is full. Dropping message: %s", str(message))
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            _LOGGER.error("Failed to parse incoming datagram from %s: %s", addr, exc, exc_info=True)
 
     def error_received(self, exc: Exception) -> None:
+        """
+        Called when a UDP error is received.
+        """
         raise exc
 
     async def _wait_for_ack(self, ack_id: int) -> None:
+        """
+        Wait for an ACK message with the given ID.
+        Handles dropped or out-of-order ACKs.
+        """
         message = await self.data_queue.get()
         while message.id != ack_id:
             _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
@@ -136,6 +195,14 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         message: OmniLogicMessage,
         max_attempts: int = 5,
     ) -> None:
+        """
+        Send a message and ensure it is acknowledged, retrying if necessary.
+        Args:
+            message: The message to send.
+            max_attempts: Maximum number of send attempts.
+        Raises:
+            OmniTimeoutException: If no ACK is received after retries.
+        """
         for attempt in range(0, max_attempts):
             self.transport.sendto(bytes(message))
 
@@ -148,9 +215,18 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                 await asyncio.wait_for(self._wait_for_ack(message.id), 0.5)
                 return
             except TimeoutError as exc:
-                if attempt < 4:
-                    _LOGGER.debug("ACK not received, re-attempting delivery")
+                if attempt < max_attempts - 1:
+                    _LOGGER.warning(
+                        "ACK not received for message type %s (ID: %s), attempt %d/%d. Retrying...",
+                        message.type.name,
+                        message.id,
+                        attempt + 1,
+                        max_attempts,
+                    )
                 else:
+                    _LOGGER.error(
+                        "Failed to receive ACK for message type %s (ID: %s) after %d attempts.", message.type.name, message.id, max_attempts
+                    )
                     raise OmniTimeoutException("Failed to receive acknowledgement of command, max retries exceeded") from exc
 
     async def send_and_receive(
@@ -159,6 +235,15 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         payload: str | None,
         msg_id: int | None = None,
     ) -> str:
+        """
+        Send a message and wait for a response, returning the response payload as a string.
+        Args:
+            msg_type: Type of message to send.
+            payload: Optional payload string.
+            msg_id: Optional message ID.
+        Returns:
+            Response payload as a string.
+        """
         await self.send_message(msg_type, payload, msg_id)
         return await self._receive_file()
 
@@ -169,6 +254,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         payload: str | None,
         msg_id: int | None = None,
     ) -> None:
+        """
+        Send a message that does not require a response.
+        Args:
+            msg_type: Type of message to send.
+            payload: Optional payload string.
+            msg_id: Optional message ID.
+        """
         # If we aren't sending a specific msg_id, lets randomize it
         if not msg_id:
             msg_id = random.randrange(2**32)
@@ -180,6 +272,9 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self._ensure_sent(message)
 
     async def _send_ack(self, msg_id: int) -> None:
+        """
+        Send an ACK message for the given message ID.
+        """
         body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "Ack"
@@ -188,6 +283,14 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self.send_message(MessageType.XML_ACK, req_body, msg_id)
 
     async def _receive_file(self) -> str:
+        """
+        Wait for and reassemble a full response from the controller.
+        Handles single and multi-block (LeadMessage/BlockMessage) responses.
+        Returns:
+            Response payload as a string.
+        Raises:
+            OmniTimeoutException: If a block message is not received in time.
+        """
         # wait for the initial packet.
         message = await self.data_queue.get()
 
