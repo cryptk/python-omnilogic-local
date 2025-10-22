@@ -9,7 +9,7 @@ from .const import XML_NS
 
 
 class LeadMessage(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     source_op_id: int = Field(alias="SourceOpId")
     msg_size: int = Field(alias="MsgSize")

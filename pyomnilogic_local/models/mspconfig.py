@@ -35,6 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     _sub_devices: set[str] | None = None
     system_id: int = Field(alias="System-Id")
     name: str | None = Field(alias="Name", default=None)

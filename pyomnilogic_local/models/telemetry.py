@@ -43,6 +43,8 @@ from ..omnitypes import (
 
 
 class TelemetryBackyard(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.BACKYARD
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
@@ -54,6 +56,8 @@ class TelemetryBackyard(BaseModel):
 
 
 class TelemetryBoW(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.BOW
     system_id: int = Field(alias="@systemId")
     water_temp: int = Field(alias="@waterTemp")
@@ -61,6 +65,8 @@ class TelemetryBoW(BaseModel):
 
 
 class TelemetryChlorinator(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CHLORINATOR
     system_id: int = Field(alias="@systemId")
     status_raw: int = Field(alias="@status")
@@ -81,6 +87,8 @@ class TelemetryChlorinator(BaseModel):
 
 
 class TelemetryCSAD(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CSAD
     system_id: int = Field(alias="@systemId")
     status_raw: int = Field(alias="@status")
@@ -90,6 +98,8 @@ class TelemetryCSAD(BaseModel):
 
 
 class TelemetryColorLogicLight(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
     state: ColorLogicPowerState | int = Field(alias="@lightState")
@@ -100,6 +110,8 @@ class TelemetryColorLogicLight(BaseModel):
 
 
 class TelemetryFilter(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
     state: FilterState | int = Field(alias="@filterState")
@@ -112,12 +124,16 @@ class TelemetryFilter(BaseModel):
 
 
 class TelemetryGroup(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.GROUP
     system_id: int = Field(alias="@systemId")
     state: int = Field(alias="@groupState")
 
 
 class TelemetryHeater(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
     state: HeaterState | int = Field(alias="@heaterState")
@@ -128,6 +144,8 @@ class TelemetryHeater(BaseModel):
 
 
 class TelemetryPump(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
     state: PumpState | int = Field(alias="@pumpState")
@@ -137,6 +155,8 @@ class TelemetryPump(BaseModel):
 
 
 class TelemetryRelay(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
     state: RelayState | int = Field(alias="@relayState")
@@ -144,6 +164,8 @@ class TelemetryRelay(BaseModel):
 
 
 class TelemetryValveActuator(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
     state: ValveActuatorState | int = Field(alias="@valveActuatorState")
@@ -151,6 +173,8 @@ class TelemetryValveActuator(BaseModel):
 
 
 class TelemetryVirtualHeater(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.VIRT_HEATER
     system_id: int = Field(alias="@systemId")
     current_set_point: int = Field(alias="@Current-Set-Point")
@@ -177,7 +201,7 @@ TelemetryType: TypeAlias = (
 
 
 class Telemetry(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     version: str = Field(alias="@version")
     backyard: TelemetryBackyard = Field(alias="Backyard")

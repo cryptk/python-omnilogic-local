@@ -5,7 +5,7 @@ from xmltodict import parse as xml_parse
 
 
 class FilterDiagnosticsParameter(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(alias="@name")
     dataType: str = Field(alias="@dataType")
@@ -13,13 +13,13 @@ class FilterDiagnosticsParameter(BaseModel):
 
 
 class FilterDiagnosticsParameters(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     parameter: list[FilterDiagnosticsParameter] = Field(alias="Parameter")
 
 
 class FilterDiagnostics(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(alias="Name")
     # parameters: FilterDiagnosticsParameters = Field(alias="Parameters")
