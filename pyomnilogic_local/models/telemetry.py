@@ -22,6 +22,7 @@ from ..omnitypes import (
     OmniType,
     PumpState,
     RelayState,
+    RelayWhyOn,
     ValveActuatorState,
 )
 
@@ -160,7 +161,7 @@ class TelemetryRelay(BaseModel):
     omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
     state: RelayState | int = Field(alias="@relayState")
-    why_on: int = Field(alias="@whyOn")
+    why_on: RelayWhyOn | int = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
@@ -169,7 +170,8 @@ class TelemetryValveActuator(BaseModel):
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
     state: ValveActuatorState | int = Field(alias="@valveActuatorState")
-    why_on: int = Field(alias="@whyOn")
+    # Valve actuators are actually relays, so we can reuse the RelayWhyOn enum here
+    why_on: RelayWhyOn | int = Field(alias="@whyOn")
 
 
 class TelemetryVirtualHeater(BaseModel):
