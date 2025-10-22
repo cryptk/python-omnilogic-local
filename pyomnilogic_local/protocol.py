@@ -126,11 +126,15 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     # The omni will re-transmit 5 times (a total of 6 attempts including the initial) if it does not receive an ACK
     _omni_retransmit_count = 5
 
+    data_queue: asyncio.Queue[OmniLogicMessage]
+    error_queue: asyncio.Queue[Exception]
+
     def __init__(self) -> None:
         """
         Initialize the protocol handler and message queue.
         """
-        self.data_queue = asyncio.Queue[OmniLogicMessage]()
+        self.data_queue = asyncio.Queue()
+        self.error_queue = asyncio.Queue()
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """
@@ -163,32 +167,35 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     def error_received(self, exc: Exception) -> None:
         """
         Called when a UDP error is received.
+        Store the error so it can be handled by awaiting coroutines.
         """
-        raise exc
+        self.error_queue.put_nowait(exc)
 
     async def _wait_for_ack(self, ack_id: int) -> None:
         """
         Wait for an ACK message with the given ID.
         Handles dropped or out-of-order ACKs.
         """
-        message = await self.data_queue.get()
-        while message.id != ack_id:
-            _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
-            # If the message that we received was either a LEADMESSAGE or a BLOCK MESSAGE, lets put it back and return,
-            # The Omni is continuing on with life, lets not be clingy for an ACK that was dropped and will never come
-            # We will put this new message back into the queue and stop waiting for our ACK.
-            # The set below should include any message types that may be sent immediately after the Omni sends us an ACK.
-            # Example is:
-            # Us > Omni: MessageType.REQUEST_CONFIGURATION
-            # Omni > Us: MessageType.ACK
-            # Omni > Us: MessageType.MSP_LEADMESSAGE  <--- Sent immediately after an ACK
-            if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
-                _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
-                await self.data_queue.put(message)
-                break
-            # In theory, we should never get to this spot, but it's mostly here to cause the code to wait forever so that asyncio will
-            # eventually time out waiting for it, that way we can deal with the dropped packets
-            message = await self.data_queue.get()
+        # Wait for either an ACK message or an error
+        while True:
+            # Wait for either a message or an error
+            data_task = asyncio.create_task(self.data_queue.get())
+            error_task = asyncio.create_task(self.error_queue.get())
+            done, _ = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
+            if error_task in done:
+                exc = error_task.result()
+                if isinstance(exc, Exception):
+                    raise exc
+                _LOGGER.error("Unknown error occurred during communication with Omnilogic: %s", exc)
+            if data_task in done:
+                message = data_task.result()
+                if message.id == ack_id:
+                    return
+                _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
+                if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
+                    _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
+                    await self.data_queue.put(message)
+                    return
 
     async def _ensure_sent(
         self,
@@ -245,7 +252,8 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             Response payload as a string.
         """
         await self.send_message(msg_type, payload, msg_id)
-        return await self._receive_file()
+        resp = await self._receive_file()
+        return resp
 
     # Send a message that you do NOT need a response to
     async def send_message(
