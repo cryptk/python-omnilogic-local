@@ -1,26 +1,29 @@
 from __future__ import annotations
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from xmltodict import parse as xml_parse
 
 
 class FilterDiagnosticsParameter(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str = Field(alias="@name")
     dataType: str = Field(alias="@dataType")
     value: int = Field(alias="#text")
 
 
 class FilterDiagnosticsParameters(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     parameter: list[FilterDiagnosticsParameter] = Field(alias="Parameter")
 
 
 class FilterDiagnostics(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str = Field(alias="Name")
     # parameters: FilterDiagnosticsParameters = Field(alias="Parameters")
     parameters: list[FilterDiagnosticsParameter] = Field(alias="Parameters")
-
-    class Config:
-        orm_mode = True
 
     def get_param_by_name(self, name: str) -> int:
         return [param.value for param in self.parameters if param.name == name][0]
@@ -36,4 +39,4 @@ class FilterDiagnostics(BaseModel):
         # The XML nests the Parameter entries under a Parameters entry, this is annoying to work with.  Here we are adjusting the data to
         # remove that extra level in the data
         data["Response"]["Parameters"] = data["Response"]["Parameters"]["Parameter"]
-        return FilterDiagnostics.parse_obj(data["Response"])
+        return FilterDiagnostics.model_validate(data["Response"])

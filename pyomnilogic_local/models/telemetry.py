@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
 
-from pydantic.v1 import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
@@ -22,6 +22,7 @@ from ..omnitypes import (
     OmniType,
     PumpState,
     RelayState,
+    RelayWhyOn,
     ValveActuatorState,
 )
 
@@ -43,17 +44,21 @@ from ..omnitypes import (
 
 
 class TelemetryBackyard(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.BACKYARD
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
     air_temp: int = Field(alias="@airTemp")
     state: BackyardState | int = Field(alias="@state")
     # The below two fields are only available for telemetry with a status_version >= 11
-    config_checksum: int | None = Field(alias="@ConfigChksum")
-    msp_version: str | None = Field(alias="@mspVersion")
+    config_checksum: int | None = Field(alias="@ConfigChksum", default=None)
+    msp_version: str | None = Field(alias="@mspVersion", default=None)
 
 
 class TelemetryBoW(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.BOW
     system_id: int = Field(alias="@systemId")
     water_temp: int = Field(alias="@waterTemp")
@@ -61,6 +66,8 @@ class TelemetryBoW(BaseModel):
 
 
 class TelemetryChlorinator(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CHLORINATOR
     system_id: int = Field(alias="@systemId")
     status_raw: int = Field(alias="@status")
@@ -70,7 +77,7 @@ class TelemetryChlorinator(BaseModel):
     chlr_error: int = Field(alias="@chlrError")
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
-    timed_percent: int | None = Field(alias="@Timed-Percent")
+    timed_percent: int | None = Field(alias="@Timed-Percent", default=None)
     operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
@@ -81,6 +88,8 @@ class TelemetryChlorinator(BaseModel):
 
 
 class TelemetryCSAD(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CSAD
     system_id: int = Field(alias="@systemId")
     status_raw: int = Field(alias="@status")
@@ -90,6 +99,8 @@ class TelemetryCSAD(BaseModel):
 
 
 class TelemetryColorLogicLight(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
     state: ColorLogicPowerState | int = Field(alias="@lightState")
@@ -100,6 +111,8 @@ class TelemetryColorLogicLight(BaseModel):
 
 
 class TelemetryFilter(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
     state: FilterState | int = Field(alias="@filterState")
@@ -112,12 +125,16 @@ class TelemetryFilter(BaseModel):
 
 
 class TelemetryGroup(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.GROUP
     system_id: int = Field(alias="@systemId")
     state: int = Field(alias="@groupState")
 
 
 class TelemetryHeater(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
     state: HeaterState | int = Field(alias="@heaterState")
@@ -128,6 +145,8 @@ class TelemetryHeater(BaseModel):
 
 
 class TelemetryPump(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
     state: PumpState | int = Field(alias="@pumpState")
@@ -137,20 +156,27 @@ class TelemetryPump(BaseModel):
 
 
 class TelemetryRelay(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
     state: RelayState | int = Field(alias="@relayState")
-    why_on: int = Field(alias="@whyOn")
+    why_on: RelayWhyOn | int = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
     state: ValveActuatorState | int = Field(alias="@valveActuatorState")
-    why_on: int = Field(alias="@whyOn")
+    # Valve actuators are actually relays, so we can reuse the RelayWhyOn enum here
+    why_on: RelayWhyOn | int = Field(alias="@whyOn")
 
 
 class TelemetryVirtualHeater(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.VIRT_HEATER
     system_id: int = Field(alias="@systemId")
     current_set_point: int = Field(alias="@Current-Set-Point")
@@ -177,22 +203,21 @@ TelemetryType: TypeAlias = (
 
 
 class Telemetry(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     version: str = Field(alias="@version")
     backyard: TelemetryBackyard = Field(alias="Backyard")
     bow: list[TelemetryBoW] = Field(alias="BodyOfWater")
-    chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator")
-    colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light")
-    csad: list[TelemetryCSAD] | None = Field(alias="CSAD")
-    filter: list[TelemetryFilter] | None = Field(alias="Filter")
-    group: list[TelemetryGroup] | None = Field(alias="Group")
-    heater: list[TelemetryHeater] | None = Field(alias="Heater")
-    pump: list[TelemetryPump] | None = Field(alias="Pump")
-    relay: list[TelemetryRelay] | None = Field(alias="Relay")
-    valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator")
-    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater")
-
-    class Config:
-        orm_mode = True
+    chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator", default=None)
+    colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
+    csad: list[TelemetryCSAD] | None = Field(alias="CSAD", default=None)
+    filter: list[TelemetryFilter] | None = Field(alias="Filter", default=None)
+    group: list[TelemetryGroup] | None = Field(alias="Group", default=None)
+    heater: list[TelemetryHeater] | None = Field(alias="Heater", default=None)
+    pump: list[TelemetryPump] | None = Field(alias="Pump", default=None)
+    relay: list[TelemetryRelay] | None = Field(alias="Relay", default=None)
+    valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator", default=None)
+    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater", default=None)
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
@@ -244,7 +269,7 @@ class Telemetry(BaseModel):
             ),
         )
         try:
-            return Telemetry.parse_obj(data["STATUS"])
+            return Telemetry.model_validate(data["STATUS"])
         except ValidationError as exc:
             raise OmniParsingException(f"Failed to parse Telemetry: {exc}") from exc
 

@@ -145,7 +145,7 @@ def process_pcap_messages(packets: Any) -> list[tuple[str, str, OmniLogicMessage
 
                 # Check if we have all the blocks
                 lead_msg = message_sequences[matching_seq][0]
-                lead_data = LeadMessage.from_orm(ET.fromstring(lead_msg.payload[:-1]))
+                lead_data = LeadMessage.model_validate(ET.fromstring(lead_msg.payload[:-1]))
 
                 # We have LeadMessage + all BlockMessages
                 if len(message_sequences[matching_seq]) == lead_data.msg_block_count + 1:

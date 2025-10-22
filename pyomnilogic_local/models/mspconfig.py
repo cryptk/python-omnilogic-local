@@ -9,7 +9,7 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 
-from pydantic.v1 import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from xmltodict import parse as xml_parse
 
 from ..exceptions import OmniParsingException
@@ -35,13 +35,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     _sub_devices: set[str] | None = None
     system_id: int = Field(alias="System-Id")
-    name: str | None = Field(alias="Name")
-    bow_id: int | None
+    name: str | None = Field(alias="Name", default=None)
+    bow_id: int | None = None
 
     def without_subdevices(self) -> Self:
-        return self.copy(exclude=self._sub_devices)
+        data = self.model_dump(exclude=self._sub_devices, round_trip=True)
+        data = {**data, **{}}
+        copied = self.model_validate(data)
+        _LOGGER.debug("without_subdevices: original=%s, copied=%s", self, copied)
+        return copied
+        # return self.copy(exclude=self._sub_devices)
 
     def propagate_bow_id(self, bow_id: int | None) -> None:
         # First we set our own bow_id
@@ -63,6 +70,8 @@ class OmniBase(BaseModel):
 
 
 class MSPSystem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     omni_type: OmniType = OmniType.SYSTEM
     vsp_speed_format: Literal["RPM", "Percent"] = Field(alias="Msp-Vsp-Speed-Format")
     units: Literal["Standard", "Metric"] = Field(alias="Units")
@@ -116,7 +125,7 @@ class MSPHeaterEquip(OmniBase):
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")
-    supports_cooling: Literal["yes", "no"] | None = Field(alias="SupportsCooling")
+    supports_cooling: Literal["yes", "no"] | None = Field(alias="SupportsCooling", default=None)
 
 
 # This is the entry for the VirtualHeater, it does not use OmniBase because it has no name attribute
@@ -126,10 +135,10 @@ class MSPVirtualHeater(OmniBase):
     omni_type: OmniType = OmniType.VIRT_HEATER
     enabled: Literal["yes", "no"] = Field(alias="Enabled")
     set_point: int = Field(alias="Current-Set-Point")
-    solar_set_point: int | None = Field(alias="SolarSetPoint")
+    solar_set_point: int | None = Field(alias="SolarSetPoint", default=None)
     max_temp: int = Field(alias="Max-Settable-Water-Temp")
     min_temp: int = Field(alias="Min-Settable-Water-Temp")
-    heater_equipment: list[MSPHeaterEquip] | None
+    heater_equipment: list[MSPHeaterEquip] | None = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
@@ -137,7 +146,7 @@ class MSPVirtualHeater(OmniBase):
         # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
         # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
         heater_equip_data = [op[OmniType.HEATER_EQUIP] for op in data.get("Operation", {}) if OmniType.HEATER_EQUIP in op]
-        self.heater_equipment = [MSPHeaterEquip.parse_obj(equip) for equip in heater_equip_data]
+        self.heater_equipment = [MSPHeaterEquip.model_validate(equip) for equip in heater_equip_data]
 
 
 class MSPChlorinatorEquip(OmniBase):
@@ -163,7 +172,9 @@ class MSPChlorinator(OmniBase):
         # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
         # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
         chlorinator_equip_data = [op for op in data.get("Operation", {}) if OmniType.CHLORINATOR_EQUIP in op][0]
-        self.chlorinator_equipment = [MSPChlorinatorEquip.parse_obj(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]]
+        self.chlorinator_equipment = [
+            MSPChlorinatorEquip.model_validate(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]
+        ]
 
 
 class MSPCSAD(OmniBase):
@@ -185,8 +196,8 @@ class MSPCSAD(OmniBase):
 class MSPColorLogicLight(OmniBase):
     omni_type: OmniType = OmniType.CL_LIGHT
     type: ColorLogicLightType | str = Field(alias="Type")
-    v2_active: Literal["yes", "no"] | None = Field(alias="V2-Active")
-    effects: list[ColorLogicShow] | None
+    v2_active: Literal["yes", "no"] | None = Field(alias="V2-Active", default=None)
+    effects: list[ColorLogicShow] | None = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
@@ -199,14 +210,14 @@ class MSPBoW(OmniBase):
     omni_type: OmniType = OmniType.BOW
     type: BodyOfWaterType | str = Field(alias="Type")
     supports_spillover: Literal["yes", "no"] = Field(alias="Supports-Spillover")
-    filter: list[MSPFilter] | None = Field(alias="Filter")
-    relay: list[MSPRelay] | None = Field(alias="Relay")
-    heater: MSPVirtualHeater | None = Field(alias="Heater")
-    sensor: list[MSPSensor] | None = Field(alias="Sensor")
-    colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
-    pump: list[MSPPump] | None = Field(alias="Pump")
-    chlorinator: MSPChlorinator | None = Field(alias="Chlorinator")
-    csad: list[MSPCSAD] | None = Field(alias="CSAD")
+    filter: list[MSPFilter] | None = Field(alias="Filter", default=None)
+    relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
+    heater: MSPVirtualHeater | None = Field(alias="Heater", default=None)
+    sensor: list[MSPSensor] | None = Field(alias="Sensor", default=None)
+    colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
+    pump: list[MSPPump] | None = Field(alias="Pump", default=None)
+    chlorinator: MSPChlorinator | None = Field(alias="Chlorinator", default=None)
+    csad: list[MSPCSAD] | None = Field(alias="CSAD", default=None)
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
@@ -219,16 +230,16 @@ class MSPBackyard(OmniBase):
     _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
 
     omni_type: OmniType = OmniType.BACKYARD
-    sensor: list[MSPSensor] | None = Field(alias="Sensor")
-    bow: list[MSPBoW] | None = Field(alias="Body-of-water")
-    relay: list[MSPRelay] | None = Field(alias="Relay")
-    colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light")
+    sensor: list[MSPSensor] | None = Field(alias="Sensor", default=None)
+    bow: list[MSPBoW] | None = Field(alias="Body-of-water", default=None)
+    relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
+    colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
 
 
 class MSPSchedule(OmniBase):
     omni_type: OmniType = OmniType.SCHEDULE
     system_id: int = Field(alias="schedule-system-id")
-    bow_id: int = Field(alias="bow-system-id")
+    bow_id: int | None = Field(alias="bow-system-id", default=None)
     equipment_id: int = Field(alias="equipment-id")
     enabled: bool = Field()
 
@@ -239,11 +250,10 @@ MSPConfigType: TypeAlias = (
 
 
 class MSPConfig(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     system: MSPSystem = Field(alias="System")
     backyard: MSPBackyard = Field(alias="Backyard")
-
-    class Config:
-        orm_mode = True
 
     @staticmethod
     def load_xml(xml: str) -> MSPConfig:
@@ -266,6 +276,6 @@ class MSPConfig(BaseModel):
             ),
         )
         try:
-            return MSPConfig.parse_obj(data["MSPConfig"])
+            return MSPConfig.model_validate(data["MSPConfig"], from_attributes=True)
         except ValidationError as exc:
             raise OmniParsingException(f"Failed to parse MSP Configuration: {exc}") from exc

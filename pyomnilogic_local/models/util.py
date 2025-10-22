@@ -2,22 +2,11 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal, TypeVar, cast, overload
 
-from pydantic.v1.utils import GetterDict
-
-from .const import XML_NS
 from .filter_diagnostics import FilterDiagnostics
 from .mspconfig import MSPConfig
 from .telemetry import Telemetry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ParameterGetter(GetterDict):
-    def get(self, key: str, default: Any = None) -> Any:
-        try:
-            return self._obj.find(f".//api:Parameter[@name='{key}']", XML_NS).text
-        except AttributeError:
-            return default
 
 
 F = TypeVar("F", bound=Callable[..., Awaitable[str]])

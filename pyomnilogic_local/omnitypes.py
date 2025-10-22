@@ -94,13 +94,14 @@ class BodyOfWaterType(str, PrettyEnum):
 class ChlorinatorOperatingMode(IntEnum):
     DISABLED = 0
     TIMED = 1
-    ORP = 2
-    OFF = 3
+    ORP_AUTO = 2
+    ORP_TIMED_RW = 3  # CSAD in ORP mode experienced condition that prevents ORP operation
 
 
 class ChlorinatorDispenserType(str, PrettyEnum):
     SALT = "SALT_DISPENSING"
     LIQUID = "LIQUID_DISPENSING"
+    TABLET = "TABLET_DISPENSING"
 
 
 class ChlorinatorCellType(PrettyEnum):
@@ -360,6 +361,15 @@ class RelayType(str, PrettyEnum):
     VALVE_ACTUATOR = "RLY_VALVE_ACTUATOR"
     HIGH_VOLTAGE = "RLY_HIGH_VOLTAGE_RELAY"
     LOW_VOLTAGE = "RLY_LOW_VOLTAGE_RELAY"
+
+
+class RelayWhyOn(PrettyEnum):
+    OFF = 0
+    ON = 1
+    FREEZE_PROTECT = 2
+    WAITING_FOR_INTERLOCK = 3
+    PAUSED = 4
+    WAITING_FOR_FILTER = 5
 
 
 # Sensors
