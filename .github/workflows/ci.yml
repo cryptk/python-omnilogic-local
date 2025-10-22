@@ -29,7 +29,6 @@ jobs:
         python-version:
           - "3.12"
           - "3.13"
-          - "3.14"
         poetry-version:
           - "2.2.1"
     steps:
@@ -54,7 +53,6 @@ jobs:
         python-version:
           - "3.12"
           - "3.13"
-          - "3.14"
         poetry-version:
           - "2.2.1"
         os:
