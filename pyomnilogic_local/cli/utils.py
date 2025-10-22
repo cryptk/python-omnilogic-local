@@ -5,12 +5,14 @@ accessing controller data within the Click context.
 """
 
 import asyncio
-from typing import Any, Literal, overload
+from typing import Literal, overload
 
 import click
 
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
+from pyomnilogic_local.models.mspconfig import MSPConfig
+from pyomnilogic_local.models.telemetry import Telemetry
 
 
 async def get_omni(host: str) -> OmniLogicAPI:
@@ -25,7 +27,7 @@ async def get_omni(host: str) -> OmniLogicAPI:
     return OmniLogicAPI(host, 10444, 5.0)
 
 
-async def fetch_startup_data(omni: OmniLogicAPI) -> tuple[Any, Any]:
+async def fetch_startup_data(omni: OmniLogicAPI) -> tuple[MSPConfig, Telemetry]:
     """Fetch MSPConfig and Telemetry from the controller.
 
     Args:

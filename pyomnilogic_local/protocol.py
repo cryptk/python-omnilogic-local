@@ -311,7 +311,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
         # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
         if message.type is MessageType.MSP_LEADMESSAGE:
-            leadmsg = LeadMessage.from_orm(ET.fromstring(message.payload[:-1]))
+            leadmsg = LeadMessage.model_validate(ET.fromstring(message.payload[:-1]))
 
             _LOGGER.debug("Will receive %s blockmessages", leadmsg.msg_block_count)
 

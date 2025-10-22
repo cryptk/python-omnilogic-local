@@ -1,9 +1,25 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
+from typing import Any
+
 import click
 
 from pyomnilogic_local.cli import ensure_connection
+from pyomnilogic_local.models.mspconfig import (
+    MSPColorLogicLight,
+    MSPConfig,
+)
+from pyomnilogic_local.models.telemetry import (
+    Telemetry,
+    TelemetryType,
+)
+from pyomnilogic_local.omnitypes import (
+    ColorLogicBrightness,
+    ColorLogicPowerState,
+    ColorLogicShow,
+    ColorLogicSpeed,
+)
 
 
 @click.group()
@@ -30,7 +46,8 @@ def lights(ctx: click.Context) -> None:
     Example:
         omnilogic get lights
     """
-    mspconfig = ctx.obj["MSPCONFIG"]
+    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
+    telemetry: Telemetry = ctx.obj["TELEMETRY"]
 
     lights_found = False
 
@@ -38,7 +55,7 @@ def lights(ctx: click.Context) -> None:
     if mspconfig.backyard.colorlogic_light:
         for light in mspconfig.backyard.colorlogic_light:
             lights_found = True
-            _print_light_info(light)
+            _print_light_info(light, telemetry.get_telem_by_systemid(light.system_id))
 
     # Check for lights in Bodies of Water
     if mspconfig.backyard.bow:
@@ -46,35 +63,39 @@ def lights(ctx: click.Context) -> None:
             if bow.colorlogic_light:
                 for cl_light in bow.colorlogic_light:
                     lights_found = True
-                    _print_light_info(cl_light)
+                    _print_light_info(cl_light, telemetry.get_telem_by_systemid(cl_light.system_id))
 
     if not lights_found:
         click.echo("No ColorLogic lights found in the system configuration.")
 
 
-def _print_light_info(light: object) -> None:
+def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryType | None) -> None:
     """Format and print light information in a nice table format.
 
     Args:
         light: Light object from MSPConfig with attributes to display
+        telemetry: Telemetry object containing current state information
     """
     click.echo("\n" + "=" * 60)
-    for attr_name in dir(light):
-        # Skip private/magic attributes and methods
-        if attr_name.startswith("_") or callable(getattr(light, attr_name)):
-            continue
 
-        value = getattr(light, attr_name)
-
-        # Special handling for show lists - convert to readable format
-        if attr_name == "current_show" and isinstance(value, list):
-            show_names = [show.name if hasattr(show, "name") else str(show) for show in value]
+    light_data: dict[Any, Any] = {**dict(light), **dict(telemetry)} if telemetry else dict(light)
+    for attr_name, value in light_data.items():
+        if attr_name == "brightness":
+            value = ColorLogicBrightness(value).pretty()
+        elif attr_name == "effects" and isinstance(value, list):
+            show_names = [show.pretty() if hasattr(show, "pretty") else str(show) for show in value]
             value = ", ".join(show_names) if show_names else "None"
+        elif attr_name == "show" and value is not None:
+            value = ColorLogicShow(value).pretty()
+        elif attr_name == "speed":
+            value = ColorLogicSpeed(value).pretty()
+        elif attr_name == "state":
+            value = ColorLogicPowerState(value).pretty()
         elif isinstance(value, list):
             # Format other lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"
 
-        # Format the attribute name to be more readable
+        # # Format the attribute name to be more readable
         display_name = attr_name.replace("_", " ").title()
         click.echo(f"{display_name:20} : {value}")
     click.echo("=" * 60)
