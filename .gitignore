@@ -166,3 +166,7 @@ cython_debug/
 *.vpwhistu
 *.vpwwildcardcache
 *.vtg
+
+# Testing files for PCAP parseer
+*.pcap
+*.pcapng
