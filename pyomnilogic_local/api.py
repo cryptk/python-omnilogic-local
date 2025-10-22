@@ -61,21 +61,6 @@ class OmniLogicAPI:
 
         return resp
 
-    async def async_get_alarm_list(self) -> str:
-        """Retrieve a list of alarms from the Omni.
-
-        Returns:
-            str: An XML body indicating any alarms that are present
-        """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
-
-        name_element = ET.SubElement(body_element, "Name")
-        name_element.text = "GetAllAlarmList"
-
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
-
-        return await self.async_send_message(MessageType.GET_ALARM_LIST, req_body, True)
-
     @to_pydantic(pydantic_type=MSPConfig)
     async def async_get_config(self) -> str:
         """Retrieve the MSPConfig from the Omni, optionally parse it into a pydantic model.
@@ -124,14 +109,6 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
         return await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
-
-    async def async_get_log_config(self) -> str:
-        """Retrieve the logging configuration from the Omni.
-
-        Returns:
-            str: An XML body describing the logging configuration
-        """
-        return await self.async_send_message(MessageType.REQUEST_LOG_CONFIG, None, True)
 
     @to_pydantic(pydantic_type=Telemetry)
     async def async_get_telemetry(self) -> str:
