@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import Enum, Flag, IntEnum
 
 from .util import PrettyEnum
 
@@ -85,12 +85,66 @@ class BodyOfWaterType(str, PrettyEnum):
 
 
 # Chlorinators
-# Chlorinator status is a bitmask that we still need to figure out
-# class ChlorinatorStatus(str,Enum):
-#     pass
+class ChlorinatorStatus(Flag):
+    """Chlorinator status flags.
+
+    These flags represent the current operational state of the chlorinator
+    and can be combined (multiple flags can be active simultaneously).
+    """
+
+    ERROR_PRESENT = 1 << 0  # Error present, check chlrError value
+    ALERT_PRESENT = 1 << 1  # Alert present, check chlrAlert value
+    GENERATING = 1 << 2  # Power is applied to T-Cell (actively chlorinating)
+    SYSTEM_PAUSED = 1 << 3  # System processor is pausing chlorination
+    LOCAL_PAUSED = 1 << 4  # Local processor is pausing chlorination
+    AUTHENTICATED = 1 << 5  # T-Cell is authenticated
+    K1_ACTIVE = 1 << 6  # K1 relay is active
+    K2_ACTIVE = 1 << 7  # K2 relay is active
 
 
-# I have seen one pool that had an operatingMode of 3, I am not sure what that means, perhaps that is an OFF mode
+class ChlorinatorAlert(Flag):
+    """Chlorinator alert flags.
+
+    Multi-bit fields are represented by their individual values.
+    Use the helper properties on TelemetryChlorinator for semantic interpretation.
+    """
+
+    SALT_LOW = 1 << 0  # Salt level is low
+    SALT_TOO_LOW = 1 << 1  # Salt level is too low
+    HIGH_CURRENT = 1 << 2  # High current alert
+    LOW_VOLTAGE = 1 << 3  # Low voltage alert
+    CELL_TEMP_LOW = 1 << 4  # Cell water temperature low
+    CELL_TEMP_SCALEBACK = 1 << 5  # Cell water temperature scaleback
+    # CELL_TEMP_LOW and CELL_TEMP_SCALEBACK = CELL_TEMP_HIGH
+    BOARD_TEMP_HIGH = 1 << 6  # Board temperature high
+    BOARD_TEMP_CLEARING = 1 << 7  # Board temperature clearing
+    CELL_CLEAN = 1 << 11  # Cell cleaning runtime alert
+
+
+class ChlorinatorError(Flag):
+    """Chlorinator error flags.
+
+    Multi-bit fields are represented by their individual values.
+    Use the helper properties on TelemetryChlorinator for semantic interpretation.
+    """
+
+    CURRENT_SENSOR_SHORT = 1 << 0
+    CURRENT_SENSOR_OPEN = 1 << 1
+    VOLTAGE_SENSOR_SHORT = 1 << 2
+    VOLTAGE_SENSOR_OPEN = 1 << 3
+    CELL_TEMP_SENSOR_SHORT = 1 << 4
+    CELL_TEMP_SENSOR_OPEN = 1 << 5
+    BOARD_TEMP_SENSOR_SHORT = 1 << 6
+    BOARD_TEMP_SENSOR_OPEN = 1 << 7
+    K1_RELAY_SHORT = 1 << 8
+    K1_RELAY_OPEN = 1 << 9
+    K2_RELAY_SHORT = 1 << 10
+    K2_RELAY_OPEN = 1 << 11
+    CELL_ERROR_TYPE = 1 << 12
+    CELL_ERROR_AUTH = 1 << 13
+    AQUARITE_PCB_ERROR = 1 << 14
+
+
 class ChlorinatorOperatingMode(IntEnum):
     DISABLED = 0
     TIMED = 1
