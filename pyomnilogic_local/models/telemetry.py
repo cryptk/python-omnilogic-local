@@ -8,7 +8,10 @@ from xmltodict import parse as xml_parse
 from ..exceptions import OmniParsingException
 from ..omnitypes import (
     BackyardState,
+    ChlorinatorAlert,
+    ChlorinatorError,
     ChlorinatorOperatingMode,
+    ChlorinatorStatus,
     ColorLogicBrightness,
     ColorLogicPowerState,
     ColorLogicShow,
@@ -73,18 +76,95 @@ class TelemetryChlorinator(BaseModel):
     status_raw: int = Field(alias="@status")
     instant_salt_level: int = Field(alias="@instantSaltLevel")
     avg_salt_level: int = Field(alias="@avgSaltLevel")
-    chlr_alert: int = Field(alias="@chlrAlert")
-    chlr_error: int = Field(alias="@chlrError")
+    chlr_alert_raw: int = Field(alias="@chlrAlert")
+    chlr_error_raw: int = Field(alias="@chlrError")
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int | None = Field(alias="@Timed-Percent", default=None)
     operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
-    # Still need to do a bit more work to determine if a chlorinator is actively chlorinating
-    # @property
-    # def active(self) -> bool:
-    #     return self.status_raw & 4 == 4 # Check if bit 4 is set, which means the chlorinator is currently chlorinating
+    @property
+    def status(self) -> list[str]:
+        """Decode status bitmask into a list of active status flag names.
+
+        Returns:
+            List of active ChlorinatorStatus flag names as strings
+
+        Example:
+            >>> chlorinator.status
+            ['ALERT_PRESENT', 'GENERATING', 'K1_ACTIVE']
+        """
+        return [flag.name for flag in ChlorinatorStatus if self.status_raw & flag.value and flag.name is not None]
+
+    @property
+    def alerts(self) -> list[str]:
+        """Decode chlrAlert bitmask into a list of active alert flag names.
+
+        Returns:
+            List of active ChlorinatorAlert flag names as strings
+
+        Note:
+            When both CELL_TEMP_LOW and CELL_TEMP_SCALEBACK are set (bits 5:4 = 11),
+            they are replaced with "CELL_TEMP_HIGH" for semantic correctness.
+
+        Example:
+            >>> chlorinator.alerts
+            ['SALT_LOW', 'HIGH_CURRENT']
+        """
+
+        flags = ChlorinatorAlert(self.chlr_alert_raw)
+        high_temp_bits = ChlorinatorAlert.CELL_TEMP_LOW | ChlorinatorAlert.CELL_TEMP_SCALEBACK
+        cell_temp_high = False
+
+        if flags & high_temp_bits == high_temp_bits:
+            cell_temp_high = True
+            flags = flags & ~high_temp_bits
+
+        final_flags = [flag.name for flag in ChlorinatorAlert if flags & flag and flag.name is not None]
+        if cell_temp_high:
+            final_flags.append("CELL_TEMP_HIGH")
+
+        return final_flags
+
+    @property
+    def errors(self) -> list[str]:
+        """Decode chlrError bitmask into a list of active error flag names.
+
+        Returns:
+            List of active ChlorinatorError flag names as strings
+
+        Note:
+            When both CELL_ERROR_TYPE and CELL_ERROR_AUTH are set (bits 13:12 = 11),
+            they are replaced with "CELL_COMM_LOSS" for semantic correctness.
+
+        Example:
+            >>> chlorinator.errors
+            ['CURRENT_SENSOR_SHORT', 'VOLTAGE_SENSOR_OPEN']
+        """
+
+        flags = ChlorinatorError(self.chlr_error_raw)
+        cell_comm_loss_bits = ChlorinatorError.CELL_ERROR_TYPE | ChlorinatorError.CELL_ERROR_AUTH
+        cell_comm_loss = False
+
+        if flags & cell_comm_loss_bits == cell_comm_loss_bits:
+            cell_comm_loss = True
+            flags = flags & ~cell_comm_loss_bits
+
+        final_flags = [flag.name for flag in ChlorinatorError if flags & flag and flag.name is not None]
+        if cell_comm_loss:
+            final_flags.append("CELL_COMM_LOSS")
+
+        return final_flags
+
+    @property
+    def active(self) -> bool:
+        """Check if the chlorinator is actively generating chlorine.
+
+        Returns:
+            True if the GENERATING status flag is set, False otherwise
+        """
+        return ChlorinatorStatus.GENERATING.value & self.status_raw == ChlorinatorStatus.GENERATING.value
 
 
 class TelemetryCSAD(BaseModel):
