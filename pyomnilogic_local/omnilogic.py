@@ -61,8 +61,3 @@ class OmniLogic:
                 self.system = System(equipment_mspconfig)
             if equipment_mspconfig.omni_type == OmniType.BACKYARD:
                 self.backyard = Backyard(equipment_mspconfig, self.telemetry)
-
-        # if hasattr(self, "mspconfig") and self.mspconfig is not None:
-        #     _LOGGER.debug(self.mspconfig)
-        # if hasattr(self, "telemetry") and self.telemetry is not None:
-        #     _LOGGER.debug(self.telemetry)
