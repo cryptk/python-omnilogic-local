@@ -1,3 +1,2 @@
 class ColorLogicLight:
-
     pass

@@ -333,7 +333,7 @@ type MSPEquipmentType = (
     | MSPColorLogicLight
 )
 
-type MSPConfigType = (MSPSystem | MSPEquipmentType)
+type MSPConfigType = MSPSystem | MSPEquipmentType
 
 
 class MSPConfig(BaseModel):

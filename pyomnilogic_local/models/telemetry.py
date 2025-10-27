@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, SupportsInt, TypeVar, cast, overload
+from typing import Any, SupportsInt, cast, overload
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
 from xmltodict import parse as xml_parse
@@ -88,7 +88,8 @@ class TelemetryChlorinator(BaseModel):
     operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def status(self) -> list[str]:
         """Decode status bitmask into a list of active status flag names.
 
@@ -101,7 +102,8 @@ class TelemetryChlorinator(BaseModel):
         """
         return [flag.name for flag in ChlorinatorStatus if self.status_raw & flag.value and flag.name is not None]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def alerts(self) -> list[str]:
         """Decode chlrAlert bitmask into a list of active alert flag names.
 
@@ -131,7 +133,8 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def errors(self) -> list[str]:
         """Decode chlrError bitmask into a list of active error flag names.
 
@@ -161,7 +164,8 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def active(self) -> bool:
         """Check if the chlorinator is actively generating chlorine.
 
@@ -326,15 +330,10 @@ class Telemetry(BaseModel):
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
-        TypeVar("KT")
-        TypeVar("VT", SupportsInt, Any)
-
         @overload
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
-
         @overload
         def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
-
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
             """Post process XML to attempt to convert values to int.
 
