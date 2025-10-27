@@ -1,4 +1,4 @@
-from enum import Enum, Flag, IntEnum
+from enum import Enum, Flag, IntEnum, StrEnum
 
 from .util import PrettyEnum
 
@@ -32,13 +32,13 @@ class MessageType(Enum):
     MSP_BLOCKMESSAGE = 1999
 
 
-class ClientType(Enum):
+class ClientType(IntEnum, PrettyEnum):
     XML = 0
     SIMPLE = 1
     OMNI = 3
 
 
-class OmniType(str, Enum):
+class OmniType(StrEnum):
     BACKYARD = "Backyard"
     BOW = "BodyOfWater"
     BOW_MSP = "Body-of-water"
@@ -61,12 +61,9 @@ class OmniType(str, Enum):
     VALVE_ACTUATOR = "ValveActuator"
     VIRT_HEATER = "VirtualHeater"
 
-    def __str__(self) -> str:
-        return OmniType[self.name].value
-
 
 # Backyard/BoW
-class BackyardState(PrettyEnum):
+class BackyardState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
     SERVICE_MODE = 2
@@ -74,12 +71,12 @@ class BackyardState(PrettyEnum):
     TIMED_SERVICE_MODE = 4
 
 
-class BodyOfWaterState(PrettyEnum):
+class BodyOfWaterState(IntEnum, PrettyEnum):
     NO_FLOW = 0
     FLOW = 1
 
 
-class BodyOfWaterType(str, PrettyEnum):
+class BodyOfWaterType(StrEnum, PrettyEnum):
     POOL = "BOW_POOL"
     SPA = "BOW_SPA"
 
@@ -145,20 +142,20 @@ class ChlorinatorError(Flag):
     AQUARITE_PCB_ERROR = 1 << 14
 
 
-class ChlorinatorOperatingMode(IntEnum):
+class ChlorinatorOperatingMode(IntEnum, PrettyEnum):
     DISABLED = 0
     TIMED = 1
     ORP_AUTO = 2
     ORP_TIMED_RW = 3  # CSAD in ORP mode experienced condition that prevents ORP operation
 
 
-class ChlorinatorDispenserType(str, PrettyEnum):
+class ChlorinatorDispenserType(StrEnum, PrettyEnum):
     SALT = "SALT_DISPENSING"
     LIQUID = "LIQUID_DISPENSING"
     TABLET = "TABLET_DISPENSING"
 
 
-class ChlorinatorCellType(PrettyEnum):
+class ChlorinatorCellType(StrEnum, PrettyEnum):
     UNKNOWN = "CELL_TYPE_UNKNOWN"
     T3 = "CELL_TYPE_T3"
     T5 = "CELL_TYPE_T5"
@@ -176,7 +173,7 @@ class ChlorinatorCellType(PrettyEnum):
         return ChlorinatorCellInt[self.name].value
 
 
-class ChlorinatorCellInt(IntEnum):
+class ChlorinatorCellInt(IntEnum, PrettyEnum):
     UNKNOWN = 0
     T3 = 1
     T5 = 2
@@ -191,7 +188,7 @@ class ChlorinatorCellInt(IntEnum):
 
 
 # Lights
-class ColorLogicSpeed(PrettyEnum):
+class ColorLogicSpeed(IntEnum, PrettyEnum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1
     ONE_QUARTER = 2
@@ -203,7 +200,7 @@ class ColorLogicSpeed(PrettyEnum):
     SIXTEEN_TIMES = 8
 
 
-class ColorLogicBrightness(PrettyEnum):
+class ColorLogicBrightness(IntEnum, PrettyEnum):
     TWENTY_PERCENT = 0
     FOURTY_PERCENT = 1
     SIXTY_PERCENT = 2
@@ -211,7 +208,60 @@ class ColorLogicBrightness(PrettyEnum):
     ONE_HUNDRED_PERCENT = 4
 
 
-class ColorLogicShow(PrettyEnum):
+type ColorLogicShow = ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2
+
+
+class ColorLogicShow25(IntEnum, PrettyEnum):
+    VOODOO_LOUNGE = 0
+    DEEP_BLUE_SEA = 1
+    AFTERNOON_SKY = 2
+    EMERALD = 3
+    SANGRIA = 4
+    CLOUD_WHITE = 5
+    TWILIGHT = 6
+    TRANQUILITY = 7
+    GEMSTONE = 8
+    USA = 9
+    MARDI_GRAS = 10
+    COOL_CABARET = 11
+
+
+class ColorLogicShow40(IntEnum, PrettyEnum):
+    VOODOO_LOUNGE = 0
+    DEEP_BLUE_SEA = 1
+    AFTERNOON_SKY = 2
+    EMERALD = 3
+    SANGRIA = 4
+    CLOUD_WHITE = 5
+    TWILIGHT = 6
+    TRANQUILITY = 7
+    GEMSTONE = 8
+    USA = 9
+    MARDI_GRAS = 10
+    COOL_CABARET = 11
+
+
+class ColorLogicShowUCL(IntEnum, PrettyEnum):
+    VOODOO_LOUNGE = 0
+    DEEP_BLUE_SEA = 1
+    ROYAL_BLUE = 2
+    AFTERNOON_SKY = 3
+    AQUA_GREEN = 4
+    EMERALD = 5
+    CLOUD_WHITE = 6
+    WARM_RED = 7
+    FLAMINGO = 8
+    VIVID_VIOLET = 9
+    SANGRIA = 10
+    TWILIGHT = 11
+    TRANQUILITY = 12
+    GEMSTONE = 13
+    USA = 14
+    MARDI_GRAS = 15
+    COOL_CABARET = 16
+
+
+class ColorLogicShowUCLV2(IntEnum, PrettyEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     ROYAL_BLUE = 2
@@ -241,11 +291,8 @@ class ColorLogicShow(PrettyEnum):
     WARM_WHITE = 25
     BRIGHT_YELLOW = 26
 
-    def __str__(self) -> str:
-        return self.name
 
-
-class ColorLogicPowerState(PrettyEnum):
+class ColorLogicPowerState(IntEnum, PrettyEnum):
     OFF = 0
     POWERING_OFF = 1
     CHANGING_SHOW = 3
@@ -254,27 +301,28 @@ class ColorLogicPowerState(PrettyEnum):
     COOLDOWN = 7
 
 
-class ColorLogicLightType(str, PrettyEnum):
+class ColorLogicLightType(StrEnum, PrettyEnum):
     UCL = "COLOR_LOGIC_UCL"
     FOUR_ZERO = "COLOR_LOGIC_4_0"
     TWO_FIVE = "COLOR_LOGIC_2_5"
+    SAM = "COLOR_LOGIC_SAM"
 
     def __str__(self) -> str:
         return ColorLogicLightType[self.name].value
 
 
-class CSADType(str, PrettyEnum):
+class CSADType(StrEnum, PrettyEnum):
     ACID = "ACID"
     CO2 = "CO2"
 
 
 # Chemistry Sense and Dispense
-class CSADStatus(PrettyEnum):
+class CSADStatus(IntEnum, PrettyEnum):
     NOT_DISPENSING = 0
     DISPENSING = 1
 
 
-class CSADMode(PrettyEnum):
+class CSADMode(IntEnum, PrettyEnum):
     OFF = 0
     AUTO = 1
     FORCE_ON = 2
@@ -283,7 +331,7 @@ class CSADMode(PrettyEnum):
 
 
 # Filters
-class FilterState(PrettyEnum):
+class FilterState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
     PRIMING = 2
@@ -298,13 +346,13 @@ class FilterState(PrettyEnum):
     FILTER_WAITING_TURN_OFF = 11
 
 
-class FilterType(str, PrettyEnum):
+class FilterType(StrEnum, PrettyEnum):
     VARIABLE_SPEED = "FMT_VARIABLE_SPEED_PUMP"
     DUAL_SPEED = "FMT_DUAL_SPEED"
     SINGLE_SPEED = "FMT_SINGLE_SPEED"
 
 
-class FilterValvePosition(PrettyEnum):
+class FilterValvePosition(IntEnum, PrettyEnum):
     POOL_ONLY = 1
     SPA_ONLY = 2
     SPILLOVER = 3
@@ -312,7 +360,7 @@ class FilterValvePosition(PrettyEnum):
     HIGH_PRIO_HEAT = 5
 
 
-class FilterWhyOn(PrettyEnum):
+class FilterWhyOn(IntEnum, PrettyEnum):
     OFF = 0
     NO_WATER_FLOW = 1
     COOLDOWN = 2
@@ -335,13 +383,13 @@ class FilterWhyOn(PrettyEnum):
 
 
 # Heaters
-class HeaterState(PrettyEnum):
+class HeaterState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
     PAUSE = 2
 
 
-class HeaterType(str, PrettyEnum):
+class HeaterType(StrEnum, PrettyEnum):
     GAS = "HTR_GAS"
     HEAT_PUMP = "HTR_HEAT_PUMP"
     SOLAR = "HTR_SOLAR"
@@ -350,25 +398,25 @@ class HeaterType(str, PrettyEnum):
     SMART = "HTR_SMART"
 
 
-class HeaterMode(PrettyEnum):
+class HeaterMode(IntEnum, PrettyEnum):
     HEAT = 0
     COOL = 1
     AUTO = 2
 
 
 # Pumps
-class PumpState(PrettyEnum):
+class PumpState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
 
 
-class PumpType(str, PrettyEnum):
+class PumpType(StrEnum, PrettyEnum):
     SINGLE_SPEED = "PMP_SINGLE_SPEED"
     DUAL_SPEED = "PMP_DUAL_SPEED"
     VARIABLE_SPEED = "PMP_VARIABLE_SPEED_PUMP"
 
 
-class PumpFunction(str, PrettyEnum):
+class PumpFunction(StrEnum, PrettyEnum):
     PUMP = "PMP_PUMP"
     WATER_FEATURE = "PMP_WATER_FEATURE"
     CLEANER = "PMP_CLEANER"
@@ -386,7 +434,7 @@ class PumpFunction(str, PrettyEnum):
 
 
 # Relays
-class RelayFunction(str, PrettyEnum):
+class RelayFunction(StrEnum, PrettyEnum):
     WATER_FEATURE = "RLY_WATER_FEATURE"
     LIGHT = "RLY_LIGHT"
     BACKYARD_LIGHT = "RLY_BACKYARD_LIGHT"
@@ -406,18 +454,18 @@ class RelayFunction(str, PrettyEnum):
     CLEANER_IN_FLOOR = "RLY_CLEANER_IN_FLOOR"
 
 
-class RelayState(PrettyEnum):
+class RelayState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
 
 
-class RelayType(str, PrettyEnum):
+class RelayType(StrEnum, PrettyEnum):
     VALVE_ACTUATOR = "RLY_VALVE_ACTUATOR"
     HIGH_VOLTAGE = "RLY_HIGH_VOLTAGE_RELAY"
     LOW_VOLTAGE = "RLY_LOW_VOLTAGE_RELAY"
 
 
-class RelayWhyOn(PrettyEnum):
+class RelayWhyOn(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
     FREEZE_PROTECT = 2
@@ -427,7 +475,7 @@ class RelayWhyOn(PrettyEnum):
 
 
 # Sensors
-class SensorType(str, PrettyEnum):
+class SensorType(StrEnum, PrettyEnum):
     AIR_TEMP = "SENSOR_AIR_TEMP"
     SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
     WATER_TEMP = "SENSOR_WATER_TEMP"
@@ -436,7 +484,7 @@ class SensorType(str, PrettyEnum):
     EXT_INPUT = "SENSOR_EXT_INPUT"
 
 
-class SensorUnits(str, PrettyEnum):
+class SensorUnits(StrEnum, PrettyEnum):
     FAHRENHEIT = "UNITS_FAHRENHEIT"
     CELSIUS = "UNITS_CELSIUS"
     PPM = "UNITS_PPM"
@@ -447,6 +495,6 @@ class SensorUnits(str, PrettyEnum):
 
 
 # Valve Actuators
-class ValveActuatorState(PrettyEnum):
+class ValveActuatorState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1

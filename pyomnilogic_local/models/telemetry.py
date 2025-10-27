@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
+from typing import Any, SupportsInt, TypeVar, cast, overload
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
 from xmltodict import parse as xml_parse
 
-from ..exceptions import OmniParsingException
 from ..omnitypes import (
     BackyardState,
     ChlorinatorAlert,
@@ -13,8 +12,12 @@ from ..omnitypes import (
     ChlorinatorOperatingMode,
     ChlorinatorStatus,
     ColorLogicBrightness,
+    ColorLogicLightType,
     ColorLogicPowerState,
-    ColorLogicShow,
+    ColorLogicShow25,
+    ColorLogicShow40,
+    ColorLogicShowUCL,
+    ColorLogicShowUCLV2,
     ColorLogicSpeed,
     CSADMode,
     FilterState,
@@ -28,6 +31,7 @@ from ..omnitypes import (
     RelayWhyOn,
     ValveActuatorState,
 )
+from .exceptions import OmniParsingException
 
 # Example telemetry XML data:
 #
@@ -52,7 +56,7 @@ class TelemetryBackyard(BaseModel):
     omni_type: OmniType = OmniType.BACKYARD
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
-    air_temp: int = Field(alias="@airTemp")
+    air_temp: int | None = Field(alias="@airTemp")
     state: BackyardState | int = Field(alias="@state")
     # The below two fields are only available for telemetry with a status_version >= 11
     config_checksum: int | None = Field(alias="@ConfigChksum", default=None)
@@ -84,7 +88,7 @@ class TelemetryChlorinator(BaseModel):
     operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
-    @property
+    @computed_field
     def status(self) -> list[str]:
         """Decode status bitmask into a list of active status flag names.
 
@@ -97,7 +101,7 @@ class TelemetryChlorinator(BaseModel):
         """
         return [flag.name for flag in ChlorinatorStatus if self.status_raw & flag.value and flag.name is not None]
 
-    @property
+    @computed_field
     def alerts(self) -> list[str]:
         """Decode chlrAlert bitmask into a list of active alert flag names.
 
@@ -127,7 +131,7 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @property
+    @computed_field
     def errors(self) -> list[str]:
         """Decode chlrError bitmask into a list of active error flag names.
 
@@ -157,7 +161,7 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @property
+    @computed_field
     def active(self) -> bool:
         """Check if the chlorinator is actively generating chlorine.
 
@@ -184,10 +188,30 @@ class TelemetryColorLogicLight(BaseModel):
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
     state: ColorLogicPowerState | int = Field(alias="@lightState")
-    show: ColorLogicShow | int = Field(alias="@currentShow")
+    show: int = Field(alias="@currentShow")
     speed: ColorLogicSpeed | int = Field(alias="@speed")
     brightness: ColorLogicBrightness | int = Field(alias="@brightness")
     special_effect: int = Field(alias="@specialEffect")
+
+    def show_name(
+        self, model: ColorLogicLightType, v2: bool, pretty: bool = False
+    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | int:
+        """Get the current light show depending on the light type.
+
+        Returns:
+            ColorLogicShowUCL enum member corresponding to the current show,
+            or None if the show value is invalid.
+        """
+        match model:
+            case ColorLogicLightType.TWO_FIVE:
+                return ColorLogicShow25(self.show)
+            case ColorLogicLightType.FOUR_ZERO:
+                return ColorLogicShow40(self.show)
+            case ColorLogicLightType.UCL:
+                if v2:
+                    return ColorLogicShowUCLV2(self.show)
+                return ColorLogicShowUCL(self.show)
+        return self.show  # Return raw int if type is unknown
 
 
 class TelemetryFilter(BaseModel):
@@ -267,10 +291,11 @@ class TelemetryVirtualHeater(BaseModel):
     why_on: int = Field(alias="@whyHeaterIsOn")
 
 
-TelemetryType: TypeAlias = (
+type TelemetryType = (
     TelemetryBackyard
     | TelemetryBoW
     | TelemetryChlorinator
+    | TelemetryCSAD
     | TelemetryColorLogicLight
     | TelemetryFilter
     | TelemetryGroup

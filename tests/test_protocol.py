@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pyomnilogic_local.exceptions import OmniTimeoutException
+from pyomnilogic_local.api.exceptions import OmniTimeoutException
+from pyomnilogic_local.api.protocol import OmniLogicMessage, OmniLogicProtocol
 from pyomnilogic_local.omnitypes import ClientType, MessageType
-from pyomnilogic_local.protocol import OmniLogicMessage, OmniLogicProtocol
 
 
 def test_parse_basic_ack() -> None:

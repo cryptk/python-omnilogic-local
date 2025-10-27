@@ -1,0 +1,2 @@
+class OmniParsingException(Exception):
+    pass

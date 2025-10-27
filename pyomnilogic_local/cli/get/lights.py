@@ -1,7 +1,7 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
-from typing import Any
+from typing import Any, cast
 
 import click
 
@@ -11,12 +11,11 @@ from pyomnilogic_local.models.mspconfig import (
 )
 from pyomnilogic_local.models.telemetry import (
     Telemetry,
-    TelemetryType,
+    TelemetryColorLogicLight,
 )
 from pyomnilogic_local.omnitypes import (
     ColorLogicBrightness,
     ColorLogicPowerState,
-    ColorLogicShow,
     ColorLogicSpeed,
 )
 
@@ -41,7 +40,7 @@ def lights(ctx: click.Context) -> None:
     if mspconfig.backyard.colorlogic_light:
         for light in mspconfig.backyard.colorlogic_light:
             lights_found = True
-            _print_light_info(light, telemetry.get_telem_by_systemid(light.system_id))
+            _print_light_info(light, cast(TelemetryColorLogicLight, telemetry.get_telem_by_systemid(light.system_id)))
 
     # Check for lights in Bodies of Water
     if mspconfig.backyard.bow:
@@ -49,13 +48,13 @@ def lights(ctx: click.Context) -> None:
             if bow.colorlogic_light:
                 for cl_light in bow.colorlogic_light:
                     lights_found = True
-                    _print_light_info(cl_light, telemetry.get_telem_by_systemid(cl_light.system_id))
+                    _print_light_info(cl_light, cast(TelemetryColorLogicLight, telemetry.get_telem_by_systemid(cl_light.system_id)))
 
     if not lights_found:
         click.echo("No ColorLogic lights found in the system configuration.")
 
 
-def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryType | None) -> None:
+def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryColorLogicLight | None) -> None:
     """Format and print light information in a nice table format.
 
     Args:
@@ -67,6 +66,7 @@ def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryType | None
     click.echo("=" * 60)
 
     light_data: dict[Any, Any] = {**dict(light), **dict(telemetry)} if telemetry else dict(light)
+
     for attr_name, value in light_data.items():
         if attr_name == "brightness":
             value = ColorLogicBrightness(value).pretty()
@@ -74,7 +74,7 @@ def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryType | None
             show_names = [show.pretty() if hasattr(show, "pretty") else str(show) for show in value]
             value = ", ".join(show_names) if show_names else "None"
         elif attr_name == "show" and value is not None:
-            value = ColorLogicShow(value).pretty()
+            value = telemetry.show_name(light.type, light.v2_active, True) if telemetry else str(value)
         elif attr_name == "speed":
             value = ColorLogicSpeed(value).pretty()
         elif attr_name == "state":

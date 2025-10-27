@@ -2,23 +2,32 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Literal, TypeAlias
+from typing import Any, ClassVar, Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_validator,
+)
 from xmltodict import parse as xml_parse
 
-from ..exceptions import OmniParsingException
 from ..omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,
     ColorLogicLightType,
     ColorLogicShow,
+    ColorLogicShow25,
+    ColorLogicShow40,
+    ColorLogicShowUCL,
+    ColorLogicShowUCLV2,
     CSADType,
     FilterType,
     HeaterType,
@@ -30,6 +39,7 @@ from ..omnitypes import (
     SensorType,
     SensorUnits,
 )
+from .exceptions import OmniParsingException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +53,7 @@ class OmniBase(BaseModel):
     bow_id: int | None = None
 
     def without_subdevices(self) -> Self:
-        data = self.model_dump(exclude=self._sub_devices, round_trip=True)
-        data = {**data, **{}}
+        data = self.model_dump(exclude=self._sub_devices, round_trip=True, by_alias=True)
         copied = self.model_validate(data)
         _LOGGER.debug("without_subdevices: original=%s, copied=%s", self, copied)
         return copied
@@ -68,37 +77,67 @@ class OmniBase(BaseModel):
             elif subdevice is not None:
                 subdevice.propagate_bow_id(bow_id)
 
+    _YES_NO_FIELDS: ClassVar[set[str]] = set()
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_yes_no_to_bool(cls, data: Any) -> Any:
+        # Check if data is a dictionary (common when loading from XML/JSON)
+        if not isinstance(data, dict):
+            return data
+
+        for key in cls._YES_NO_FIELDS:
+            raw_value = data.get(key)
+
+            if isinstance(raw_value, str):
+                lower_value = raw_value.lower()
+
+                if lower_value == "yes":
+                    data[key] = True
+                elif lower_value == "no":
+                    data[key] = False
+
+        return data
+
 
 class MSPSystem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.SYSTEM
+
     vsp_speed_format: Literal["RPM", "Percent"] = Field(alias="Msp-Vsp-Speed-Format")
     units: Literal["Standard", "Metric"] = Field(alias="Units")
 
 
 class MSPSensor(OmniBase):
     omni_type: OmniType = OmniType.SENSOR
+
     type: SensorType | str = Field(alias="Type")
     units: SensorUnits | str = Field(alias="Units")
 
 
 class MSPFilter(OmniBase):
+    _YES_NO_FIELDS = {"priming_enabled"}
+
     omni_type: OmniType = OmniType.FILTER
+
     type: FilterType | str = Field(alias="Filter-Type")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
     min_rpm: int = Field(alias="Min-Pump-RPM")
     # We should figure out how to coerce this field into a True/False
-    priming_enabled: Literal["yes", "no"] = Field(alias="Priming-Enabled")
+    priming_enabled: bool = Field(alias="Priming-Enabled")
     low_speed: int = Field(alias="Vsp-Low-Pump-Speed")
     medium_speed: int = Field(alias="Vsp-Medium-Pump-Speed")
     high_speed: int = Field(alias="Vsp-High-Pump-Speed")
 
 
 class MSPPump(OmniBase):
+    _YES_NO_FIELDS = {"priming_enabled"}
+
     omni_type: OmniType = OmniType.PUMP
+
     type: PumpType | str = Field(alias="Type")
     function: PumpFunction | str = Field(alias="Function")
     max_percent: int = Field(alias="Max-Pump-Speed")
@@ -106,7 +145,7 @@ class MSPPump(OmniBase):
     max_rpm: int = Field(alias="Max-Pump-RPM")
     min_rpm: int = Field(alias="Min-Pump-RPM")
     # We should figure out how to coerce this field into a True/False
-    priming_enabled: Literal["yes", "no"] = Field(alias="Priming-Enabled")
+    priming_enabled: bool = Field(alias="Priming-Enabled")
     low_speed: int = Field(alias="Vsp-Low-Pump-Speed")
     medium_speed: int = Field(alias="Vsp-Medium-Pump-Speed")
     high_speed: int = Field(alias="Vsp-High-Pump-Speed")
@@ -114,26 +153,32 @@ class MSPPump(OmniBase):
 
 class MSPRelay(OmniBase):
     omni_type: OmniType = OmniType.RELAY
+
     type: RelayType | str = Field(alias="Type")
     function: RelayFunction | str = Field(alias="Function")
 
 
 class MSPHeaterEquip(OmniBase):
+    _YES_NO_FIELDS = {"enabled", "supports_cooling"}
+
     omni_type: OmniType = OmniType.HEATER_EQUIP
+
     type: Literal["PET_HEATER"] = Field(alias="Type")
     heater_type: HeaterType | str = Field(alias="Heater-Type")
-    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+    enabled: bool = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")
-    supports_cooling: Literal["yes", "no"] | None = Field(alias="SupportsCooling", default=None)
+    supports_cooling: bool | None = Field(alias="SupportsCooling", default=None)
 
 
 # This is the entry for the VirtualHeater, it does not use OmniBase because it has no name attribute
 class MSPVirtualHeater(OmniBase):
     _sub_devices = {"heater_equipment"}
+    _YES_NO_FIELDS = {"enabled"}
 
     omni_type: OmniType = OmniType.VIRT_HEATER
-    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+
+    enabled: bool = Field(alias="Enabled")
     set_point: int = Field(alias="Current-Set-Point")
     solar_set_point: int | None = Field(alias="SolarSetPoint", default=None)
     max_temp: int = Field(alias="Max-Settable-Water-Temp")
@@ -150,15 +195,20 @@ class MSPVirtualHeater(OmniBase):
 
 
 class MSPChlorinatorEquip(OmniBase):
+    _YES_NO_FIELDS = {"enabled"}
+
     omni_type: OmniType = OmniType.CHLORINATOR_EQUIP
-    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+
+    enabled: bool = Field(alias="Enabled")
 
 
 class MSPChlorinator(OmniBase):
     _sub_devices = {"chlorinator_equipment"}
+    _YES_NO_FIELDS = {"enabled"}
 
     omni_type: OmniType = OmniType.CHLORINATOR
-    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+
+    enabled: bool = Field(alias="Enabled")
     timed_percent: int = Field(alias="Timed-Percent")
     superchlor_timeout: int = Field(alias="SuperChlor-Timeout")
     orp_timeout: int = Field(alias="ORP-Timeout")
@@ -178,8 +228,11 @@ class MSPChlorinator(OmniBase):
 
 
 class MSPCSAD(OmniBase):
+    _YES_NO_FIELDS = {"enabled"}
+
     omni_type: OmniType = OmniType.CSAD
-    enabled: Literal["yes", "no"] = Field(alias="Enabled")
+
+    enabled: bool = Field(alias="Enabled")
     type: CSADType | str = Field(alias="Type")
     target_value: float = Field(alias="TargetValue")
     calibration_value: float = Field(alias="CalibrationValue")
@@ -194,22 +247,40 @@ class MSPCSAD(OmniBase):
 
 
 class MSPColorLogicLight(OmniBase):
+    _YES_NO_FIELDS = {"v2_active"}
+
     omni_type: OmniType = OmniType.CL_LIGHT
-    type: ColorLogicLightType | str = Field(alias="Type")
-    v2_active: Literal["yes", "no"] | None = Field(alias="V2-Active", default=None)
+
+    type: ColorLogicLightType = Field(alias="Type")
+    v2_active: bool = Field(alias="V2-Active", default=False)
     effects: list[ColorLogicShow] | None = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        self.effects = list(ColorLogicShow) if self.v2_active == "yes" else [show for show in ColorLogicShow if show.value <= 16]
+
+        # Get the available light shows depending on the light type.
+        match self.type:
+            case ColorLogicLightType.TWO_FIVE:
+                self.effects = list(ColorLogicShow25)
+            case ColorLogicLightType.FOUR_ZERO:
+                self.effects = list(ColorLogicShow40)
+            case ColorLogicLightType.UCL:
+                if self.v2_active:
+                    self.effects = list(ColorLogicShowUCLV2)
+                else:
+                    self.effects = list(ColorLogicShowUCL)
+
+        # self.effects = list(ColorLogicShow) if self.v2_active == "yes" else [show for show in ColorLogicShow if show.value <= 16]
 
 
 class MSPBoW(OmniBase):
     _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
+    _YES_NO_FIELDS = {"supports_spillover"}
 
     omni_type: OmniType = OmniType.BOW
+
     type: BodyOfWaterType | str = Field(alias="Type")
-    supports_spillover: Literal["yes", "no"] = Field(alias="Supports-Spillover")
+    supports_spillover: bool = Field(alias="Supports-Spillover", default=False)
     filter: list[MSPFilter] | None = Field(alias="Filter", default=None)
     relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
     heater: MSPVirtualHeater | None = Field(alias="Heater", default=None)
@@ -230,23 +301,39 @@ class MSPBackyard(OmniBase):
     _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
 
     omni_type: OmniType = OmniType.BACKYARD
-    sensor: list[MSPSensor] | None = Field(alias="Sensor", default=None)
+
     bow: list[MSPBoW] | None = Field(alias="Body-of-water", default=None)
-    relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
+    relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
+    sensor: list[MSPSensor] | None = Field(alias="Sensor", default=None)
 
 
 class MSPSchedule(OmniBase):
     omni_type: OmniType = OmniType.SCHEDULE
+
     system_id: int = Field(alias="schedule-system-id")
     bow_id: int | None = Field(alias="bow-system-id", default=None)
     equipment_id: int = Field(alias="equipment-id")
     enabled: bool = Field()
 
 
-MSPConfigType: TypeAlias = (
-    MSPSystem | MSPSchedule | MSPBackyard | MSPBoW | MSPVirtualHeater | MSPHeaterEquip | MSPRelay | MSPFilter | MSPSensor
+type MSPEquipmentType = (
+    MSPSchedule
+    | MSPBackyard
+    | MSPBoW
+    | MSPVirtualHeater
+    | MSPHeaterEquip
+    | MSPRelay
+    | MSPFilter
+    | MSPSensor
+    | MSPPump
+    | MSPChlorinator
+    | MSPChlorinatorEquip
+    | MSPCSAD
+    | MSPColorLogicLight
 )
+
+type MSPConfigType = (MSPSystem | MSPEquipmentType)
 
 
 class MSPConfig(BaseModel):

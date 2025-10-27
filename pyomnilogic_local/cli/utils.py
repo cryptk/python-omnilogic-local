@@ -9,7 +9,7 @@ from typing import Literal, overload
 
 import click
 
-from pyomnilogic_local.api import OmniLogicAPI
+from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
@@ -40,7 +40,7 @@ async def fetch_startup_data(omni: OmniLogicAPI) -> tuple[MSPConfig, Telemetry]:
         RuntimeError: If unable to fetch configuration or telemetry from controller
     """
     try:
-        mspconfig = await omni.async_get_config()
+        mspconfig = await omni.async_get_mspconfig()
         telemetry = await omni.async_get_telemetry()
     except Exception as exc:
         raise RuntimeError(f"[ERROR] Failed to fetch config or telemetry from controller: {exc}") from exc
