@@ -208,7 +208,7 @@ class ColorLogicBrightness(IntEnum, PrettyEnum):
     ONE_HUNDRED_PERCENT = 4
 
 
-type ColorLogicShow = ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2
+type LightShows = ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow
 
 
 class ColorLogicShow25(IntEnum, PrettyEnum):
@@ -292,6 +292,38 @@ class ColorLogicShowUCLV2(IntEnum, PrettyEnum):
     BRIGHT_YELLOW = 26
 
 
+class PentairShow(IntEnum, PrettyEnum):
+    SAM = 0
+    PARTY = 1
+    ROMANCE = 2
+    CARIBBEAN = 3
+    AMERICAN = 4
+    CALIFORNIA_SUNSET = 5
+    ROYAL = 6
+    BLUE = 7
+    GREEN = 8
+    RED = 9
+    WHITE = 10
+    MAGENTA = 11
+
+
+class ZodiacShow(IntEnum, PrettyEnum):
+    ALPINE_WHITE = 0
+    SKY_BLUE = 1
+    COBALT_BLUE = 2
+    CARIBBEAN_BLUE = 3
+    SPRING_GREEN = 4
+    EMERALD_GREEN = 5
+    EMERALD_ROSE = 6
+    MAGENTA = 7
+    VIOLET = 8
+    SLOW_COLOR_SPLASH = 9
+    FAST_COLOR_SPLASH = 10
+    AMERICA_THE_BEAUTIFUL = 11
+    FAT_TUESDAY = 12
+    DISCO_TECH = 13
+
+
 class ColorLogicPowerState(IntEnum, PrettyEnum):
     OFF = 0
     POWERING_OFF = 1
@@ -306,6 +338,8 @@ class ColorLogicLightType(StrEnum, PrettyEnum):
     FOUR_ZERO = "COLOR_LOGIC_4_0"
     TWO_FIVE = "COLOR_LOGIC_2_5"
     SAM = "COLOR_LOGIC_SAM"
+    PENTAIR_COLOR = "CL_P_COLOR"
+    ZODIAC_COLOR = "CL_Z_COLOR"
 
     def __str__(self) -> str:
         return ColorLogicLightType[self.name].value

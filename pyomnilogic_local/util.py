@@ -7,6 +7,10 @@ else:
     from typing_extensions import Self
 
 
+class OmniLogicLocalError(Exception):
+    """Base exception for python-omnilogic-local."""
+
+
 class PrettyEnum(Enum):
     def pretty(self) -> str:
         return self.name.replace("_", " ").title()

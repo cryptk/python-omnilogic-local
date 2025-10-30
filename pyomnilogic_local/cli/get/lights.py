@@ -74,7 +74,7 @@ def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryColorLogicL
             show_names = [show.pretty() if hasattr(show, "pretty") else str(show) for show in value]
             value = ", ".join(show_names) if show_names else "None"
         elif attr_name == "show" and value is not None:
-            value = telemetry.show_name(light.type, light.v2_active, True) if telemetry else str(value)
+            value = telemetry.show_name(light.equip_type, light.v2_active, True) if telemetry else str(value)
         elif attr_name == "speed":
             value = ColorLogicSpeed(value).pretty()
         elif attr_name == "state":

@@ -1,10 +1,8 @@
 import logging
 
-from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.backyard import Backyard
 from pyomnilogic_local.models import MSPConfig, Telemetry
-from pyomnilogic_local.omnitypes import OmniType
 from pyomnilogic_local.system import System
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +17,6 @@ class OmniLogic:
 
     system: System
     backyard: Backyard
-
-    equipment: dict[int, OmniEquipment] = {}
 
     def __init__(self, host: str, port: int = 10444) -> None:
         self.host = host
@@ -50,14 +46,17 @@ class OmniLogic:
     def _update_equipment(self) -> None:
         """Update equipment objects based on the latest MSPConfig and Telemetry data."""
 
-        _LOGGER.debug("Updating ColorLogic Light equipment data")
-
         if not hasattr(self, "mspconfig") or self.mspconfig is None:
             _LOGGER.debug("No MSPConfig data available; skipping equipment update")
             return
 
-        for _, equipment_mspconfig in self.mspconfig:
-            if equipment_mspconfig.omni_type == OmniType.SYSTEM:
-                self.system = System(equipment_mspconfig)
-            if equipment_mspconfig.omni_type == OmniType.BACKYARD:
-                self.backyard = Backyard(equipment_mspconfig, self.telemetry)
+        try:
+            self.system.update_config(self.mspconfig.system)
+        except AttributeError:
+            self.system = System(self.mspconfig.system)
+
+        try:
+            self.backyard.update_config(self.mspconfig.backyard)
+            self.backyard.update_telemetry(self.telemetry)
+        except AttributeError:
+            self.backyard = Backyard(self._api, self.mspconfig.backyard, self.telemetry)

@@ -12,8 +12,8 @@ readme = "README.md"
 requires-python = ">=3.12,<4.0.0"
 dependencies = [
     "pydantic >=2.0.0,<3.0.0",
-    "xmltodict >=0.13.0,<2.0.0",
     "click >=8.0.0,<8.4.0",
+    "xmltodict >=1.0.2,<2.0.0",
 ]
 
 [project.scripts]

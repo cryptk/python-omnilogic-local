@@ -1,2 +1,113 @@
-class ColorLogicLight:
-    pass
+import logging
+
+from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.api.api import OmniLogicAPI
+from pyomnilogic_local.models.mspconfig import MSPColorLogicLight
+from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
+from pyomnilogic_local.omnitypes import (
+    ColorLogicBrightness,
+    ColorLogicLightType,
+    ColorLogicPowerState,
+    ColorLogicSpeed,
+    LightShows,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight]):
+    """Represents a color logic light."""
+
+    def __init__(self, _api: OmniLogicAPI, mspconfig: MSPColorLogicLight, telemetry: Telemetry) -> None:
+        super().__init__(_api, mspconfig, telemetry)
+
+    @property
+    def model(self) -> ColorLogicLightType:
+        """Returns the model of the light."""
+        return self.mspconfig.equip_type
+
+    @property
+    def v2_active(self) -> bool:
+        """Returns whether the light is v2 active."""
+        return self.mspconfig.v2_active
+
+    @property
+    def effects(self) -> list[LightShows] | None:
+        """Returns the effects of the light."""
+        return self.mspconfig.effects
+
+    @property
+    def state(self) -> ColorLogicPowerState:
+        """Returns the state of the light."""
+        return self.telemetry.state
+
+    @property
+    def show(self) -> LightShows:
+        """Returns the current light show."""
+        return self.telemetry.show
+
+    @property
+    def speed(self) -> ColorLogicSpeed:
+        """Returns the current speed."""
+        if self.model in [ColorLogicLightType.SAM, ColorLogicLightType.TWO_FIVE, ColorLogicLightType.FOUR_ZERO, ColorLogicLightType.UCL]:
+            return self.telemetry.speed
+        # Non color-logic lights only support 1x speed
+        return ColorLogicSpeed.ONE_TIMES
+
+    @property
+    def brightness(self) -> ColorLogicBrightness:
+        """Returns the current brightness."""
+        if self.model in [ColorLogicLightType.SAM, ColorLogicLightType.TWO_FIVE, ColorLogicLightType.FOUR_ZERO, ColorLogicLightType.UCL]:
+            return self.telemetry.brightness
+        # Non color-logic lights only support 100% brightness
+        return ColorLogicBrightness.ONE_HUNDRED_PERCENT
+
+    @property
+    def special_effect(self) -> int:
+        """Returns the current special effect."""
+        return self.telemetry.special_effect
+
+    async def turn_on(self) -> None:
+        """Turns the light on."""
+        if self.bow_id is None or self.system_id is None:
+            raise ValueError("Cannot turn on light: bow_id or system_id is None")
+        await self._api.async_set_equipment(self.bow_id, self.system_id, True)
+
+    async def turn_off(self) -> None:
+        """Turns the light off."""
+        if self.bow_id is None or self.system_id is None:
+            raise ValueError("Cannot turn off light: bow_id or system_id is None")
+        await self._api.async_set_equipment(self.bow_id, self.system_id, False)
+
+    async def set_show(
+        self,
+        show: LightShows | None = None,
+        speed: ColorLogicSpeed | None = None,
+        brightness: ColorLogicBrightness | None = None,
+    ) -> None:
+        """Sets the light show, speed, and brightness."""
+
+        # Non color-logic lights do not support speed or brightness control
+        if self.model not in [
+            ColorLogicLightType.SAM,
+            ColorLogicLightType.TWO_FIVE,
+            ColorLogicLightType.FOUR_ZERO,
+            ColorLogicLightType.UCL,
+        ]:
+            if speed is not None:
+                _LOGGER.warning("Non colorlogic lights do not support speed control %s", self.model.name)
+                speed = ColorLogicSpeed.ONE_TIMES
+            if brightness is not None:
+                _LOGGER.warning("Non colorlogic lights do not support brightness control %s", self.model.name)
+                brightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT
+
+        if self.bow_id is None or self.system_id is None:
+            raise ValueError("Cannot set light show: bow_id or system_id is None")
+
+        await self._api.async_set_light_show(
+            self.bow_id,
+            self.system_id,
+            show or self.show,  # use current value if None
+            speed or self.speed,  # use current value if None
+            brightness or self.brightness,  # use current value if None
+        )

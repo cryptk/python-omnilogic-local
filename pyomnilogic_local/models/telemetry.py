@@ -25,11 +25,14 @@ from ..omnitypes import (
     FilterWhyOn,
     HeaterMode,
     HeaterState,
+    LightShows,
     OmniType,
+    PentairShow,
     PumpState,
     RelayState,
     RelayWhyOn,
     ValveActuatorState,
+    ZodiacShow,
 )
 from .exceptions import OmniParsingException
 
@@ -191,15 +194,15 @@ class TelemetryColorLogicLight(BaseModel):
 
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
-    state: ColorLogicPowerState | int = Field(alias="@lightState")
-    show: int = Field(alias="@currentShow")
-    speed: ColorLogicSpeed | int = Field(alias="@speed")
-    brightness: ColorLogicBrightness | int = Field(alias="@brightness")
+    state: ColorLogicPowerState = Field(alias="@lightState")
+    show: LightShows = Field(alias="@currentShow")
+    speed: ColorLogicSpeed = Field(alias="@speed")
+    brightness: ColorLogicBrightness = Field(alias="@brightness")
     special_effect: int = Field(alias="@specialEffect")
 
     def show_name(
         self, model: ColorLogicLightType, v2: bool, pretty: bool = False
-    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | int:
+    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow | int:
         """Get the current light show depending on the light type.
 
         Returns:
@@ -215,6 +218,10 @@ class TelemetryColorLogicLight(BaseModel):
                 if v2:
                     return ColorLogicShowUCLV2(self.show)
                 return ColorLogicShowUCL(self.show)
+            case ColorLogicLightType.PENTAIR_COLOR:
+                return PentairShow(self.show)
+            case ColorLogicLightType.ZODIAC_COLOR:
+                return ZodiacShow(self.show)
         return self.show  # Return raw int if type is unknown
 
 

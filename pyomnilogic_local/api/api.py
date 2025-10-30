@@ -12,12 +12,9 @@ from pyomnilogic_local.models.telemetry import Telemetry
 
 from ..omnitypes import (
     ColorLogicBrightness,
-    ColorLogicShow25,
-    ColorLogicShow40,
-    ColorLogicShowUCL,
-    ColorLogicShowUCLV2,
     ColorLogicSpeed,
     HeaterMode,
+    LightShows,
     MessageType,
 )
 from .protocol import OmniLogicProtocol
@@ -380,7 +377,7 @@ class OmniLogicAPI:
         self,
         pool_id: int,
         equipment_id: int,
-        show: ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2,
+        show: LightShows,
         speed: ColorLogicSpeed = ColorLogicSpeed.ONE_TIMES,
         brightness: ColorLogicBrightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT,
         reserved: int = 0,

@@ -23,7 +23,6 @@ from ..omnitypes import (
     ChlorinatorCellType,
     ChlorinatorDispenserType,
     ColorLogicLightType,
-    ColorLogicShow,
     ColorLogicShow25,
     ColorLogicShow40,
     ColorLogicShowUCL,
@@ -31,13 +30,16 @@ from ..omnitypes import (
     CSADType,
     FilterType,
     HeaterType,
+    LightShows,
     OmniType,
+    PentairShow,
     PumpFunction,
     PumpType,
     RelayFunction,
     RelayType,
     SensorType,
     SensorUnits,
+    ZodiacShow,
 )
 from .exceptions import OmniParsingException
 
@@ -50,16 +52,16 @@ class OmniBase(BaseModel):
     _sub_devices: set[str] | None = None
     system_id: int = Field(alias="System-Id")
     name: str | None = Field(alias="Name", default=None)
-    bow_id: int | None = None
+    bow_id: int = -1
+    omni_type: OmniType
 
     def without_subdevices(self) -> Self:
         data = self.model_dump(exclude=self._sub_devices, round_trip=True, by_alias=True)
         copied = self.model_validate(data)
         _LOGGER.debug("without_subdevices: original=%s, copied=%s", self, copied)
         return copied
-        # return self.copy(exclude=self._sub_devices)
 
-    def propagate_bow_id(self, bow_id: int | None) -> None:
+    def propagate_bow_id(self, bow_id: int) -> None:
         # First we set our own bow_id
         self.bow_id = bow_id
         # If we have no devices under us, we have nothing to do
@@ -102,6 +104,7 @@ class OmniBase(BaseModel):
 
 class MSPSystem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    # system_id: int = -1  # The System has no system-id, set it to -1 to signify this
 
     omni_type: OmniType = OmniType.SYSTEM
 
@@ -112,7 +115,7 @@ class MSPSystem(BaseModel):
 class MSPSensor(OmniBase):
     omni_type: OmniType = OmniType.SENSOR
 
-    type: SensorType | str = Field(alias="Type")
+    equip_type: SensorType | str = Field(alias="Type")
     units: SensorUnits | str = Field(alias="Units")
 
 
@@ -121,7 +124,7 @@ class MSPFilter(OmniBase):
 
     omni_type: OmniType = OmniType.FILTER
 
-    type: FilterType | str = Field(alias="Filter-Type")
+    equip_type: FilterType | str = Field(alias="Filter-Type")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
@@ -138,7 +141,7 @@ class MSPPump(OmniBase):
 
     omni_type: OmniType = OmniType.PUMP
 
-    type: PumpType | str = Field(alias="Type")
+    equip_type: PumpType | str = Field(alias="Type")
     function: PumpFunction | str = Field(alias="Function")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
@@ -163,7 +166,7 @@ class MSPHeaterEquip(OmniBase):
 
     omni_type: OmniType = OmniType.HEATER_EQUIP
 
-    type: Literal["PET_HEATER"] = Field(alias="Type")
+    equip_type: Literal["PET_HEATER"] = Field(alias="Type")
     heater_type: HeaterType | str = Field(alias="Heater-Type")
     enabled: bool = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
@@ -233,7 +236,7 @@ class MSPCSAD(OmniBase):
     omni_type: OmniType = OmniType.CSAD
 
     enabled: bool = Field(alias="Enabled")
-    type: CSADType | str = Field(alias="Type")
+    equip_type: CSADType | str = Field(alias="Type")
     target_value: float = Field(alias="TargetValue")
     calibration_value: float = Field(alias="CalibrationValue")
     ph_low_alarm_value: float = Field(alias="PHLowAlarmLevel")
@@ -251,15 +254,15 @@ class MSPColorLogicLight(OmniBase):
 
     omni_type: OmniType = OmniType.CL_LIGHT
 
-    type: ColorLogicLightType = Field(alias="Type")
+    equip_type: ColorLogicLightType = Field(alias="Type")
     v2_active: bool = Field(alias="V2-Active", default=False)
-    effects: list[ColorLogicShow] | None = None
+    effects: list[LightShows] | None = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
 
         # Get the available light shows depending on the light type.
-        match self.type:
+        match self.equip_type:
             case ColorLogicLightType.TWO_FIVE:
                 self.effects = list(ColorLogicShow25)
             case ColorLogicLightType.FOUR_ZERO:
@@ -269,8 +272,10 @@ class MSPColorLogicLight(OmniBase):
                     self.effects = list(ColorLogicShowUCLV2)
                 else:
                     self.effects = list(ColorLogicShowUCL)
-
-        # self.effects = list(ColorLogicShow) if self.v2_active == "yes" else [show for show in ColorLogicShow if show.value <= 16]
+            case ColorLogicLightType.PENTAIR_COLOR:
+                self.effects = list(PentairShow)
+            case ColorLogicLightType.ZODIAC_COLOR:
+                self.effects = list(ZodiacShow)
 
 
 class MSPBoW(OmniBase):
@@ -279,7 +284,7 @@ class MSPBoW(OmniBase):
 
     omni_type: OmniType = OmniType.BOW
 
-    type: BodyOfWaterType | str = Field(alias="Type")
+    equip_type: BodyOfWaterType | str = Field(alias="Type")
     supports_spillover: bool = Field(alias="Supports-Spillover", default=False)
     filter: list[MSPFilter] | None = Field(alias="Filter", default=None)
     relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
@@ -293,12 +298,15 @@ class MSPBoW(OmniBase):
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
     def __init__(self, **data: Any) -> None:
+        # As we are requiring a bow_id on everything in OmniBase, we need to propagate it down now
+        # before calling super().__init__() so that it will be present for validation.
         super().__init__(**data)
         self.propagate_bow_id(self.system_id)
 
 
 class MSPBackyard(OmniBase):
     _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
+    bow_id: int = -1
 
     omni_type: OmniType = OmniType.BACKYARD
 
@@ -312,7 +320,7 @@ class MSPSchedule(OmniBase):
     omni_type: OmniType = OmniType.SCHEDULE
 
     system_id: int = Field(alias="schedule-system-id")
-    bow_id: int | None = Field(alias="bow-system-id", default=None)
+    bow_id: int = Field(alias="bow-system-id")  # pyright: ignore[reportGeneralTypeIssues]
     equipment_id: int = Field(alias="equipment-id")
     enabled: bool = Field()
 

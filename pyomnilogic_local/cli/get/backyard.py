@@ -76,7 +76,7 @@ def _print_backyard_info(backyardconfig: MSPBackyard, telemetry: TelemetryType |
     if backyardconfig.bow:
         equipment_counts.append(f"Bodies of Water: {len(backyardconfig.bow)}")
         for bow in backyardconfig.bow:
-            equipment_counts.append(f"  - {bow.name} ({bow.type})")
+            equipment_counts.append(f"  - {bow.name} ({bow.equip_type})")
 
     if backyardconfig.sensor:
         equipment_counts.append(f"Backyard Sensors: {len(backyardconfig.sensor)}")
