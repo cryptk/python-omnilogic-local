@@ -97,25 +97,3 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
             self.telemetry = cast(TelemetryT, specific_telemetry)
         else:
             self.telemetry = cast(TelemetryT, None)
-        # else:
-        #     raise NotImplementedError("This equipment does not have telemetry data.")
-
-    # def _update_equipment(self, telemetry: Telemetry) -> None:
-    #     pass
-
-    # def _update_equipment(self, telemetry: Telemetry) -> None:
-    #     """Update any child equipment based on the latest MSPConfig and Telemetry data."""
-    #     for _, equipment_mspconfig in self.mspconfig:
-    #         system_id = equipment_mspconfig.system_id
-    #         if system_id is None:
-    #             _LOGGER.debug("Skipping equipment update: system_id is None: %s", equipment_mspconfig)
-    #             continue
-    #         if system_id in self.child_equipment:
-    #             # Update existing child equipment
-    #             child_equipment = self.child_equipment[system_id]
-    #             if child_equipment is not None:
-    #                 child_equipment.update_config(equipment_mspconfig)
-    #                 if hasattr(self, "telemetry"):
-    #                     child_equipment.update_telemetry(telemetry)
-    #         else:
-    #             equipment = create_equipment(self, equipment_mspconfig, telemetry)

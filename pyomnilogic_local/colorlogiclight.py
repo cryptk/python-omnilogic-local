@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import auto_refresh
+from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPColorLogicLight
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
 from pyomnilogic_local.omnitypes import (
@@ -72,21 +72,21 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         """Returns the current special effect."""
         return self.telemetry.special_effect
 
-    @auto_refresh()
+    @dirties_state()
     async def turn_on(self) -> None:
         """Turns the light on."""
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn on light: bow_id or system_id is None")
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
-    @auto_refresh()
+    @dirties_state()
     async def turn_off(self) -> None:
         """Turns the light off."""
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn off light: bow_id or system_id is None")
         await self._api.async_set_equipment(self.bow_id, self.system_id, False)
 
-    @auto_refresh()
+    @dirties_state()
     async def set_show(
         self, show: LightShows | None = None, speed: ColorLogicSpeed | None = None, brightness: ColorLogicBrightness | None = None
     ) -> None:

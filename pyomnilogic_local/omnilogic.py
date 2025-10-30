@@ -11,8 +11,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniLogic:
-    auto_refresh_enabled: bool = True
-
     mspconfig: MSPConfig
     telemetry: Telemetry
 
@@ -21,6 +19,8 @@ class OmniLogic:
 
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
+    _mspconfig_dirty: bool = True
+    _telemetry_dirty: bool = True
     _refresh_lock: asyncio.Lock
 
     def __init__(self, host: str, port: int = 10444) -> None:
@@ -30,58 +30,60 @@ class OmniLogic:
         self._api = OmniLogicAPI(host, port)
         self._refresh_lock = asyncio.Lock()
 
-    async def refresh(self, update_mspconfig: bool = True, update_telemetry: bool = True) -> None:
+    async def refresh(
+        self,
+        *,
+        mspconfig: bool = True,
+        telemetry: bool = True,
+        if_dirty: bool = True,
+        if_older_than: float = 10.0,
+        force: bool = False,
+    ) -> None:
         """Refresh the data from the OmniLogic controller.
 
         Args:
-            update_mspconfig: Whether to fetch and update MSPConfig data
-            update_telemetry: Whether to fetch and update Telemetry data
-        """
-        if update_mspconfig:
-            self.mspconfig = await self._api.async_get_mspconfig()
-            self._mspconfig_last_updated = time.time()
-        if update_telemetry:
-            self.telemetry = await self._api.async_get_telemetry()
-            self._telemetry_last_updated = time.time()
-
-        self._update_equipment()
-
-    # async def refresh_mspconfig(self) -> None:
-    #     """Refresh only the MSPConfig data from the OmniLogic controller."""
-    #     self.mspconfig = await self._api.async_get_mspconfig()
-    #     self._mspconfig_last_updated = time.time()
-    #     self._update_equipment()
-
-    # async def refresh_telemetry(self) -> None:
-    #     """Refresh only the Telemetry data from the OmniLogic controller."""
-    #     self.telemetry = await self._api.async_get_telemetry()
-    #     self._telemetry_last_updated = time.time()
-    #     self._update_equipment()
-
-    async def update_if_older_than(
-        self,
-        telemetry_min_time: float | None = None,
-        mspconfig_min_time: float | None = None,
-    ) -> None:
-        """Update telemetry/mspconfig only if older than specified timestamp.
-
-        This method uses a lock to ensure only one refresh happens at a time.
-        If another thread/task already updated the data to be newer than required,
-        this method will skip the update.
-
-        Args:
-            telemetry_min_time: Update telemetry if last updated before this timestamp
-            mspconfig_min_time: Update mspconfig if last updated before this timestamp
+            mspconfig: Whether to refresh MSPConfig data (if conditions are met)
+            telemetry: Whether to refresh Telemetry data (if conditions are met)
+            if_dirty: Only refresh if the data has been marked dirty
+            if_older_than: Only refresh if data is older than this many seconds
+            force: Force refresh regardless of dirty flag or age
         """
         async with self._refresh_lock:
-            needs_telemetry = telemetry_min_time and self._telemetry_last_updated < telemetry_min_time
-            needs_mspconfig = mspconfig_min_time and self._mspconfig_last_updated < mspconfig_min_time
+            current_time = time.time()
 
-            if needs_telemetry or needs_mspconfig:
-                await self.refresh(
-                    update_mspconfig=bool(needs_mspconfig),
-                    update_telemetry=bool(needs_telemetry),
-                )
+            # Determine if mspconfig needs updating
+            update_mspconfig = False
+            if mspconfig:
+                if force:
+                    update_mspconfig = True
+                elif if_dirty and self._mspconfig_dirty:
+                    update_mspconfig = True
+                elif (current_time - self._mspconfig_last_updated) > if_older_than:
+                    update_mspconfig = True
+
+            # Determine if telemetry needs updating
+            update_telemetry = False
+            if telemetry:
+                if force:
+                    update_telemetry = True
+                elif if_dirty and self._telemetry_dirty:
+                    update_telemetry = True
+                elif (current_time - self._telemetry_last_updated) > if_older_than:
+                    update_telemetry = True
+
+            # Perform the updates
+            if update_mspconfig:
+                self.mspconfig = await self._api.async_get_mspconfig()
+                self._mspconfig_last_updated = time.time()
+                self._mspconfig_dirty = False
+
+            if update_telemetry:
+                self.telemetry = await self._api.async_get_telemetry()
+                self._telemetry_last_updated = time.time()
+                self._telemetry_dirty = False
+
+            if update_mspconfig or update_telemetry:
+                self._update_equipment()
 
     def _update_equipment(self) -> None:
         """Update equipment objects based on the latest MSPConfig and Telemetry data."""
