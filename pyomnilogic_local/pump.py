@@ -1,7 +1,132 @@
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPPump
 from pyomnilogic_local.models.telemetry import TelemetryPump
+from pyomnilogic_local.omnitypes import PumpState
 
 
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
     """Represents a pump in the OmniLogic system."""
+
+    # Expose MSPConfig attributes
+    @property
+    def equip_type(self) -> str:
+        """The pump type (e.g., PMP_VARIABLE_SPEED_PUMP)."""
+        return self.mspconfig.equip_type
+
+    @property
+    def function(self) -> str:
+        """The pump function (e.g., PMP_PUMP, PMP_WATER_FEATURE)."""
+        return self.mspconfig.function
+
+    @property
+    def max_percent(self) -> int:
+        """Maximum pump speed percentage."""
+        return self.mspconfig.max_percent
+
+    @property
+    def min_percent(self) -> int:
+        """Minimum pump speed percentage."""
+        return self.mspconfig.min_percent
+
+    @property
+    def max_rpm(self) -> int:
+        """Maximum pump speed in RPM."""
+        return self.mspconfig.max_rpm
+
+    @property
+    def min_rpm(self) -> int:
+        """Minimum pump speed in RPM."""
+        return self.mspconfig.min_rpm
+
+    @property
+    def priming_enabled(self) -> bool:
+        """Whether priming is enabled for this pump."""
+        return self.mspconfig.priming_enabled
+
+    @property
+    def low_speed(self) -> int:
+        """Low speed preset value."""
+        return self.mspconfig.low_speed
+
+    @property
+    def medium_speed(self) -> int:
+        """Medium speed preset value."""
+        return self.mspconfig.medium_speed
+
+    @property
+    def high_speed(self) -> int:
+        """High speed preset value."""
+        return self.mspconfig.high_speed
+
+    # Expose Telemetry attributes
+    @property
+    def state(self) -> PumpState | int:
+        """Current pump state."""
+        return self.telemetry.state
+
+    @property
+    def speed(self) -> int:
+        """Current pump speed."""
+        return self.telemetry.speed
+
+    @property
+    def last_speed(self) -> int:
+        """Last speed setting."""
+        return self.telemetry.last_speed
+
+    @property
+    def why_on(self) -> int:
+        """Reason why the pump is on."""
+        return self.telemetry.why_on
+
+    # Computed properties
+    @property
+    def is_on(self) -> bool:
+        """Check if the pump is currently on.
+
+        Returns:
+            True if pump state is ON (1), False otherwise
+        """
+        return self.state == PumpState.ON
+
+    @property
+    def is_ready(self) -> bool:
+        """Check if the pump is ready to receive commands.
+
+        A pump is considered ready if it's in a stable state (ON or OFF).
+
+        Returns:
+            True if pump can accept commands, False otherwise
+        """
+        return self.state in (PumpState.OFF, PumpState.ON)
+
+    # Control methods
+    @dirties_state()
+    async def turn_on(self) -> None:
+        """Turn the pump on.
+
+        This will turn on the pump at its last used speed setting.
+        """
+        if self.bow_id is None or self.system_id is None:
+            msg = "Pump bow_id and system_id must be set"
+            raise ValueError(msg)
+
+        await self._api.async_set_equipment(
+            pool_id=self.bow_id,
+            equipment_id=self.system_id,
+            is_on=True,
+        )
+
+    @dirties_state()
+    async def turn_off(self) -> None:
+        """Turn the pump off."""
+        if self.bow_id is None or self.system_id is None:
+            msg = "Pump bow_id and system_id must be set"
+            raise ValueError(msg)
+
+        await self._api.async_set_equipment(
+            pool_id=self.bow_id,
+            equipment_id=self.system_id,
+            is_on=False,
+        )

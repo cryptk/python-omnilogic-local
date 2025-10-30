@@ -1,4 +1,4 @@
-from enum import Enum, Flag, IntEnum, StrEnum
+from enum import Enum, Flag, IntEnum, StrEnum, auto
 
 from .util import PrettyEnum
 
@@ -414,6 +414,12 @@ class FilterWhyOn(IntEnum, PrettyEnum):
     UNKNOWN_16 = 16
     UNKNOWN_17 = 17
     UNKNOWN_18 = 18
+
+
+class FilterSpeedPresets(StrEnum, PrettyEnum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
 
 
 # Heaters
