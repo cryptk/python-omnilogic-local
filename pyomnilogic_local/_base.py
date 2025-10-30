@@ -37,10 +37,7 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         """
         self._api = _api
 
-        self.update_config(mspconfig)
-
-        if telemetry is not None:
-            self.update_telemetry(telemetry)
+        self.update(mspconfig, telemetry)
 
     @property
     def bow_id(self) -> int | None:

@@ -1,6 +1,7 @@
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.chlorinator import Chlorinator
+from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.colorlogiclight import _LOGGER, ColorLogicLight
 from pyomnilogic_local.csad import CSAD
 from pyomnilogic_local.filter import Filter
@@ -15,14 +16,14 @@ from pyomnilogic_local.sensor import Sensor
 class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     """Represents a bow in the OmniLogic system."""
 
-    filters: list[Filter] = []
+    filters: EquipmentDict[Filter] = EquipmentDict()
     heater: Heater | None = None
-    relays: list[Relay] = []
-    sensors: list[Sensor] = []
-    lights: list[ColorLogicLight] = []
-    pumps: list[Pump] = []
+    relays: EquipmentDict[Relay] = EquipmentDict()
+    sensors: EquipmentDict[Sensor] = EquipmentDict()
+    lights: EquipmentDict[ColorLogicLight] = EquipmentDict()
+    pumps: EquipmentDict[Pump] = EquipmentDict()
     chlorinator: Chlorinator | None = None
-    csads: list[CSAD] = []
+    csads: EquipmentDict[CSAD] = EquipmentDict()
 
     def __init__(self, _api: OmniLogicAPI, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         super().__init__(_api, mspconfig, telemetry)
@@ -37,21 +38,21 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         if telemetry is None:
             _LOGGER.warning("No telemetry provided to update Bow equipment.")
             return
-        self._update_filters(self.mspconfig, telemetry)
-        self._update_heater(self.mspconfig, telemetry)
-        self._update_sensors(self.mspconfig, telemetry)
-        self._update_lights(self.mspconfig, telemetry)
-        self._update_pumps(self.mspconfig, telemetry)
-        self._update_chlorinators(self.mspconfig, telemetry)
-        self._update_csads(self.mspconfig, telemetry)
+        self._update_filters(mspconfig, telemetry)
+        self._update_heater(mspconfig, telemetry)
+        self._update_sensors(mspconfig, telemetry)
+        self._update_lights(mspconfig, telemetry)
+        self._update_pumps(mspconfig, telemetry)
+        self._update_chlorinators(mspconfig, telemetry)
+        self._update_csads(mspconfig, telemetry)
 
     def _update_filters(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the filters based on the MSP configuration."""
         if mspconfig.filter is None:
-            self.filters = []
+            self.filters = EquipmentDict()
             return
 
-        self.filters = [Filter(self._api, filter_, telemetry) for filter_ in mspconfig.filter]
+        self.filters = EquipmentDict([Filter(self._api, filter_, telemetry) for filter_ in mspconfig.filter])
 
     def _update_heater(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the heater based on the MSP configuration."""
@@ -64,34 +65,34 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     def _update_relays(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the relays based on the MSP configuration."""
         if mspconfig.relay is None:
-            self.relays = []
+            self.relays = EquipmentDict()
             return
 
-        self.relays = [Relay(self._api, relay, telemetry) for relay in mspconfig.relay]
+        self.relays = EquipmentDict([Relay(self._api, relay, telemetry) for relay in mspconfig.relay])
 
     def _update_sensors(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the sensors based on the MSP configuration."""
         if mspconfig.sensor is None:
-            self.sensors = []
+            self.sensors = EquipmentDict()
             return
 
-        self.sensors = [Sensor(self._api, sensor, telemetry) for sensor in mspconfig.sensor]
+        self.sensors = EquipmentDict([Sensor(self._api, sensor, telemetry) for sensor in mspconfig.sensor])
 
     def _update_lights(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the lights based on the MSP configuration."""
         if mspconfig.colorlogic_light is None:
-            self.lights = []
+            self.lights = EquipmentDict()
             return
 
-        self.lights = [ColorLogicLight(self._api, light, telemetry) for light in mspconfig.colorlogic_light]
+        self.lights = EquipmentDict([ColorLogicLight(self._api, light, telemetry) for light in mspconfig.colorlogic_light])
 
     def _update_pumps(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the pumps based on the MSP configuration."""
         if mspconfig.pump is None:
-            self.pumps = []
+            self.pumps = EquipmentDict()
             return
 
-        self.pumps = [Pump(self._api, pump, telemetry) for pump in mspconfig.pump]
+        self.pumps = EquipmentDict([Pump(self._api, pump, telemetry) for pump in mspconfig.pump])
 
     def _update_chlorinators(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the chlorinators based on the MSP configuration."""
@@ -104,7 +105,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     def _update_csads(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the CSADs based on the MSP configuration."""
         if mspconfig.csad is None:
-            self.csads = []
+            self.csads = EquipmentDict()
             return
 
-        self.csads = [CSAD(self._api, csad, telemetry) for csad in mspconfig.csad]
+        self.csads = EquipmentDict([CSAD(self._api, csad, telemetry) for csad in mspconfig.csad])

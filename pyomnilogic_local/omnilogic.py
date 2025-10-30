@@ -56,7 +56,6 @@ class OmniLogic:
             self.system = System(self.mspconfig.system)
 
         try:
-            self.backyard.update_config(self.mspconfig.backyard)
-            self.backyard.update_telemetry(self.telemetry)
+            self.backyard.update(self.mspconfig.backyard, self.telemetry)
         except AttributeError:
             self.backyard = Backyard(self._api, self.mspconfig.backyard, self.telemetry)
