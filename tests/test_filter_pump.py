@@ -197,7 +197,7 @@ class TestFilter:
         filter_obj._api.async_set_equipment.assert_called_once_with(
             pool_id=7,
             equipment_id=8,
-            is_on=True,
+            is_on=filter_obj.last_speed,
         )
 
     @pytest.mark.asyncio
@@ -220,14 +220,14 @@ class TestFilter:
         """Test run_preset_speed with LOW preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_filter_speed = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.LOW)
 
-        filter_obj._api.async_set_filter_speed.assert_called_once_with(
+        filter_obj._api.async_set_equipment.assert_called_once_with(
             pool_id=7,
             equipment_id=8,
-            speed=40,
+            is_on=40,
         )
 
     @pytest.mark.asyncio
@@ -235,14 +235,14 @@ class TestFilter:
         """Test run_preset_speed with MEDIUM preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_filter_speed = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.MEDIUM)
 
-        filter_obj._api.async_set_filter_speed.assert_called_once_with(
+        filter_obj._api.async_set_equipment.assert_called_once_with(
             pool_id=7,
             equipment_id=8,
-            speed=60,
+            is_on=filter_obj.medium_speed,
         )
 
     @pytest.mark.asyncio
@@ -250,14 +250,14 @@ class TestFilter:
         """Test run_preset_speed with HIGH preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_filter_speed = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.HIGH)
 
-        filter_obj._api.async_set_filter_speed.assert_called_once_with(
+        filter_obj._api.async_set_equipment.assert_called_once_with(
             pool_id=7,
             equipment_id=8,
-            speed=80,
+            is_on=filter_obj.high_speed,
         )
 
 
