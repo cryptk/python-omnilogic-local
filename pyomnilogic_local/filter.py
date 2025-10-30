@@ -3,6 +3,7 @@ from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPFilter
 from pyomnilogic_local.models.telemetry import TelemetryFilter
 from pyomnilogic_local.omnitypes import FilterSpeedPresets, FilterState
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 
 class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
@@ -128,7 +129,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
-            raise ValueError(msg)
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
@@ -141,7 +142,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         """Turn the filter off."""
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
-            raise ValueError(msg)
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
@@ -158,7 +159,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
-            raise ValueError(msg)
+            raise OmniEquipmentNotInitializedError(msg)
 
         speed_value: int
         match speed:

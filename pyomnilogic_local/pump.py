@@ -3,6 +3,7 @@ from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPPump
 from pyomnilogic_local.models.telemetry import TelemetryPump
 from pyomnilogic_local.omnitypes import PumpState
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
@@ -110,7 +111,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Pump bow_id and system_id must be set"
-            raise ValueError(msg)
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
@@ -123,7 +124,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
         """Turn the pump off."""
         if self.bow_id is None or self.system_id is None:
             msg = "Pump bow_id and system_id must be set"
-            raise ValueError(msg)
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
