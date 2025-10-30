@@ -11,6 +11,7 @@ from pyomnilogic_local.omnitypes import (
     ColorLogicSpeed,
     LightShows,
 )
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,13 +71,13 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     async def turn_on(self) -> None:
         """Turns the light on."""
         if self.bow_id is None or self.system_id is None:
-            raise ValueError("Cannot turn on light: bow_id or system_id is None")
+            raise OmniEquipmentNotInitializedError("Cannot turn on light: bow_id or system_id is None")
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
     async def turn_off(self) -> None:
         """Turns the light off."""
         if self.bow_id is None or self.system_id is None:
-            raise ValueError("Cannot turn off light: bow_id or system_id is None")
+            raise OmniEquipmentNotInitializedError("Cannot turn off light: bow_id or system_id is None")
         await self._api.async_set_equipment(self.bow_id, self.system_id, False)
 
     async def set_show(
@@ -102,7 +103,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
                 brightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT
 
         if self.bow_id is None or self.system_id is None:
-            raise ValueError("Cannot set light show: bow_id or system_id is None")
+            raise OmniEquipmentNotInitializedError("Cannot set light show: bow_id or system_id is None")
 
         await self._api.async_set_light_show(
             self.bow_id,
