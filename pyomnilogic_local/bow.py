@@ -1,5 +1,6 @@
+from typing import TYPE_CHECKING
+
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.chlorinator import Chlorinator
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.colorlogiclight import _LOGGER, ColorLogicLight
@@ -11,6 +12,9 @@ from pyomnilogic_local.models.telemetry import Telemetry, TelemetryBoW
 from pyomnilogic_local.pump import Pump
 from pyomnilogic_local.relay import Relay
 from pyomnilogic_local.sensor import Sensor
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnilogic import OmniLogic
 
 
 class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
@@ -25,8 +29,8 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     chlorinator: Chlorinator | None = None
     csads: EquipmentDict[CSAD] = EquipmentDict()
 
-    def __init__(self, _api: OmniLogicAPI, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
-        super().__init__(_api, mspconfig, telemetry)
+    def __init__(self, omni: "OmniLogic", mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+        super().__init__(omni, mspconfig, telemetry)
 
     @property
     def equip_type(self) -> str:
@@ -52,7 +56,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.filters = EquipmentDict()
             return
 
-        self.filters = EquipmentDict([Filter(self._api, filter_, telemetry) for filter_ in mspconfig.filter])
+        self.filters = EquipmentDict([Filter(self._omni, filter_, telemetry) for filter_ in mspconfig.filter])
 
     def _update_heater(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the heater based on the MSP configuration."""
@@ -60,7 +64,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.heater = None
             return
 
-        self.heater = Heater(self._api, mspconfig.heater, telemetry)
+        self.heater = Heater(self._omni, mspconfig.heater, telemetry)
 
     def _update_relays(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the relays based on the MSP configuration."""
@@ -68,7 +72,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.relays = EquipmentDict()
             return
 
-        self.relays = EquipmentDict([Relay(self._api, relay, telemetry) for relay in mspconfig.relay])
+        self.relays = EquipmentDict([Relay(self._omni, relay, telemetry) for relay in mspconfig.relay])
 
     def _update_sensors(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the sensors based on the MSP configuration."""
@@ -76,7 +80,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.sensors = EquipmentDict()
             return
 
-        self.sensors = EquipmentDict([Sensor(self._api, sensor, telemetry) for sensor in mspconfig.sensor])
+        self.sensors = EquipmentDict([Sensor(self._omni, sensor, telemetry) for sensor in mspconfig.sensor])
 
     def _update_lights(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the lights based on the MSP configuration."""
@@ -84,7 +88,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.lights = EquipmentDict()
             return
 
-        self.lights = EquipmentDict([ColorLogicLight(self._api, light, telemetry) for light in mspconfig.colorlogic_light])
+        self.lights = EquipmentDict([ColorLogicLight(self._omni, light, telemetry) for light in mspconfig.colorlogic_light])
 
     def _update_pumps(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the pumps based on the MSP configuration."""
@@ -92,7 +96,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.pumps = EquipmentDict()
             return
 
-        self.pumps = EquipmentDict([Pump(self._api, pump, telemetry) for pump in mspconfig.pump])
+        self.pumps = EquipmentDict([Pump(self._omni, pump, telemetry) for pump in mspconfig.pump])
 
     def _update_chlorinators(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the chlorinators based on the MSP configuration."""
@@ -100,7 +104,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.chlorinator = None
             return
 
-        self.chlorinator = Chlorinator(self._api, mspconfig.chlorinator, telemetry)
+        self.chlorinator = Chlorinator(self._omni, mspconfig.chlorinator, telemetry)
 
     def _update_csads(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the CSADs based on the MSP configuration."""
@@ -108,4 +112,4 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             self.csads = EquipmentDict()
             return
 
-        self.csads = EquipmentDict([CSAD(self._api, csad, telemetry) for csad in mspconfig.csad])
+        self.csads = EquipmentDict([CSAD(self._omni, csad, telemetry) for csad in mspconfig.csad])
