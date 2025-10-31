@@ -42,13 +42,30 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         if telemetry is None:
             _LOGGER.warning("No telemetry provided to update Bow equipment.")
             return
-        self._update_filters(mspconfig, telemetry)
-        self._update_heater(mspconfig, telemetry)
-        self._update_sensors(mspconfig, telemetry)
-        self._update_lights(mspconfig, telemetry)
-        self._update_pumps(mspconfig, telemetry)
         self._update_chlorinators(mspconfig, telemetry)
         self._update_csads(mspconfig, telemetry)
+        self._update_filters(mspconfig, telemetry)
+        self._update_heater(mspconfig, telemetry)
+        self._update_lights(mspconfig, telemetry)
+        self._update_pumps(mspconfig, telemetry)
+        self._update_relays(mspconfig, telemetry)
+        self._update_sensors(mspconfig, telemetry)
+
+    def _update_chlorinators(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+        """Update the chlorinators based on the MSP configuration."""
+        if mspconfig.chlorinator is None:
+            self.chlorinator = None
+            return
+
+        self.chlorinator = Chlorinator(self._omni, mspconfig.chlorinator, telemetry)
+
+    def _update_csads(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+        """Update the CSADs based on the MSP configuration."""
+        if mspconfig.csad is None:
+            self.csads = EquipmentDict()
+            return
+
+        self.csads = EquipmentDict([CSAD(self._omni, csad, telemetry) for csad in mspconfig.csad])
 
     def _update_filters(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the filters based on the MSP configuration."""
@@ -66,22 +83,6 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
 
         self.heater = Heater(self._omni, mspconfig.heater, telemetry)
 
-    def _update_relays(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
-        """Update the relays based on the MSP configuration."""
-        if mspconfig.relay is None:
-            self.relays = EquipmentDict()
-            return
-
-        self.relays = EquipmentDict([Relay(self._omni, relay, telemetry) for relay in mspconfig.relay])
-
-    def _update_sensors(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
-        """Update the sensors based on the MSP configuration."""
-        if mspconfig.sensor is None:
-            self.sensors = EquipmentDict()
-            return
-
-        self.sensors = EquipmentDict([Sensor(self._omni, sensor, telemetry) for sensor in mspconfig.sensor])
-
     def _update_lights(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the lights based on the MSP configuration."""
         if mspconfig.colorlogic_light is None:
@@ -98,18 +99,18 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
 
         self.pumps = EquipmentDict([Pump(self._omni, pump, telemetry) for pump in mspconfig.pump])
 
-    def _update_chlorinators(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
-        """Update the chlorinators based on the MSP configuration."""
-        if mspconfig.chlorinator is None:
-            self.chlorinator = None
+    def _update_relays(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+        """Update the relays based on the MSP configuration."""
+        if mspconfig.relay is None:
+            self.relays = EquipmentDict()
             return
 
-        self.chlorinator = Chlorinator(self._omni, mspconfig.chlorinator, telemetry)
+        self.relays = EquipmentDict([Relay(self._omni, relay, telemetry) for relay in mspconfig.relay])
 
-    def _update_csads(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
-        """Update the CSADs based on the MSP configuration."""
-        if mspconfig.csad is None:
-            self.csads = EquipmentDict()
+    def _update_sensors(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+        """Update the sensors based on the MSP configuration."""
+        if mspconfig.sensor is None:
+            self.sensors = EquipmentDict()
             return
 
-        self.csads = EquipmentDict([CSAD(self._omni, csad, telemetry) for csad in mspconfig.csad])
+        self.sensors = EquipmentDict([Sensor(self._omni, sensor, telemetry) for sensor in mspconfig.sensor])
