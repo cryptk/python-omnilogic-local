@@ -156,15 +156,13 @@ class OmniLogicAPI:
         pool_id: int,
         equipment_id: int,
         temperature: int,
-        unit: str,
     ) -> None:
         """Set the temperature for a heater on the Omni
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
-            temperature (int): What temperature to request
-            unit (str): The temperature unit to use (either F or C)
+            temperature (int): What temperature to request (must be in Fahrenheit)
 
         Returns:
             None
@@ -179,10 +177,12 @@ class OmniLogicAPI:
         parameter.text = str(pool_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit="F", alias="Data")
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+
+        print(req_body)
 
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
