@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 class Backyard(OmniEquipment[MSPBackyard, TelemetryBackyard]):
     """Represents the backyard equipment in the OmniLogic system."""
 
+    mspconfig: MSPBackyard
+    telemetry: TelemetryBackyard
     bow: EquipmentDict[Bow] = EquipmentDict()
     lights: EquipmentDict[ColorLogicLight] = EquipmentDict()
     relays: EquipmentDict[Relay] = EquipmentDict()

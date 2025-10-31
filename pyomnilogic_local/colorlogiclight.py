@@ -26,6 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight]):
     """Represents a color logic light."""
 
+    mspconfig: MSPColorLogicLight
+    telemetry: TelemetryColorLogicLight
+
     def __init__(self, omni: "OmniLogic", mspconfig: MSPColorLogicLight, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 

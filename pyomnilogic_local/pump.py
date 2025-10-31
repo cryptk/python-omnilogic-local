@@ -9,6 +9,9 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
     """Represents a pump in the OmniLogic system."""
 
+    mspconfig: MSPPump
+    telemetry: TelemetryPump
+
     # Expose MSPConfig attributes
     @property
     def equip_type(self) -> str:

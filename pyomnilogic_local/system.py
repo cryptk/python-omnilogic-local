@@ -4,6 +4,8 @@ from pyomnilogic_local.models.mspconfig import MSPSystem
 class System:
     """Represents the main system equipment in the OmniLogic system."""
 
+    mspconfig: MSPSystem
+
     def __init__(self, mspconfig: MSPSystem) -> None:
         # self.vsp_speed_format = mspconfig.vsp_speed_format
         # self.units = mspconfig.units

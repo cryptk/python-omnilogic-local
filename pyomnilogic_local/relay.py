@@ -14,6 +14,9 @@ if TYPE_CHECKING:
 class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
     """Represents a relay in the OmniLogic system."""
 
+    mspconfig: MSPRelay
+    telemetry: TelemetryRelay
+
     def __init__(self, omni: "OmniLogic", mspconfig: MSPRelay, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 

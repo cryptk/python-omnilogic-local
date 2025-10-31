@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     """Represents a bow in the OmniLogic system."""
 
+    mspconfig: MSPBoW
+    telemetry: TelemetryBoW
     filters: EquipmentDict[Filter] = EquipmentDict()
     heater: Heater | None = None
     relays: EquipmentDict[Relay] = EquipmentDict()

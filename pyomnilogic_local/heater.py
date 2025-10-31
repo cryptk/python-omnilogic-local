@@ -22,6 +22,8 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
     determine if conversion to Celsius should be performed for display.
     """
 
+    mspconfig: MSPVirtualHeater
+    telemetry: TelemetryVirtualHeater
     heater_equipment: EquipmentDict[HeaterEquipment] = EquipmentDict()
 
     def __init__(self, omni: "OmniLogic", mspconfig: MSPVirtualHeater, telemetry: Telemetry) -> None:

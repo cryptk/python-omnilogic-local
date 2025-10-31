@@ -20,11 +20,14 @@ class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
     Note: Temperature is always in Fahrenheit internally.
     """
 
+    mspconfig: MSPHeaterEquip
+    telemetry: TelemetryHeater
+
     def __init__(self, omni: "OmniLogic", mspconfig: MSPHeaterEquip, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property
-    def heater_type(self) -> HeaterType | str:
+    def heater_type(self) -> HeaterType:
         """Returns the type of heater (GAS, HEAT_PUMP, SOLAR, etc.)."""
         return self.mspconfig.heater_type
 

@@ -9,6 +9,9 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
     """Represents a filter in the OmniLogic system."""
 
+    mspconfig: MSPFilter
+    telemetry: TelemetryFilter
+
     # Expose MSPConfig attributes
     @property
     def equip_type(self) -> str:
