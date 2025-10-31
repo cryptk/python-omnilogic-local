@@ -115,8 +115,8 @@ class MSPSystem(BaseModel):
 class MSPSensor(OmniBase):
     omni_type: OmniType = OmniType.SENSOR
 
-    equip_type: SensorType | str = Field(alias="Type")
-    units: SensorUnits | str = Field(alias="Units")
+    equip_type: SensorType = Field(alias="Type")
+    units: SensorUnits = Field(alias="Units")
 
 
 class MSPFilter(OmniBase):
@@ -124,7 +124,7 @@ class MSPFilter(OmniBase):
 
     omni_type: OmniType = OmniType.FILTER
 
-    equip_type: FilterType | str = Field(alias="Filter-Type")
+    equip_type: FilterType = Field(alias="Filter-Type")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
@@ -141,8 +141,8 @@ class MSPPump(OmniBase):
 
     omni_type: OmniType = OmniType.PUMP
 
-    equip_type: PumpType | str = Field(alias="Type")
-    function: PumpFunction | str = Field(alias="Function")
+    equip_type: PumpType = Field(alias="Type")
+    function: PumpFunction = Field(alias="Function")
     max_percent: int = Field(alias="Max-Pump-Speed")
     min_percent: int = Field(alias="Min-Pump-Speed")
     max_rpm: int = Field(alias="Max-Pump-RPM")
@@ -215,7 +215,7 @@ class MSPChlorinator(OmniBase):
     timed_percent: int = Field(alias="Timed-Percent")
     superchlor_timeout: int = Field(alias="SuperChlor-Timeout")
     orp_timeout: int = Field(alias="ORP-Timeout")
-    dispenser_type: ChlorinatorDispenserType | str = Field(alias="Dispenser-Type")
+    dispenser_type: ChlorinatorDispenserType = Field(alias="Dispenser-Type")
     cell_type: ChlorinatorCellType = Field(alias="Cell-Type")
     chlorinator_equipment: list[MSPChlorinatorEquip] | None = None
 

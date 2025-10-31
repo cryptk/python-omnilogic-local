@@ -411,9 +411,9 @@ class FilterWhyOn(IntEnum, PrettyEnum):
     TIMER_SPILLOVER = 13
     TIMER_ON = 14
     FREEZE_PROTECT = 15
-    UNKNOWN_16 = 16
-    UNKNOWN_17 = 17
-    UNKNOWN_18 = 18
+    UNKNOWN_16 = 16  # We have seen 18, so we assume 16 exists
+    UNKNOWN_17 = 17  # We have seen 18, so we assume 17 exists
+    UNKNOWN_18 = 18  # ref: https://github.com/cryptk/haomnilogic-local/issues/106
 
 
 class FilterSpeedPresets(StrEnum, PrettyEnum):
@@ -450,6 +450,7 @@ class HeaterMode(IntEnum, PrettyEnum):
 class PumpState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
+    FREEZE_PROTECT = 2  # This is an assumption that 2 means freeze protect, ref: https://github.com/cryptk/haomnilogic-local/issues/147
 
 
 class PumpType(StrEnum, PrettyEnum):
@@ -514,11 +515,11 @@ class RelayWhyOn(IntEnum, PrettyEnum):
     WAITING_FOR_INTERLOCK = 3
     PAUSED = 4
     WAITING_FOR_FILTER = 5
-    UNKNOWN_1 = 6
-    UNKNOWN_2 = 7
-    UNKNOWN_3 = 8
-    UNKNOWN_4 = 9
-    UNKNOWN_5 = 10
+    UNKNOWN_1 = 6  # We have seen 8, so we assume 6 exists
+    UNKNOWN_2 = 7  # ref https://github.com/cryptk/haomnilogic-local/issues/150
+    UNKNOWN_3 = 8  # ref https://github.com/cryptk/haomnilogic-local/issues/106
+    UNKNOWN_4 = 9  # We have seen 10, so we assume 9 exists
+    UNKNOWN_5 = 10  # ref https://github.com/cryptk/haomnilogic-local/issues/73
 
 
 # Sensors

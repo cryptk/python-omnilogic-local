@@ -60,7 +60,7 @@ class TelemetryBackyard(BaseModel):
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
     air_temp: int | None = Field(alias="@airTemp")
-    state: BackyardState | int = Field(alias="@state")
+    state: BackyardState = Field(alias="@state")
     # The below two fields are only available for telemetry with a status_version >= 11
     config_checksum: int | None = Field(alias="@ConfigChksum", default=None)
     msp_version: str | None = Field(alias="@mspVersion", default=None)
@@ -88,7 +88,7 @@ class TelemetryChlorinator(BaseModel):
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int | None = Field(alias="@Timed-Percent", default=None)
-    operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
+    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
     @computed_field  # type: ignore[prop-decorator]
@@ -186,7 +186,7 @@ class TelemetryCSAD(BaseModel):
     status_raw: int = Field(alias="@status")
     ph: float = Field(alias="@ph")
     orp: int = Field(alias="@orp")
-    mode: CSADMode | int = Field(alias="@mode")
+    mode: CSADMode = Field(alias="@mode")
 
 
 class TelemetryColorLogicLight(BaseModel):
@@ -230,10 +230,10 @@ class TelemetryFilter(BaseModel):
 
     omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
-    state: FilterState | int = Field(alias="@filterState")
+    state: FilterState = Field(alias="@filterState")
     speed: int = Field(alias="@filterSpeed")
-    valve_position: FilterValvePosition | int = Field(alias="@valvePosition")
-    why_on: FilterWhyOn | int = Field(alias="@whyFilterIsOn")
+    valve_position: FilterValvePosition = Field(alias="@valvePosition")
+    why_on: FilterWhyOn = Field(alias="@whyFilterIsOn")
     reported_speed: int = Field(alias="@reportedFilterSpeed")
     power: int = Field(alias="@power")
     last_speed: int = Field(alias="@lastSpeed")
@@ -264,7 +264,7 @@ class TelemetryPump(BaseModel):
 
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
-    state: PumpState | int = Field(alias="@pumpState")
+    state: PumpState = Field(alias="@pumpState")
     speed: int = Field(alias="@pumpSpeed")
     last_speed: int = Field(alias="@lastSpeed")
     why_on: int = Field(alias="@whyOn")
