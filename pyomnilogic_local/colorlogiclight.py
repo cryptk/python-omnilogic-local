@@ -12,7 +12,10 @@ from pyomnilogic_local.omnitypes import (
     ColorLogicSpeed,
     LightShows,
 )
-from pyomnilogic_local.util import OmniEquipmentNotInitializedError
+from pyomnilogic_local.util import (
+    OmniEquipmentNotInitializedError,
+    OmniEquipmentNotReadyError,
+)
 
 if TYPE_CHECKING:
     from pyomnilogic_local.omnilogic import OmniLogic
@@ -72,25 +75,85 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         """Returns the current special effect."""
         return self.telemetry.special_effect
 
+    @property
+    def is_ready(self) -> bool:
+        """
+        Returns whether the light is ready to accept commands.
+
+        The light is not ready when it is in a transitional state:
+        - FIFTEEN_SECONDS_WHITE: Light is in the 15-second white period after power on
+        - CHANGING_SHOW: Light is actively changing between shows
+        - POWERING_OFF: Light is in the process of turning off
+        - COOLDOWN: Light is in cooldown period after being turned off
+
+        Returns:
+            bool: True if the light can accept commands, False otherwise.
+        """
+        return self.state not in [
+            ColorLogicPowerState.FIFTEEN_SECONDS_WHITE,
+            ColorLogicPowerState.CHANGING_SHOW,
+            ColorLogicPowerState.POWERING_OFF,
+            ColorLogicPowerState.COOLDOWN,
+        ]
+
     @dirties_state()
     async def turn_on(self) -> None:
-        """Turns the light on."""
+        """
+        Turns the light on.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the light is not ready to accept commands
+                (in FIFTEEN_SECONDS_WHITE, CHANGING_SHOW, POWERING_OFF, or COOLDOWN state).
+        """
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn on light: bow_id or system_id is None")
+        if not self.is_ready:
+            raise OmniEquipmentNotReadyError(
+                f"Cannot turn on light: light is in {self.state.pretty()} state. Wait for the light to be ready before issuing commands."
+            )
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
     @dirties_state()
     async def turn_off(self) -> None:
-        """Turns the light off."""
+        """
+        Turns the light off.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the light is not ready to accept commands
+                (in FIFTEEN_SECONDS_WHITE, CHANGING_SHOW, POWERING_OFF, or COOLDOWN state).
+        """
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn off light: bow_id or system_id is None")
+        if not self.is_ready:
+            raise OmniEquipmentNotReadyError(
+                f"Cannot turn off light: light is in {self.state.pretty()} state. Wait for the light to be ready before issuing commands."
+            )
         await self._api.async_set_equipment(self.bow_id, self.system_id, False)
 
     @dirties_state()
     async def set_show(
         self, show: LightShows | None = None, speed: ColorLogicSpeed | None = None, brightness: ColorLogicBrightness | None = None
     ) -> None:
-        """Sets the light show, speed, and brightness."""
+        """
+        Sets the light show, speed, and brightness.
+
+        Args:
+            show: The light show to set. If None, uses the current show.
+            speed: The speed to set. If None, uses the current speed.
+            brightness: The brightness to set. If None, uses the current brightness.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the light is not ready to accept commands
+                (in FIFTEEN_SECONDS_WHITE, CHANGING_SHOW, POWERING_OFF, or COOLDOWN state).
+
+        Note:
+            Non color-logic lights do not support speed or brightness control.
+            If speed or brightness are provided for non color-logic lights, they will be ignored
+            and a warning will be logged.
+        """
 
         # Non color-logic lights do not support speed or brightness control
         if self.model not in [
@@ -108,6 +171,11 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
 
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot set light show: bow_id or system_id is None")
+
+        if not self.is_ready:
+            raise OmniEquipmentNotReadyError(
+                f"Cannot set light show: light is in {self.state.pretty()} state. Wait for the light to be ready before issuing commands."
+            )
 
         await self._api.async_set_light_show(
             self.bow_id,
