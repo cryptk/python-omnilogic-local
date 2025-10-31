@@ -182,8 +182,6 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        print(req_body)
-
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
     async def async_set_solar_heater(

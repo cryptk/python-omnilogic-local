@@ -1,10 +1,22 @@
 import asyncio
 import logging
 import time
+from typing import Any
 
+from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.backyard import Backyard
+from pyomnilogic_local.chlorinator import Chlorinator
+from pyomnilogic_local.collections import EquipmentDict
+from pyomnilogic_local.colorlogiclight import ColorLogicLight
+from pyomnilogic_local.csad import CSAD
+from pyomnilogic_local.filter import Filter
+from pyomnilogic_local.heater import Heater
+from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models import MSPConfig, Telemetry
+from pyomnilogic_local.pump import Pump
+from pyomnilogic_local.relay import Relay
+from pyomnilogic_local.sensor import Sensor
 from pyomnilogic_local.system import System
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,4 +114,143 @@ class OmniLogic:
         except AttributeError:
             self.backyard = Backyard(self, self.mspconfig.backyard, self.telemetry)
 
-        # No need for _set_omni_reference anymore - it's passed in __init__!
+    # Equipment discovery properties
+    @property
+    def all_lights(self) -> EquipmentDict[ColorLogicLight]:
+        """Returns all ColorLogicLight instances across all bows in the backyard."""
+        lights: list[ColorLogicLight] = []
+        # Lights at backyard level
+        lights.extend(self.backyard.lights.values())
+        # Lights in each bow
+        for bow in self.backyard.bow.values():
+            lights.extend(bow.lights.values())
+        return EquipmentDict(lights)
+
+    @property
+    def all_relays(self) -> EquipmentDict[Relay]:
+        """Returns all Relay instances across all bows in the backyard."""
+        relays: list[Relay] = []
+        # Relays at backyard level
+        relays.extend(self.backyard.relays.values())
+        # Relays in each bow
+        for bow in self.backyard.bow.values():
+            relays.extend(bow.relays.values())
+        return EquipmentDict(relays)
+
+    @property
+    def all_pumps(self) -> EquipmentDict[Pump]:
+        """Returns all Pump instances across all bows in the backyard."""
+        pumps: list[Pump] = []
+        for bow in self.backyard.bow.values():
+            pumps.extend(bow.pumps.values())
+        return EquipmentDict(pumps)
+
+    @property
+    def all_filters(self) -> EquipmentDict[Filter]:
+        """Returns all Filter instances across all bows in the backyard."""
+        filters: list[Filter] = []
+        for bow in self.backyard.bow.values():
+            filters.extend(bow.filters.values())
+        return EquipmentDict(filters)
+
+    @property
+    def all_sensors(self) -> EquipmentDict[Sensor]:
+        """Returns all Sensor instances across all bows in the backyard."""
+        sensors: list[Sensor] = []
+        # Sensors at backyard level
+        sensors.extend(self.backyard.sensors.values())
+        # Sensors in each bow
+        for bow in self.backyard.bow.values():
+            sensors.extend(bow.sensors.values())
+        return EquipmentDict(sensors)
+
+    @property
+    def all_heaters(self) -> EquipmentDict[Heater]:
+        """Returns all Heater (VirtualHeater) instances across all bows in the backyard."""
+        heaters: list[Heater] = []
+        for bow in self.backyard.bow.values():
+            if bow.heater is not None:
+                heaters.append(bow.heater)
+        return EquipmentDict(heaters)
+
+    @property
+    def all_heater_equipment(self) -> EquipmentDict[HeaterEquipment]:
+        """Returns all HeaterEquipment instances across all heaters in the backyard."""
+        heater_equipment: list[HeaterEquipment] = []
+        for heater in self.all_heaters.values():
+            heater_equipment.extend(heater.heater_equipment.values())
+        return EquipmentDict(heater_equipment)
+
+    @property
+    def all_chlorinators(self) -> EquipmentDict[Chlorinator]:
+        """Returns all Chlorinator instances across all bows in the backyard."""
+        chlorinators: list[Chlorinator] = []
+        for bow in self.backyard.bow.values():
+            if bow.chlorinator is not None:
+                chlorinators.append(bow.chlorinator)
+        return EquipmentDict(chlorinators)
+
+    @property
+    def all_csads(self) -> EquipmentDict[CSAD]:
+        """Returns all CSAD instances across all bows in the backyard."""
+        csads: list[CSAD] = []
+        for bow in self.backyard.bow.values():
+            csads.extend(bow.csads.values())
+        return EquipmentDict(csads)
+
+    # Equipment search methods
+    def get_equipment_by_name(self, name: str) -> OmniEquipment[Any, Any] | None:
+        """
+        Find equipment by name across all equipment types.
+
+        Args:
+            name: The name of the equipment to find
+
+        Returns:
+            The first equipment with matching name, or None if not found
+        """
+        # Search all equipment types
+        all_equipment: list[OmniEquipment[Any, Any]] = []
+        all_equipment.extend(self.all_lights.values())
+        all_equipment.extend(self.all_relays.values())
+        all_equipment.extend(self.all_pumps.values())
+        all_equipment.extend(self.all_filters.values())
+        all_equipment.extend(self.all_sensors.values())
+        all_equipment.extend(self.all_heaters.values())
+        all_equipment.extend(self.all_heater_equipment.values())
+        all_equipment.extend(self.all_chlorinators.values())
+        all_equipment.extend(self.all_csads.values())
+
+        for equipment in all_equipment:
+            if equipment.name == name:
+                return equipment
+
+        return None
+
+    def get_equipment_by_id(self, system_id: int) -> OmniEquipment[Any, Any] | None:
+        """
+        Find equipment by system_id across all equipment types.
+
+        Args:
+            system_id: The system ID of the equipment to find
+
+        Returns:
+            The first equipment with matching system_id, or None if not found
+        """
+        # Search all equipment types
+        all_equipment: list[OmniEquipment[Any, Any]] = []
+        all_equipment.extend(self.all_lights.values())
+        all_equipment.extend(self.all_relays.values())
+        all_equipment.extend(self.all_pumps.values())
+        all_equipment.extend(self.all_filters.values())
+        all_equipment.extend(self.all_sensors.values())
+        all_equipment.extend(self.all_heaters.values())
+        all_equipment.extend(self.all_heater_equipment.values())
+        all_equipment.extend(self.all_chlorinators.values())
+        all_equipment.extend(self.all_csads.values())
+
+        for equipment in all_equipment:
+            if equipment.system_id == system_id:
+                return equipment
+
+        return None
