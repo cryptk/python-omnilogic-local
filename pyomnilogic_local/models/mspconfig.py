@@ -217,13 +217,14 @@ class MSPChlorinator(OmniBase):
     orp_timeout: int = Field(alias="ORP-Timeout")
     dispenser_type: ChlorinatorDispenserType | str = Field(alias="Dispenser-Type")
     cell_type: ChlorinatorCellType = Field(alias="Cell-Type")
-    chlorinator_equipment: list[MSPChlorinatorEquip] | None
+    chlorinator_equipment: list[MSPChlorinatorEquip] | None = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
 
-        # The heater equipment are nested down inside a list of "Operations", which also includes non Heater-Equipment items.  We need to
-        # first filter down to just the heater equipment items, then populate our self.heater_equipment with parsed versions of those items.
+        # The chlorinator equipment are nested down inside a list of "Operations", which also includes non Chlorinator-Equipment items.
+        # We need to first filter down to just the chlorinator equipment items, then populate our self.chlorinator_equipment with parsed
+        # versions of those items.
         chlorinator_equip_data = [op for op in data.get("Operation", {}) if OmniType.CHLORINATOR_EQUIP in op][0]
         self.chlorinator_equipment = [
             MSPChlorinatorEquip.model_validate(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]

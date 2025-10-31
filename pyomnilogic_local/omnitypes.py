@@ -436,6 +436,8 @@ class HeaterType(StrEnum, PrettyEnum):
     ELECTRIC = "HTR_ELECTRIC"
     GEOTHERMAL = "HTR_GEOTHERMAL"
     SMART = "HTR_SMART"
+    CHILLER = "HTR_CHILLER"
+    SMART_HEAT_PUMP = "HTR_SMART_HEAT_PUMP"
 
 
 class HeaterMode(IntEnum, PrettyEnum):
@@ -512,6 +514,11 @@ class RelayWhyOn(IntEnum, PrettyEnum):
     WAITING_FOR_INTERLOCK = 3
     PAUSED = 4
     WAITING_FOR_FILTER = 5
+    UNKNOWN_1 = 6
+    UNKNOWN_2 = 7
+    UNKNOWN_3 = 8
+    UNKNOWN_4 = 9
+    UNKNOWN_5 = 10
 
 
 # Sensors
