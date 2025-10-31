@@ -167,7 +167,7 @@ class MSPHeaterEquip(OmniBase):
     omni_type: OmniType = OmniType.HEATER_EQUIP
 
     equip_type: Literal["PET_HEATER"] = Field(alias="Type")
-    heater_type: HeaterType | str = Field(alias="Heater-Type")
+    heater_type: HeaterType = Field(alias="Heater-Type")
     enabled: bool = Field(alias="Enabled")
     min_filter_speed: int = Field(alias="Min-Speed-For-Operation")
     sensor_id: int = Field(alias="Sensor-System-Id")

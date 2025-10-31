@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models.mspconfig import MSPVirtualHeater
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryVirtualHeater
 from pyomnilogic_local.omnitypes import HeaterMode
@@ -20,8 +22,24 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
     determine if conversion to Celsius should be performed for display.
     """
 
+    heater_equipment: EquipmentDict[HeaterEquipment] = EquipmentDict()
+
     def __init__(self, omni: "OmniLogic", mspconfig: MSPVirtualHeater, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
+
+    def _update_equipment(self, mspconfig: MSPVirtualHeater, telemetry: Telemetry | None) -> None:
+        """Update both the configuration and telemetry data for the equipment."""
+        if telemetry is None:
+            return
+        self._update_heater_equipment(mspconfig, telemetry)
+
+    def _update_heater_equipment(self, mspconfig: MSPVirtualHeater, telemetry: Telemetry) -> None:
+        """Update the heater equipment based on the MSP configuration."""
+        if mspconfig.heater_equipment is None:
+            self.heater_equipment = EquipmentDict()
+            return
+
+        self.heater_equipment = EquipmentDict([HeaterEquipment(self._omni, equip, telemetry) for equip in mspconfig.heater_equipment])
 
     @property
     def max_temp(self) -> int:
@@ -139,3 +157,31 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
         # Always use Fahrenheit as that's what the OmniLogic system uses internally
         await self._api.async_set_heater(self.bow_id, self.system_id, temperature)
+
+    @dirties_state()
+    async def set_solar_temperature(self, temperature: int) -> None:
+        """
+        Sets the solar heater set point.
+
+        Args:
+            temperature: The target solar temperature to set in Fahrenheit.
+                        Must be between min_temp and max_temp.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If temperature is outside the valid range.
+
+        Note:
+            Temperature must be provided in Fahrenheit as that is what the OmniLogic
+            system uses internally. The system.units setting only affects display,
+            not the API. If your application uses Celsius, you must convert to
+            Fahrenheit before calling this method.
+        """
+        if self.bow_id is None or self.system_id is None:
+            raise OmniEquipmentNotInitializedError("Cannot set solar heater temperature: bow_id or system_id is None")
+
+        if temperature < self.min_temp or temperature > self.max_temp:
+            raise ValueError(f"Temperature {temperature}°F is outside valid range [{self.min_temp}°F, {self.max_temp}°F]")
+
+        # Always use Fahrenheit as that's what the OmniLogic system uses internally
+        await self._api.async_set_solar_heater(self.bow_id, self.system_id, temperature)

@@ -252,7 +252,7 @@ class TelemetryHeater(BaseModel):
 
     omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
-    state: HeaterState | int = Field(alias="@heaterState")
+    state: HeaterState = Field(alias="@heaterState")
     temp: int = Field(alias="@temp")
     enabled: bool = Field(alias="@enable")
     priority: int = Field(alias="@priority")
@@ -297,7 +297,7 @@ class TelemetryVirtualHeater(BaseModel):
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
     solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: HeaterMode | int = Field(alias="@Mode")
+    mode: HeaterMode = Field(alias="@Mode")
     silent_mode: int = Field(alias="@SilentMode")
     why_on: int = Field(alias="@whyHeaterIsOn")
 
