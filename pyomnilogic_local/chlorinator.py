@@ -303,8 +303,10 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
     def is_ready(self) -> bool:
         """Check if the chlorinator is ready to accept commands.
 
-        A chlorinator is considered ready if it is authenticated and has no
-        critical errors that would prevent it from operating.
+        A chlorinator is considered ready if:
+        - The backyard is not in service/config mode (checked by parent class)
+        - It is authenticated
+        - It has no critical errors that would prevent it from operating
 
         Returns:
             True if chlorinator can accept commands, False otherwise
@@ -313,4 +315,9 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             >>> if chlorinator.is_ready:
             ...     await chlorinator.set_chlorine_level(75)
         """
+        # First check if backyard is ready
+        if not super().is_ready:
+            return False
+
+        # Then check chlorinator-specific readiness
         return self.is_authenticated and not self.has_error

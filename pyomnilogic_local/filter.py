@@ -115,12 +115,18 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
     def is_ready(self) -> bool:
         """Check if the filter is ready to receive commands.
 
-        A filter is considered ready if it's not in a transitional state like
-        priming, waiting to turn off, or cooling down.
+        A filter is considered ready if:
+        - The backyard is not in service/config mode (checked by parent class)
+        - It's not in a transitional state like priming, waiting to turn off, or cooling down
 
         Returns:
             True if filter can accept commands, False otherwise
         """
+        # First check if backyard is ready
+        if not super().is_ready:
+            return False
+
+        # Then check filter-specific readiness
         return self.state in (FilterState.OFF, FilterState.ON)
 
     # Control methods

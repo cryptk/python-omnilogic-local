@@ -83,15 +83,22 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         """
         Returns whether the light is ready to accept commands.
 
-        The light is not ready when it is in a transitional state:
-        - FIFTEEN_SECONDS_WHITE: Light is in the 15-second white period after power on
-        - CHANGING_SHOW: Light is actively changing between shows
-        - POWERING_OFF: Light is in the process of turning off
-        - COOLDOWN: Light is in cooldown period after being turned off
+        The light is not ready when:
+        - The backyard is in service/config mode (checked by parent class)
+        - The light is in a transitional state:
+          - FIFTEEN_SECONDS_WHITE: Light is in the 15-second white period after power on
+          - CHANGING_SHOW: Light is actively changing between shows
+          - POWERING_OFF: Light is in the process of turning off
+          - COOLDOWN: Light is in cooldown period after being turned off
 
         Returns:
             bool: True if the light can accept commands, False otherwise.
         """
+        # First check if backyard is ready
+        if not super().is_ready:
+            return False
+
+        # Then check light-specific readiness
         return self.state not in [
             ColorLogicPowerState.FIFTEEN_SECONDS_WHITE,
             ColorLogicPowerState.CHANGING_SHOW,

@@ -278,8 +278,10 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
     def is_ready(self) -> bool:
         """Check if the CSAD is ready to accept commands.
 
-        A CSAD is considered ready if it is enabled and in a stable operating mode
-        (AUTO or MONITORING), not in a transitional or error state.
+        A CSAD is considered ready if:
+        - The backyard is not in service/config mode (checked by parent class)
+        - It is enabled and in a stable operating mode (AUTO, MONITORING, or FORCE_ON)
+        - Not in a transitional or error state
 
         Returns:
             True if CSAD can accept commands, False otherwise
@@ -288,4 +290,9 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
             >>> if csad.is_ready:
             ...     await csad.set_mode(CSADMode.AUTO)
         """
+        # First check if backyard is ready
+        if not super().is_ready:
+            return False
+
+        # Then check CSAD-specific readiness
         return self.is_on and self.mode in (CSADMode.AUTO, CSADMode.MONITORING, CSADMode.FORCE_ON)

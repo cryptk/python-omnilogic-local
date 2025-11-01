@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.models import MSPEquipmentType, Telemetry
 from pyomnilogic_local.models.telemetry import TelemetryType
+from pyomnilogic_local.omnitypes import BackyardState
 
 if TYPE_CHECKING:
     from pyomnilogic_local.omnilogic import OmniLogic
@@ -66,6 +67,28 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
     def omni_type(self) -> str | None:
         """The OmniType of the equipment."""
         return self.mspconfig.omni_type
+
+    @property
+    def is_ready(self) -> bool:
+        """Check if the equipment is ready to accept commands.
+
+        Equipment is not ready when the backyard is in service or configuration mode.
+        This is the base implementation that checks backyard state.
+        Subclasses should call super().is_ready first and add their own checks.
+
+        Returns:
+            bool: False if backyard is in SERVICE_MODE, CONFIG_MODE, or TIMED_SERVICE_MODE,
+                  True otherwise (equipment-specific checks in subclasses)
+        """
+        # Check if backyard state allows equipment operations
+        backyard_state = self._omni.backyard.telemetry.state
+        if backyard_state in (
+            BackyardState.SERVICE_MODE,
+            BackyardState.CONFIG_MODE,
+            BackyardState.TIMED_SERVICE_MODE,
+        ):
+            return False
+        return True
 
     def update(self, mspconfig: MSPConfigT, telemetry: Telemetry | None) -> None:
         """Update both the configuration and telemetry data for the equipment."""

@@ -9,6 +9,7 @@ from pyomnilogic_local.filter import Filter
 from pyomnilogic_local.heater import Heater
 from pyomnilogic_local.models.mspconfig import MSPBoW
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryBoW
+from pyomnilogic_local.omnitypes import BodyOfWaterType
 from pyomnilogic_local.pump import Pump
 from pyomnilogic_local.relay import Relay
 from pyomnilogic_local.sensor import Sensor
@@ -35,9 +36,31 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         super().__init__(omni, mspconfig, telemetry)
 
     @property
-    def equip_type(self) -> str:
-        """The equipment type of the bow."""
+    def equip_type(self) -> BodyOfWaterType | str:
+        """The equipment type of the bow (POOL or SPA)."""
         return self.mspconfig.equip_type
+
+    @property
+    def supports_spillover(self) -> bool:
+        """Whether this body of water supports spillover functionality."""
+        return self.mspconfig.supports_spillover
+
+    @property
+    def water_temp(self) -> int:
+        """Current water temperature reading from the bow sensor.
+
+        Note: Temperature is in Fahrenheit. Returns -1 if sensor is not available.
+        """
+        return self.telemetry.water_temp
+
+    @property
+    def flow(self) -> int:
+        """Current flow sensor reading.
+
+        Returns:
+            Flow value (255 typically indicates flow present, 0 indicates no flow)
+        """
+        return self.telemetry.flow
 
     def _update_equipment(self, mspconfig: MSPBoW, telemetry: Telemetry | None) -> None:
         """Update both the configuration and telemetry data for the equipment."""

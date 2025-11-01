@@ -98,11 +98,18 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
     def is_ready(self) -> bool:
         """Check if the pump is ready to receive commands.
 
-        A pump is considered ready if it's in a stable state (ON or OFF).
+        A pump is considered ready if:
+        - The backyard is not in service/config mode (checked by parent class)
+        - It's in a stable state (ON or OFF)
 
         Returns:
             True if pump can accept commands, False otherwise
         """
+        # First check if backyard is ready
+        if not super().is_ready:
+            return False
+
+        # Then check pump-specific readiness
         return self.state in (PumpState.OFF, PumpState.ON)
 
     # Control methods
