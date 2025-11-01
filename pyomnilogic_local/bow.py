@@ -21,7 +21,108 @@ if TYPE_CHECKING:
 
 
 class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
-    """Represents a bow in the OmniLogic system."""
+    """Represents a Body of Water (BoW) - pool or spa - in the OmniLogic system.
+
+    A Body of Water (commonly abbreviated as BoW) is a pool or spa, along with
+    all of its associated equipment. Each BoW contains:
+    - Filtration pumps
+    - Heating equipment
+    - Chlorination/sanitization systems
+    - Chemistry monitoring (CSAD)
+    - Lighting
+    - Auxiliary pumps (water features, etc.)
+    - Relays (jets, blowers, etc.)
+    - Sensors (water temperature, flow, etc.)
+
+    The Bow class provides access to all equipment associated with a specific
+    pool or spa, as well as water temperature monitoring and spillover control
+    for pool/spa combination systems.
+
+    Attributes:
+        mspconfig: Configuration data for this body of water
+        telemetry: Real-time operational data
+        filters: Collection of filtration pumps
+        heater: Virtual heater (if configured)
+        relays: Collection of relays (jets, blowers, aux equipment)
+        sensors: Collection of sensors (water temp, flow, etc.)
+        lights: Collection of ColorLogic lights
+        pumps: Collection of pumps (water features, etc.)
+        chlorinator: Chlorinator system (if configured)
+        csads: Collection of CSAD (chemistry) systems
+
+    Properties (Configuration):
+        equip_type: Body of water type (BOW_POOL or BOW_SPA)
+        supports_spillover: Whether spillover is available
+
+    Properties (Telemetry):
+        water_temp: Current water temperature (Fahrenheit)
+        flow: True if flow is detected, False otherwise
+
+    Control Methods:
+        set_spillover(speed): Set spillover pump speed (0-100%)
+        turn_on_spillover(): Turn on spillover at maximum speed
+        turn_off_spillover(): Turn off spillover
+
+    Example:
+        >>> omni = OmniLogic("192.168.1.100")
+        >>> await omni.refresh()
+        >>>
+        >>> # Access pool
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> print(f"Water temp: {pool.water_temp}°F")
+        >>> print(f"Flow detected: {pool.flow > 0}")
+        >>>
+        >>> # Access pool equipment
+        >>> if pool.heater:
+        ...     await pool.heater.set_temperature(85)
+        >>>
+        >>> if pool.chlorinator:
+        ...     print(f"Salt level: {pool.chlorinator.avg_salt_level} ppm")
+        >>>
+        >>> for filter in pool.filters:
+        ...     print(f"Filter: {filter.name}, Speed: {filter.speed}%")
+        >>>
+        >>> for light in pool.lights:
+        ...     await light.set_show(ColorLogicShow25.TROPICAL)
+        >>>
+        >>> # Spillover control (pool/spa combo systems)
+        >>> if pool.supports_spillover:
+        ...     await pool.turn_on_spillover()
+        ...     await pool.set_spillover(75)  # 75% speed
+        ...     await pool.turn_off_spillover()
+
+    Pool vs Spa:
+        Bodies of water can be either pools or spas, distinguished by the
+        equip_type property:
+
+        >>> if pool.equip_type == BodyOfWaterType.POOL:
+        ...     print("This is a pool")
+        >>> elif pool.equip_type == BodyOfWaterType.SPA:
+        ...     print("This is a spa")
+
+    Spillover Systems:
+        Some installations have combined pool/spa systems with spillover
+        capability that allows water to flow from spa to pool or vice versa:
+
+        - supports_spillover indicates if the feature is available
+        - Spillover is controlled by a dedicated pump
+        - Speed range is 0-100% (0 turns spillover off)
+        - Convenience methods simplify on/off operations
+
+    Equipment Collections:
+        Equipment is stored in EquipmentDict collections which allow access by:
+        - Name (string): pool.filters["Main Filter"]
+        - System ID (int): pool.filters[123]
+        - Index (int): pool.filters[0]
+        - Iteration: for filter in pool.filters: ...
+
+    Note:
+        - Water temperature returns -1 if sensor not available
+        - Flow telemetry typically reads 255 or 1 for flow, 0 for no flow, we simplify to bool
+        - Not all bodies of water have all equipment types
+        - Some equipment (heater, chlorinator) may be None if not configured
+        - Spillover operations raise ValueError if not supported
+    """
 
     mspconfig: MSPBoW
     telemetry: TelemetryBoW
@@ -56,13 +157,17 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         return self.telemetry.water_temp
 
     @property
-    def flow(self) -> int:
+    def flow(self) -> bool:
         """Current flow sensor reading.
 
         Returns:
-            Flow value (255 typically indicates flow present, 0 indicates no flow)
+            bool: True if flow is present, False otherwise.
         """
-        return self.telemetry.flow
+        # Flow values:
+        # 255 seems to indicate "assumed flow", for example, because a filter pump is on
+        # 1 seems to indicate "certain flow", for example, when there is an actual flow sensor
+        # 0 indicates no flow
+        return self.telemetry.flow > 0
 
     # Control methods
     @dirties_state()

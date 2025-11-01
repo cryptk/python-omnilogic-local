@@ -12,7 +12,61 @@ if TYPE_CHECKING:
 
 
 class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
-    """Represents a relay in the OmniLogic system."""
+    """Represents a relay in the OmniLogic system.
+
+    Relays are ON/OFF switches that control various pool and spa equipment that
+    doesn't require variable speed control. Common relay applications include:
+    - Pool/spa lights (non-ColorLogic)
+    - Water features and fountains
+    - Deck jets and bubblers
+    - Auxiliary equipment (blowers, misters, etc.)
+    - Landscape lighting
+    - Accessory equipment
+
+    Each relay has a configured function that determines its purpose and behavior.
+    Relays can be controlled manually or automatically based on schedules and
+    other system conditions.
+
+    Attributes:
+        mspconfig: Configuration data for this relay from MSP XML
+        telemetry: Real-time state and status data
+
+    Properties:
+        relay_type: Type of relay (e.g., VALVE_ACTUATOR, HIGH_VOLTAGE_RELAY, LOW_VOLTAGE_RELAY)
+        function: Relay function (e.g., WATER_FEATURE, CLEANER, etc)
+        state: Current state (ON or OFF)
+        why_on: Reason code for relay being on (manual, schedule, etc.)
+        is_on: True if relay is currently energized
+
+    Control Methods:
+        turn_on(): Energize the relay (turn equipment on)
+        turn_off(): De-energize the relay (turn equipment off)
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> deck_jets = pool.relays["Deck Jets"]
+        >>>
+        >>> # Check current state
+        >>> if deck_jets.is_on:
+        ...     print("Deck jets are currently running")
+        >>>
+        >>> # Control relay
+        >>> await deck_jets.turn_on()
+        >>> await deck_jets.turn_off()
+        >>>
+        >>> # Check function
+        >>> print(f"Relay function: {deck_jets.function}")
+        >>> print(f"Relay type: {deck_jets.relay_type}")
+        >>>
+        >>> # Check why the relay is on
+        >>> if deck_jets.is_on:
+        ...     print(f"Why on: {deck_jets.why_on}")
+
+    Note:
+        - Relays are binary ON/OFF devices (no speed or intensity control)
+        - The why_on property indicates if control is manual or automatic
+        - Relay state changes are immediate (no priming or delay states)
+    """
 
     mspconfig: MSPRelay
     telemetry: TelemetryRelay

@@ -7,7 +7,71 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
-    """Represents a pump in the OmniLogic system."""
+    """Represents a pump in the OmniLogic system.
+
+    Pumps are used for various functions including water circulation, waterfalls,
+    water features, spillover, and other hydraulic functions. Pumps can be
+    single-speed, multi-speed, or variable speed depending on the model.
+
+    The Pump class provides control over pump speed and operation, with support
+    for preset speeds and custom speed percentages for variable speed pumps.
+
+    Attributes:
+        mspconfig: Configuration data for this pump from MSP XML
+        telemetry: Real-time operational data and state
+
+    Properties (Configuration):
+        equip_type: Equipment type (e.g., PMP_VARIABLE_SPEED_PUMP)
+        function: Pump function (e.g., PMP_PUMP, PMP_WATER_FEATURE, PMP_SPILLOVER)
+        max_percent: Maximum speed as percentage (0-100)
+        min_percent: Minimum speed as percentage (0-100)
+        max_rpm: Maximum speed in RPM
+        min_rpm: Minimum speed in RPM
+        priming_enabled: Whether priming mode is enabled
+        low_speed: Configured low speed preset value
+        medium_speed: Configured medium speed preset value
+        high_speed: Configured high speed preset value
+
+    Properties (Telemetry):
+        state: Current operational state (OFF, ON)
+        speed: Current operating speed
+        last_speed: Previous speed setting
+        why_on: Reason code for pump being on
+
+    Properties (Computed):
+        is_on: True if pump is currently running
+        is_ready: True if pump can accept commands
+
+    Control Methods:
+        turn_on(): Turn on pump at last used speed
+        turn_off(): Turn off pump
+        run_preset_speed(speed): Run at LOW, MEDIUM, or HIGH preset
+        set_speed(speed): Run at specific percentage (0-100)
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> pump = pool.pumps["Waterfall Pump"]
+        >>>
+        >>> # Check current state
+        >>> if pump.is_on:
+        ...     print(f"Pump is running at {pump.speed}%")
+        >>>
+        >>> # Control pump
+        >>> await pump.turn_on()  # Turn on at last speed
+        >>> await pump.run_preset_speed(PumpSpeedPresets.MEDIUM)
+        >>> await pump.set_speed(60)  # Set to 60%
+        >>> await pump.turn_off()
+        >>>
+        >>> # Check pump function
+        >>> if pump.function == "PMP_WATER_FEATURE":
+        ...     print("This is a water feature pump")
+
+    Note:
+        - Speed value of 0 will turn the pump off
+        - The API automatically validates against min_percent/max_percent
+        - Not all pumps support variable speed operation
+        - Pump function determines its purpose (circulation, feature, spillover, etc.)
+    """
 
     mspconfig: MSPPump
     telemetry: TelemetryPump

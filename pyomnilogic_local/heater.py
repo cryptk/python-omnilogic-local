@@ -14,12 +14,87 @@ if TYPE_CHECKING:
 
 
 class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
-    """
-    Represents a heater in the OmniLogic system.
+    """Represents a heater system in the OmniLogic system.
 
-    Note: Temperature is always in Fahrenheit internally, so all temperature
-    properties and methods use Fahrenheit. Use the omni.system.units property to
-    determine if conversion to Celsius should be performed for display.
+    A heater maintains water temperature by heating pool or spa water to a
+    configured set point. The OmniLogic system supports various heater types:
+    - Gas heaters (natural gas or propane)
+    - Heat pumps (electric, energy efficient)
+    - Solar heaters (passive solar collection)
+    - Hybrid systems (combination of multiple heater types)
+
+    The Heater class is actually a "virtual heater" that can manage one or more
+    physical heater equipment units. It provides temperature control, mode
+    selection, and monitoring of heater operation.
+
+    Attributes:
+        mspconfig: Configuration data for this heater from MSP XML
+        telemetry: Real-time operational data and state
+        heater_equipment: Collection of physical heater units (HeaterEquipment)
+
+    Properties (Configuration):
+        max_temp: Maximum settable temperature (Fahrenheit)
+        min_temp: Minimum settable temperature (Fahrenheit)
+
+    Properties (Telemetry):
+        mode: Current heater mode (OFF, HEAT, AUTO, etc.)
+        current_set_point: Current target temperature (Fahrenheit)
+        solar_set_point: Solar heater target temperature (Fahrenheit)
+        enabled: Whether heater is enabled
+        silent_mode: Silent mode setting (reduced noise operation)
+        why_on: Reason code for heater being on
+        is_on: True if heater is enabled
+
+    Control Methods:
+        turn_on(): Enable the heater
+        turn_off(): Disable the heater
+        set_temperature(temp): Set target temperature (Fahrenheit)
+        set_solar_temperature(temp): Set solar target temperature (Fahrenheit)
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> heater = pool.heater
+        >>>
+        >>> # Check current state
+        >>> print(f"Heater enabled: {heater.is_on}")
+        >>> print(f"Current set point: {heater.current_set_point}°F")
+        >>> print(f"Mode: {heater.mode}")
+        >>>
+        >>> # Control heater
+        >>> await heater.turn_on()
+        >>> await heater.set_temperature(85)  # Set to 85°F
+        >>>
+        >>> # For systems with solar heaters
+        >>> if heater.solar_set_point > 0:
+        ...     await heater.set_solar_temperature(90)
+        >>>
+        >>> await heater.turn_off()
+        >>>
+        >>> # Access physical heater equipment
+        >>> for equip in heater.heater_equipment:
+        ...     print(f"Heater: {equip.name}, Type: {equip.equip_type}")
+
+    Important - Temperature Units:
+        ALL temperature values in the OmniLogic API are in Fahrenheit, regardless
+        of the display units configured in the system. This is an internal API
+        requirement and cannot be changed.
+
+        - All temperature properties return Fahrenheit values
+        - All temperature parameters must be provided in Fahrenheit
+        - Use system.units to determine display preference (not API units)
+        - If your application uses Celsius, convert before calling these methods
+
+        Example:
+            >>> # If working in Celsius
+            >>> celsius_target = 29
+            >>> fahrenheit_target = (celsius_target * 9/5) + 32
+            >>> await heater.set_temperature(int(fahrenheit_target))
+
+    Note:
+        - Temperature range is enforced (min_temp to max_temp)
+        - Multiple physical heaters may be grouped under one virtual heater
+        - Solar heaters have separate set points from gas/heat pump heaters
+        - Heater may not turn on immediately if water temp is already at set point
     """
 
     mspconfig: MSPVirtualHeater

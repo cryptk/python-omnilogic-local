@@ -18,11 +18,40 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
-    """Base class for OmniLogic equipment.
+    """Base class for all OmniLogic equipment.
 
-    Generic parameters:
+    This is an abstract base class that provides common functionality for all equipment
+    types in the OmniLogic system. It handles configuration updates, telemetry updates,
+    and provides access to the API for control operations.
+
+    All equipment classes inherit from this base and are strongly typed using generic
+    parameters for their specific configuration and telemetry types.
+
+    Generic Parameters:
         MSPConfigT: The specific MSP configuration type (e.g., MSPBoW, MSPRelay)
-        TelemetryT: The specific telemetry type (e.g., TelemetryBoW, TelemetryRelay, or None for equipment without telemetry)
+        TelemetryT: The specific telemetry type (e.g., TelemetryBoW, TelemetryRelay, or None)
+
+    Attributes:
+        mspconfig: Configuration data from the MSP XML
+        telemetry: Live telemetry data (may be None for equipment without telemetry)
+        child_equipment: Dictionary of child equipment indexed by system_id
+
+    Properties:
+        bow_id: The body of water ID this equipment belongs to
+        name: Equipment name from configuration
+        system_id: Unique system identifier
+        omni_type: OmniLogic type identifier
+        is_ready: Whether equipment can accept commands (checks backyard state)
+
+    Example:
+        Equipment classes should not be instantiated directly. Access them through
+        the OmniLogic instance:
+
+        >>> omni = OmniLogic("192.168.1.100")
+        >>> await omni.refresh()
+        >>> # Access equipment through the backyard
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> pump = pool.pumps["Main Pump"]
     """
 
     mspconfig: MSPConfigT

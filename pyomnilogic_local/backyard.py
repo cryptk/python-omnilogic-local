@@ -19,7 +19,78 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Backyard(OmniEquipment[MSPBackyard, TelemetryBackyard]):
-    """Represents the backyard equipment in the OmniLogic system."""
+    """Represents the backyard (top-level equipment container) in the OmniLogic system.
+
+    The Backyard is the root equipment container that holds all pool and spa
+    equipment. It contains:
+    - Bodies of Water (BoW): Pools and spas
+    - Backyard-level lights: Lights not associated with a specific body of water
+    - Backyard-level relays: Auxiliary equipment, landscape lighting, etc.
+    - Backyard-level sensors: Air temperature, etc.
+
+    The Backyard also provides system-wide status information including air
+    temperature, service mode state, and firmware version.
+
+    Attributes:
+        mspconfig: Configuration data for the backyard
+        telemetry: Real-time system-wide telemetry
+        bow: Collection of Bodies of Water (pools/spas)
+        lights: Collection of backyard-level lights
+        relays: Collection of backyard-level relays
+        sensors: Collection of backyard-level sensors
+
+    Properties (Telemetry):
+        status_version: Telemetry protocol version number
+        air_temp: Current air temperature (Fahrenheit)
+        state: System state (ON, OFF, SERVICE_MODE, CONFIG_MODE, etc.)
+        config_checksum: Configuration checksum (status_version 11+)
+        msp_version: MSP firmware version string (status_version 11+)
+        is_service_mode: True if in any service/config mode
+
+    Example:
+        >>> omni = OmniLogic("192.168.1.100")
+        >>> await omni.refresh()
+        >>>
+        >>> # Access backyard
+        >>> backyard = omni.backyard
+        >>>
+        >>> # Check system status
+        >>> print(f"Air temp: {backyard.air_temp}°F")
+        >>> print(f"System state: {backyard.state}")
+        >>> print(f"Firmware: {backyard.msp_version}")
+        >>>
+        >>> # Check service mode
+        >>> if backyard.is_service_mode:
+        ...     print("System is in service mode - equipment cannot be controlled")
+        >>>
+        >>> # Access bodies of water
+        >>> for bow in backyard.bow:
+        ...     print(f"Body of Water: {bow.name} ({bow.equip_type})")
+        >>>
+        >>> # Access backyard equipment
+        >>> for light in backyard.lights:
+        ...     print(f"Backyard light: {light.name}")
+        >>>
+        >>> for relay in backyard.relays:
+        ...     print(f"Backyard relay: {relay.name}")
+
+    Service Mode:
+        When the backyard is in service mode (SERVICE_MODE, CONFIG_MODE, or
+        TIMED_SERVICE_MODE), equipment control is disabled. This typically
+        occurs during:
+        - System maintenance
+        - Configuration changes
+        - Timed service operations
+
+        Always check is_service_mode or is_ready before controlling equipment.
+
+    Note:
+        - The Backyard is the root of the equipment hierarchy
+        - All equipment belongs to either the Backyard or a Body of Water
+        - Service mode blocks all equipment control operations
+        - Configuration changes require backyard state changes
+        - Air temperature sensor must be configured for air_temp readings
+    """
 
     mspconfig: MSPBackyard
     telemetry: TelemetryBackyard

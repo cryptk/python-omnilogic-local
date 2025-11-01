@@ -7,7 +7,72 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 
 class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
-    """Represents a filter in the OmniLogic system."""
+    """Represents a pool/spa filtration pump in the OmniLogic system.
+
+    A filter (also known as a filtration pump) is responsible for circulating and
+    filtering water through the pool or spa. Most filters support variable speed
+    operation with configurable presets for energy efficiency.
+
+    The Filter class provides control over pump speed, monitoring of operational
+    state, and access to power consumption data. Filters can operate at:
+    - Preset speeds (LOW, MEDIUM, HIGH) configured in the system
+    - Custom speed percentages (0-100%)
+    - Variable RPM (for compatible pumps)
+
+    Attributes:
+        mspconfig: Configuration data for this filter from MSP XML
+        telemetry: Real-time operational data and state
+
+    Properties (Configuration):
+        equip_type: Equipment type identifier (e.g., FMT_VARIABLE_SPEED_PUMP)
+        max_percent: Maximum speed as percentage (0-100)
+        min_percent: Minimum speed as percentage (0-100)
+        max_rpm: Maximum speed in RPM
+        min_rpm: Minimum speed in RPM
+        priming_enabled: Whether priming mode is enabled
+        low_speed: Configured low speed preset value
+        medium_speed: Configured medium speed preset value
+        high_speed: Configured high speed preset value
+
+    Properties (Telemetry):
+        state: Current operational state (OFF, ON, PRIMING, etc.)
+        speed: Current operating speed
+        valve_position: Current valve position
+        why_on: Reason code for pump being on
+        reported_speed: Speed reported by pump
+        power: Current power consumption in watts
+        last_speed: Previous speed setting
+
+    Properties (Computed):
+        is_on: True if filter is currently running
+        is_ready: True if filter can accept commands
+
+    Control Methods:
+        turn_on(): Turn on filter at last used speed
+        turn_off(): Turn off filter
+        run_preset_speed(speed): Run at LOW, MEDIUM, or HIGH preset
+        set_speed(speed): Run at specific percentage (0-100)
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> filter = pool.filters["Main Filter"]
+        >>>
+        >>> # Check current state
+        >>> print(f"Filter is {'on' if filter.is_on else 'off'}")
+        >>> print(f"Speed: {filter.speed}%, Power: {filter.power}W")
+        >>>
+        >>> # Control filter
+        >>> await filter.turn_on()  # Turn on at last speed
+        >>> await filter.run_preset_speed(FilterSpeedPresets.LOW)
+        >>> await filter.set_speed(75)  # Set to 75%
+        >>> await filter.turn_off()
+
+    Note:
+        - Speed value of 0 will turn the filter off
+        - The API automatically validates against min_percent/max_percent
+        - Filter state may transition through PRIMING before reaching ON
+        - Not all filters support all speed ranges (check min/max values)
+    """
 
     mspconfig: MSPFilter
     telemetry: TelemetryFilter

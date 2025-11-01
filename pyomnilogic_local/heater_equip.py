@@ -10,14 +10,73 @@ if TYPE_CHECKING:
 
 
 class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
-    """
-    Represents a heater equipment in the OmniLogic system.
+    """Represents physical heater equipment in the OmniLogic system.
 
-    This is the physical heater equipment (gas, heat pump, solar, etc.) that is
-    controlled by a VirtualHeater. A VirtualHeater can have one or more HeaterEquipment
-    instances associated with it.
+    HeaterEquipment represents an individual physical heating device (gas heater,
+    heat pump, solar panel system, etc.). It is controlled by a parent VirtualHeater
+    which can manage one or more physical heater units.
 
-    Note: Temperature is always in Fahrenheit internally.
+    The OmniLogic system uses a virtual/physical heater architecture:
+    - VirtualHeater: User-facing heater control (turn_on, set_temperature, etc.)
+    - HeaterEquipment: Individual physical heating devices managed by the virtual heater
+
+    This architecture allows the system to coordinate multiple heating sources
+    (e.g., solar + gas backup) under a single virtual heater interface.
+
+    Heater Types:
+        - GAS: Natural gas or propane heater (fast heating)
+        - HEAT_PUMP: Electric heat pump (energy efficient)
+        - SOLAR: Solar heating panels (free but weather-dependent)
+        - HYBRID: Combination systems
+
+    Attributes:
+        mspconfig: Configuration data for this physical heater
+        telemetry: Real-time operational state
+
+    Properties (Configuration):
+        heater_type: Type of heating unit (GAS, HEAT_PUMP, SOLAR)
+        min_filter_speed: Minimum filter speed required for operation
+        sensor_id: System ID of the temperature sensor
+        supports_cooling: Whether this unit can cool (heat pumps only)
+
+    Properties (Telemetry):
+        state: Current heater state (OFF, ON, PAUSE)
+        current_temp: Temperature reading from associated sensor (Fahrenheit)
+        enabled: Whether heater is enabled
+        priority: Heater priority for multi-heater systems
+        maintain_for: Time to maintain current operation
+        is_on: True if heater is currently running
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> heater = pool.heater
+        >>>
+        >>> # Access physical heater equipment
+        >>> for equip in heater.heater_equipment:
+        ...     print(f"Heater: {equip.name}")
+        ...     print(f"Type: {equip.heater_type}")
+        ...     print(f"State: {equip.state}")
+        ...     print(f"Current temp: {equip.current_temp}°F")
+        ...     print(f"Is on: {equip.is_on}")
+        ...     print(f"Min filter speed: {equip.min_filter_speed}%")
+        >>>
+        >>> # Check for cooling support (heat pumps)
+        >>> gas_heater = heater.heater_equipment["Gas Heater"]
+        >>> if gas_heater.supports_cooling:
+        ...     print("This unit can cool as well as heat")
+
+    Important - Temperature Units:
+        ALL temperature values are in Fahrenheit, regardless of system display
+        settings. The system.units property only affects user interface display,
+        not internal API values.
+
+    Note:
+        - HeaterEquipment is read-only (no direct control methods)
+        - Control heaters through the parent VirtualHeater instance
+        - Multiple heater equipment can work together (e.g., solar + gas)
+        - Priority determines which heater runs first in multi-heater systems
+        - Minimum filter speed must be met for safe heater operation
+        - State transitions: OFF → ON → PAUSE (when conditions not met)
     """
 
     mspconfig: MSPHeaterEquip

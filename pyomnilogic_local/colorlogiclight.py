@@ -24,7 +24,90 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight]):
-    """Represents a color logic light."""
+    """Represents a ColorLogic or compatible LED light in the OmniLogic system.
+
+    ColorLogic lights are intelligent LED pool and spa lights that can display
+    various color shows, patterns, and effects. The OmniLogic system supports
+    multiple light models with different capabilities:
+
+    Light Models:
+        - ColorLogic 2.5: Classic model with 10 preset shows
+        - ColorLogic 4.0: Enhanced model with 15 preset shows
+        - ColorLogic UCL (UniversaLogic): Universal controller for various lights
+        - ColorLogic SAM: Smart lighting system
+        - Pentair and Zodiac compatible lights (limited functionality)
+
+    Each light model supports different shows, speeds, and brightness levels.
+    The ColorLogicLight class automatically handles these differences.
+
+    Attributes:
+        mspconfig: Configuration data for this light from MSP XML
+        telemetry: Real-time operational state and settings
+
+    Properties (Configuration):
+        model: Light model type (TWO_FIVE, FOUR_ZERO, UCL, SAM, etc.)
+        v2_active: Whether V2 protocol features are active
+        effects: List of available light shows for this model
+
+    Properties (Telemetry):
+        state: Current power state (ON, OFF, transitional states)
+        show: Currently selected light show
+        speed: Show animation speed (1x, 2x, 4x, 8x)
+        brightness: Light brightness (25%, 50%, 75%, 100%)
+        special_effect: Special effect setting
+
+    Properties (Computed):
+        is_on: True if light is currently on
+        is_ready: True if light can accept commands (not in transitional state)
+
+    Control Methods:
+        turn_on(): Turn on light (starts at saved show)
+        turn_off(): Turn off light
+        toggle(): Toggle light on/off
+        set_show(show): Set light to specific show
+        set_speed(speed): Set animation speed (1x-8x)
+        set_brightness(brightness): Set brightness (25%-100%)
+
+    Example:
+        >>> pool = omni.backyard.bow["Pool"]
+        >>> pool_light = pool.lights["Pool Light"]
+        >>>
+        >>> # Check light capabilities
+        >>> print(f"Light model: {pool_light.model}")
+        >>> print(f"Available shows: {pool_light.effects}")
+        >>>
+        >>> # Check current state
+        >>> if pool_light.is_on:
+        ...     print(f"Show: {pool_light.show}")
+        ...     print(f"Speed: {pool_light.speed}")
+        ...     print(f"Brightness: {pool_light.brightness}")
+        >>>
+        >>> # Control light
+        >>> await pool_light.turn_on()
+        >>> await pool_light.set_show(ColorLogicShow25.TROPICAL)
+        >>> await pool_light.set_speed(ColorLogicSpeed.TWO_TIMES)
+        >>> await pool_light.set_brightness(ColorLogicBrightness.SEVENTY_FIVE_PERCENT)
+        >>> await pool_light.turn_off()
+
+    Important - Light State Transitions:
+        ColorLogic lights go through several transitional states when changing
+        settings. During these states, the light is NOT ready to accept commands:
+
+        - FIFTEEN_SECONDS_WHITE: 15-second white period after power on
+        - CHANGING_SHOW: Actively cycling through shows
+        - POWERING_OFF: In process of turning off
+        - COOLDOWN: Cooling down after being turned off
+
+        Always check is_ready before sending commands, or wait for state to
+        stabilize after each command.
+
+    Note:
+        - Different light models support different show sets
+        - Non-ColorLogic lights (Pentair, Zodiac) have limited control
+        - Speed and brightness may not be adjustable on all models
+        - Some shows may require specific light hardware
+        - V2 protocol enables enhanced features on compatible lights
+    """
 
     mspconfig: MSPColorLogicLight
     telemetry: TelemetryColorLogicLight
