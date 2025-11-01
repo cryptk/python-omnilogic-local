@@ -219,6 +219,21 @@ class MSPChlorinator(OmniBase):
     cell_type: ChlorinatorCellType = Field(alias="Cell-Type")
     chlorinator_equipment: list[MSPChlorinatorEquip] | None = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def convert_cell_type(cls, data: Any) -> Any:
+        """Convert cell_type string to ChlorinatorCellType enum by name."""
+        if isinstance(data, dict) and "Cell-Type" in data:
+            cell_type_str = data["Cell-Type"]
+            if isinstance(cell_type_str, str):
+                # Parse by enum member name (e.g., "CELL_TYPE_T15" -> ChlorinatorCellType.CELL_TYPE_T15)
+                try:
+                    data["Cell-Type"] = ChlorinatorCellType[cell_type_str]
+                except KeyError:
+                    # If not found, try to parse as int or leave as-is for Pydantic to handle
+                    pass
+        return data
+
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
 

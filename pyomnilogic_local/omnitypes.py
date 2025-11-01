@@ -155,36 +155,18 @@ class ChlorinatorDispenserType(StrEnum, PrettyEnum):
     TABLET = "TABLET_DISPENSING"
 
 
-class ChlorinatorCellType(StrEnum, PrettyEnum):
-    UNKNOWN = "CELL_TYPE_UNKNOWN"
-    T3 = "CELL_TYPE_T3"
-    T5 = "CELL_TYPE_T5"
-    T9 = "CELL_TYPE_T9"
-    T15 = "CELL_TYPE_T15"
-    T15_LS = "CELL_TYPE_T15_LS"
-    TCELLS315 = "CELL_TYPE_TCELLS315"
-    TCELLS325 = "CELL_TYPE_TCELLS325"
-    TCELLS340 = "CELL_TYPE_TCELLS340"
-    LIQUID = "CELL_TYPE_LIQUID"
-    TABLET = "CELL_TYPE_TABLET"
-
-    # There is probably an easier way to do this
-    def __int__(self) -> int:
-        return ChlorinatorCellInt[self.name].value
-
-
-class ChlorinatorCellInt(IntEnum, PrettyEnum):
-    UNKNOWN = 0
-    T3 = 1
-    T5 = 2
-    T9 = 3
-    T15 = 4
-    T15_LS = 5
-    TCELLS315 = 6
-    TCELLS325 = 7
-    TCELLS340 = 8
-    LIQUID = 9
-    TABLET = 10
+class ChlorinatorCellType(IntEnum, PrettyEnum):
+    CELL_TYPE_UNKNOWN = 0
+    CELL_TYPE_T3 = 1
+    CELL_TYPE_T5 = 2
+    CELL_TYPE_T9 = 3
+    CELL_TYPE_T15 = 4
+    CELL_TYPE_T15_LS = 5
+    CELL_TYPE_TCELLS315 = 6
+    CELL_TYPE_TCELLS325 = 7
+    CELL_TYPE_TCELLS340 = 8
+    CELL_TYPE_LIQUID = 9
+    CELL_TYPE_TABLET = 10
 
 
 # Lights

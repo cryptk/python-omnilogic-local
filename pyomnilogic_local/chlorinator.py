@@ -1,7 +1,13 @@
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPChlorinator
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
-from pyomnilogic_local.omnitypes import ChlorinatorOperatingMode, ChlorinatorStatus
+from pyomnilogic_local.omnitypes import (
+    ChlorinatorCellType,
+    ChlorinatorOperatingMode,
+    ChlorinatorStatus,
+)
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 
 class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
@@ -54,7 +60,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         return self.mspconfig.dispenser_type
 
     @property
-    def cell_type(self) -> str:
+    def cell_type(self) -> ChlorinatorCellType:
         """Type of T-Cell installed (e.g., T3, T5, T9, T15)."""
         return self.mspconfig.cell_type
 
@@ -321,3 +327,71 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
 
         # Then check chlorinator-specific readiness
         return self.is_authenticated and not self.has_error
+
+    # Control methods
+    @dirties_state()
+    async def turn_on(self) -> None:
+        """Turn the chlorinator on (enable it).
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id is None.
+        """
+        if self.bow_id is None:
+            raise OmniEquipmentNotInitializedError("Cannot turn on chlorinator: bow_id is None")
+        await self._api.async_set_chlorinator_enable(self.bow_id, True)
+
+    @dirties_state()
+    async def turn_off(self) -> None:
+        """Turn the chlorinator off (disable it).
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id is None.
+        """
+        if self.bow_id is None:
+            raise OmniEquipmentNotInitializedError("Cannot turn off chlorinator: bow_id is None")
+        await self._api.async_set_chlorinator_enable(self.bow_id, False)
+
+    @dirties_state()
+    async def set_timed_percent(self, percent: int) -> None:
+        """Set the timed percent for chlorine generation.
+
+        Args:
+            percent: The chlorine generation percentage (0-100)
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If percent is outside the valid range (0-100).
+
+        Note:
+            This method uses the async_set_chlorinator_params API which requires
+            all chlorinator configuration parameters. The current values from
+            mspconfig are used for unchanged parameters.
+        """
+        if self.bow_id is None or self.system_id is None:
+            raise OmniEquipmentNotInitializedError("Cannot set timed percent: bow_id or system_id is None")
+
+        if not 0 <= percent <= 100:
+            raise ValueError(f"Timed percent {percent} is outside valid range [0, 100]")
+
+        # Get the parent Bow to determine bow_type
+        # We need to find our bow in the backyard
+        if (bow := self._omni.backyard.bow.get(self.bow_id)) is None:
+            raise OmniEquipmentNotInitializedError(f"Cannot find bow with id {self.bow_id}")
+
+        # Map equipment type to numeric bow_type value
+        # BOW_POOL = 0, BOW_SPA = 1 (based on typical protocol values)
+        bow_type = 0 if bow.equip_type == "BOW_POOL" else 1
+
+        # Get operating mode from telemetry (it's already an int or enum with .value)
+        op_mode = self.telemetry.operating_mode if isinstance(self.telemetry.operating_mode, int) else self.telemetry.operating_mode.value
+
+        await self._api.async_set_chlorinator_params(
+            pool_id=self.bow_id,
+            equipment_id=self.system_id,
+            timed_percent=percent,
+            cell_type=self.mspconfig.cell_type.value,  # ChlorinatorCellType is now IntEnum, use .value
+            op_mode=op_mode,
+            sc_timeout=self.mspconfig.superchlor_timeout,
+            bow_type=bow_type,
+            orp_timeout=self.mspconfig.orp_timeout,
+        )
