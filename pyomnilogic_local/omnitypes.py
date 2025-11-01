@@ -398,22 +398,24 @@ class FilterWhyOn(IntEnum, PrettyEnum):
     OFF = 0
     NO_WATER_FLOW = 1
     COOLDOWN = 2
-    PH_REDUCE_EXTEND = 3
+    CSAD_EXTEND = 3
     HEATER_EXTEND = 4
-    PAUSED = 5
-    VALVE_CHANGING = 6
+    PAUSE = 5
+    OFF_VALVE_CHANGING = 6
     FORCE_HIGH_SPEED = 7
-    OFF_EXTERNAL_INTERLOCK = 8
+    EXTERNAL_INTERLOCK = 8
     SUPER_CHLORINATE = 9
-    COUNTDOWN = 10
+    COUNTDOWN_TIMER = 10
     MANUAL_ON = 11
     MANUAL_SPILLOVER = 12
-    TIMER_SPILLOVER = 13
-    TIMER_ON = 14
+    TIMED_SPILLOVER = 13
+    TIMED_EVENT = 14
     FREEZE_PROTECT = 15
-    UNKNOWN_16 = 16  # We have seen 18, so we assume 16 exists
-    UNKNOWN_17 = 17  # We have seen 18, so we assume 17 exists
-    UNKNOWN_18 = 18  # ref: https://github.com/cryptk/haomnilogic-local/issues/106
+    SET_POOL_SPA_SPILLOVER = 16
+    SPILLOVER_COUNTDOWN_TIMER = 17
+    GROUP_COMMAND = 18
+    SPILLOVER_INTERLOCK = 19
+    MAX_VALUE = 20
 
 
 class FilterSpeedPresets(StrEnum, PrettyEnum):
@@ -516,10 +518,22 @@ class RelayWhyOn(IntEnum, PrettyEnum):
     PAUSED = 4
     WAITING_FOR_FILTER = 5
     UNKNOWN_1 = 6  # We have seen 8, so we assume 6 exists
-    UNKNOWN_2 = 7  # ref https://github.com/cryptk/haomnilogic-local/issues/150
-    UNKNOWN_3 = 8  # ref https://github.com/cryptk/haomnilogic-local/issues/106
+    # whyOn value 7 is assumed to be TIMED_EVENT
+    # ref: https://github.com/cryptk/haomnilogic-local/issues/150
+    # ref: https://github.com/cryptk/haomnilogic-local/issues/60
+    # the relay in question is a high voltage relay that is scheduled to run 24x7
+    TIMED_EVENT = 7
+    # whyOn value 8 is assumed to be GROUP_COMMAND
+    # ref: https://github.com/cryptk/haomnilogic-local/issues/148
+    # ref: https://github.com/cryptk/haomnilogic-local/issues/106
+    # the relays in question for for a cleaner and water feature that were activated via a running group command
+    GROUP_COMMAND = 8
     UNKNOWN_4 = 9  # We have seen 10, so we assume 9 exists
-    UNKNOWN_5 = 10  # ref https://github.com/cryptk/haomnilogic-local/issues/73
+    # whyOn value 10 is assumed to be EXTERNAL_INTERLOCK
+    # ref: https://github.com/cryptk/haomnilogic-local/issues/73
+    # the relay in question was a high voltage relay controlling an ozonator interlocked with the filter
+    # and the filter was on due to a timed event
+    EXTERNAL_INTERLOCK = 10
 
 
 # Sensors
