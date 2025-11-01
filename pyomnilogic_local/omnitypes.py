@@ -460,6 +460,12 @@ class PumpFunction(StrEnum, PrettyEnum):
     CLEANER_IN_FLOOR = "PMP_CLEANER_IN_FLOOR"
 
 
+class PumpSpeedPresets(StrEnum, PrettyEnum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
+
+
 # Relays
 class RelayFunction(StrEnum, PrettyEnum):
     WATER_FEATURE = "RLY_WATER_FEATURE"

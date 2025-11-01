@@ -187,3 +187,29 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             equipment_id=self.system_id,
             is_on=speed_value,
         )
+
+    @dirties_state()
+    async def set_speed(self, speed: int) -> None:
+        """Set the filter to a specific speed.
+
+        Args:
+            speed: Speed value (0-100 percent). A value of 0 will turn the filter off.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If speed is outside the valid range.
+        """
+        if self.bow_id is None or self.system_id is None:
+            msg = "Filter bow_id and system_id must be set"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        if not 0 <= speed <= 100:
+            msg = f"Speed {speed} is outside valid range [0, 100]"
+            raise ValueError(msg)
+
+        # Note: The API validates against min_percent/max_percent internally
+        await self._api.async_set_filter_speed(
+            pool_id=self.bow_id,
+            equipment_id=self.system_id,
+            speed=speed,
+        )
