@@ -14,9 +14,9 @@ from scapy.layers.inet import UDP
 from scapy.packet import Packet
 from scapy.utils import rdpcap
 
+from pyomnilogic_local.api.protocol import OmniLogicMessage
 from pyomnilogic_local.models.leadmessage import LeadMessage
 from pyomnilogic_local.omnitypes import MessageType
-from pyomnilogic_local.protocol import OmniLogicMessage
 
 
 def parse_pcap_file(pcap_path: str) -> Any:

@@ -6,15 +6,15 @@ import logging
 import xml.etree.ElementTree as ET
 from typing import Literal, overload
 
-from .models.filter_diagnostics import FilterDiagnostics
-from .models.mspconfig import MSPConfig
-from .models.telemetry import Telemetry
-from .models.util import to_pydantic
-from .omnitypes import (
+from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
+from pyomnilogic_local.models.mspconfig import MSPConfig
+from pyomnilogic_local.models.telemetry import Telemetry
+
+from ..omnitypes import (
     ColorLogicBrightness,
-    ColorLogicShow,
     ColorLogicSpeed,
     HeaterMode,
+    LightShows,
     MessageType,
 )
 from .protocol import OmniLogicProtocol
@@ -23,12 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OmniLogicAPI:
-    def __init__(self, controller_ip: str, controller_port: int, response_timeout: float) -> None:
+    def __init__(self, controller_ip: str, controller_port: int, response_timeout: float = 5.0) -> None:
         self.controller_ip = controller_ip
         self.controller_port = controller_port
         self.response_timeout = response_timeout
-        self._loop = asyncio.get_running_loop()
-        self._protocol_factory = OmniLogicProtocol
+        # self._loop = asyncio.get_running_loop()
+        # self._protocol_factory = OmniLogicProtocol
 
     @overload
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
@@ -61,8 +61,13 @@ class OmniLogicAPI:
 
         return resp
 
-    @to_pydantic(pydantic_type=MSPConfig)
-    async def async_get_config(self) -> str:
+    @overload
+    async def async_get_mspconfig(self, raw: Literal[True]) -> str: ...
+    @overload
+    async def async_get_mspconfig(self, raw: Literal[False]) -> MSPConfig: ...
+    @overload
+    async def async_get_mspconfig(self) -> MSPConfig: ...
+    async def async_get_mspconfig(self, raw: bool = False) -> MSPConfig | str:
         """Retrieve the MSPConfig from the Omni, optionally parse it into a pydantic model.
 
         Args:
@@ -78,14 +83,21 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
+        resp = await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
 
-    @to_pydantic(pydantic_type=FilterDiagnostics)
-    async def async_get_filter_diagnostics(
-        self,
-        pool_id: int,
-        equipment_id: int,
-    ) -> str:
+        if raw:
+            return resp
+        return MSPConfig.load_xml(resp)
+
+    @overload
+    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int, raw: Literal[True]) -> str: ...
+    @overload
+    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int, raw: Literal[False]) -> FilterDiagnostics: ...
+    @overload
+    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int) -> FilterDiagnostics: ...
+    @overload
+    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int, raw: bool) -> FilterDiagnostics | str: ...
+    async def async_get_filter_diagnostics(self, pool_id: int, equipment_id: int, raw: bool = False) -> FilterDiagnostics | str:
         """Retrieve filter diagnostics from the Omni, optionally parse it into a pydantic model.
 
         Args:
@@ -108,10 +120,19 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
+        resp = await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
 
-    @to_pydantic(pydantic_type=Telemetry)
-    async def async_get_telemetry(self) -> str:
+        if raw:
+            return resp
+        return FilterDiagnostics.load_xml(resp)
+
+    @overload
+    async def async_get_telemetry(self, raw: Literal[True]) -> str: ...
+    @overload
+    async def async_get_telemetry(self, raw: Literal[False]) -> Telemetry: ...
+    @overload
+    async def async_get_telemetry(self) -> Telemetry: ...
+    async def async_get_telemetry(self, raw: bool = False) -> Telemetry | str:
         """Retrieve the current telemetry data from the Omni, optionally parse it into a pydantic model.
 
         Returns:
@@ -124,22 +145,24 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
-        return await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
+        resp = await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
+
+        if raw:
+            return resp
+        return Telemetry.load_xml(resp)
 
     async def async_set_heater(
         self,
         pool_id: int,
         equipment_id: int,
         temperature: int,
-        unit: str,
     ) -> None:
         """Set the temperature for a heater on the Omni
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
-            temperature (int): What temperature to request
-            unit (str): The temperature unit to use (either F or C)
+            temperature (int): What temperature to request (must be in Fahrenheit)
 
         Returns:
             None
@@ -154,7 +177,7 @@ class OmniLogicAPI:
         parameter.text = str(pool_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit="F", alias="Data")
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -166,15 +189,13 @@ class OmniLogicAPI:
         pool_id: int,
         equipment_id: int,
         temperature: int,
-        unit: str,
     ) -> None:
         """Set the solar set point for a heater on the Omni.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
-            temperature (int): What temperature to request
-            unit (str): The temperature unit to use (either F or C)
+            temperature (int): What temperature to request (must be in Fahrenheit)
 
         Returns:
             None
@@ -189,7 +210,7 @@ class OmniLogicAPI:
         parameter.text = str(pool_id)
         parameter = ET.SubElement(parameters_element, "Parameter", name="HeaterID", dataType="int", alias="EquipmentID")
         parameter.text = str(equipment_id)
-        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit=unit, alias="Data")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit="F", alias="Data")
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
@@ -352,7 +373,7 @@ class OmniLogicAPI:
         self,
         pool_id: int,
         equipment_id: int,
-        show: ColorLogicShow,
+        show: LightShows,
         speed: ColorLogicSpeed = ColorLogicSpeed.ONE_TIMES,
         brightness: ColorLogicBrightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT,
         reserved: int = 0,

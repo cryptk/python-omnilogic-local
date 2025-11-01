@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, SupportsInt, TypeAlias, TypeVar, cast, overload
+from typing import Any, SupportsInt, cast, overload
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
 from xmltodict import parse as xml_parse
 
-from ..exceptions import OmniParsingException
 from ..omnitypes import (
     BackyardState,
     ChlorinatorAlert,
@@ -13,8 +12,12 @@ from ..omnitypes import (
     ChlorinatorOperatingMode,
     ChlorinatorStatus,
     ColorLogicBrightness,
+    ColorLogicLightType,
     ColorLogicPowerState,
-    ColorLogicShow,
+    ColorLogicShow25,
+    ColorLogicShow40,
+    ColorLogicShowUCL,
+    ColorLogicShowUCLV2,
     ColorLogicSpeed,
     CSADMode,
     FilterState,
@@ -22,12 +25,16 @@ from ..omnitypes import (
     FilterWhyOn,
     HeaterMode,
     HeaterState,
+    LightShows,
     OmniType,
+    PentairShow,
     PumpState,
     RelayState,
     RelayWhyOn,
     ValveActuatorState,
+    ZodiacShow,
 )
+from .exceptions import OmniParsingException
 
 # Example telemetry XML data:
 #
@@ -52,8 +59,8 @@ class TelemetryBackyard(BaseModel):
     omni_type: OmniType = OmniType.BACKYARD
     system_id: int = Field(alias="@systemId")
     status_version: int = Field(alias="@statusVersion")
-    air_temp: int = Field(alias="@airTemp")
-    state: BackyardState | int = Field(alias="@state")
+    air_temp: int | None = Field(alias="@airTemp")
+    state: BackyardState = Field(alias="@state")
     # The below two fields are only available for telemetry with a status_version >= 11
     config_checksum: int | None = Field(alias="@ConfigChksum", default=None)
     msp_version: str | None = Field(alias="@mspVersion", default=None)
@@ -81,9 +88,10 @@ class TelemetryChlorinator(BaseModel):
     sc_mode: int = Field(alias="@scMode")
     operating_state: int = Field(alias="@operatingState")
     timed_percent: int | None = Field(alias="@Timed-Percent", default=None)
-    operating_mode: ChlorinatorOperatingMode | int = Field(alias="@operatingMode")
+    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
     enable: bool = Field(alias="@enable")
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def status(self) -> list[str]:
         """Decode status bitmask into a list of active status flag names.
@@ -97,6 +105,7 @@ class TelemetryChlorinator(BaseModel):
         """
         return [flag.name for flag in ChlorinatorStatus if self.status_raw & flag.value and flag.name is not None]
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def alerts(self) -> list[str]:
         """Decode chlrAlert bitmask into a list of active alert flag names.
@@ -127,6 +136,7 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def errors(self) -> list[str]:
         """Decode chlrError bitmask into a list of active error flag names.
@@ -157,6 +167,7 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def active(self) -> bool:
         """Check if the chlorinator is actively generating chlorine.
@@ -175,7 +186,7 @@ class TelemetryCSAD(BaseModel):
     status_raw: int = Field(alias="@status")
     ph: float = Field(alias="@ph")
     orp: int = Field(alias="@orp")
-    mode: CSADMode | int = Field(alias="@mode")
+    mode: CSADMode = Field(alias="@mode")
 
 
 class TelemetryColorLogicLight(BaseModel):
@@ -183,11 +194,35 @@ class TelemetryColorLogicLight(BaseModel):
 
     omni_type: OmniType = OmniType.CL_LIGHT
     system_id: int = Field(alias="@systemId")
-    state: ColorLogicPowerState | int = Field(alias="@lightState")
-    show: ColorLogicShow | int = Field(alias="@currentShow")
-    speed: ColorLogicSpeed | int = Field(alias="@speed")
-    brightness: ColorLogicBrightness | int = Field(alias="@brightness")
+    state: ColorLogicPowerState = Field(alias="@lightState")
+    show: LightShows = Field(alias="@currentShow")
+    speed: ColorLogicSpeed = Field(alias="@speed")
+    brightness: ColorLogicBrightness = Field(alias="@brightness")
     special_effect: int = Field(alias="@specialEffect")
+
+    def show_name(
+        self, model: ColorLogicLightType, v2: bool, pretty: bool = False
+    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow | int:
+        """Get the current light show depending on the light type.
+
+        Returns:
+            ColorLogicShowUCL enum member corresponding to the current show,
+            or None if the show value is invalid.
+        """
+        match model:
+            case ColorLogicLightType.TWO_FIVE:
+                return ColorLogicShow25(self.show)
+            case ColorLogicLightType.FOUR_ZERO:
+                return ColorLogicShow40(self.show)
+            case ColorLogicLightType.UCL:
+                if v2:
+                    return ColorLogicShowUCLV2(self.show)
+                return ColorLogicShowUCL(self.show)
+            case ColorLogicLightType.PENTAIR_COLOR:
+                return PentairShow(self.show)
+            case ColorLogicLightType.ZODIAC_COLOR:
+                return ZodiacShow(self.show)
+        return self.show  # Return raw int if type is unknown
 
 
 class TelemetryFilter(BaseModel):
@@ -195,10 +230,10 @@ class TelemetryFilter(BaseModel):
 
     omni_type: OmniType = OmniType.FILTER
     system_id: int = Field(alias="@systemId")
-    state: FilterState | int = Field(alias="@filterState")
+    state: FilterState = Field(alias="@filterState")
     speed: int = Field(alias="@filterSpeed")
-    valve_position: FilterValvePosition | int = Field(alias="@valvePosition")
-    why_on: FilterWhyOn | int = Field(alias="@whyFilterIsOn")
+    valve_position: FilterValvePosition = Field(alias="@valvePosition")
+    why_on: FilterWhyOn = Field(alias="@whyFilterIsOn")
     reported_speed: int = Field(alias="@reportedFilterSpeed")
     power: int = Field(alias="@power")
     last_speed: int = Field(alias="@lastSpeed")
@@ -217,7 +252,7 @@ class TelemetryHeater(BaseModel):
 
     omni_type: OmniType = OmniType.HEATER
     system_id: int = Field(alias="@systemId")
-    state: HeaterState | int = Field(alias="@heaterState")
+    state: HeaterState = Field(alias="@heaterState")
     temp: int = Field(alias="@temp")
     enabled: bool = Field(alias="@enable")
     priority: int = Field(alias="@priority")
@@ -229,7 +264,7 @@ class TelemetryPump(BaseModel):
 
     omni_type: OmniType = OmniType.PUMP
     system_id: int = Field(alias="@systemId")
-    state: PumpState | int = Field(alias="@pumpState")
+    state: PumpState = Field(alias="@pumpState")
     speed: int = Field(alias="@pumpSpeed")
     last_speed: int = Field(alias="@lastSpeed")
     why_on: int = Field(alias="@whyOn")
@@ -240,8 +275,8 @@ class TelemetryRelay(BaseModel):
 
     omni_type: OmniType = OmniType.RELAY
     system_id: int = Field(alias="@systemId")
-    state: RelayState | int = Field(alias="@relayState")
-    why_on: RelayWhyOn | int = Field(alias="@whyOn")
+    state: RelayState = Field(alias="@relayState")
+    why_on: RelayWhyOn = Field(alias="@whyOn")
 
 
 class TelemetryValveActuator(BaseModel):
@@ -249,9 +284,9 @@ class TelemetryValveActuator(BaseModel):
 
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
-    state: ValveActuatorState | int = Field(alias="@valveActuatorState")
+    state: ValveActuatorState = Field(alias="@valveActuatorState")
     # Valve actuators are actually relays, so we can reuse the RelayWhyOn enum here
-    why_on: RelayWhyOn | int = Field(alias="@whyOn")
+    why_on: RelayWhyOn = Field(alias="@whyOn")
 
 
 class TelemetryVirtualHeater(BaseModel):
@@ -262,15 +297,16 @@ class TelemetryVirtualHeater(BaseModel):
     current_set_point: int = Field(alias="@Current-Set-Point")
     enabled: bool = Field(alias="@enable")
     solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: HeaterMode | int = Field(alias="@Mode")
+    mode: HeaterMode = Field(alias="@Mode")
     silent_mode: int = Field(alias="@SilentMode")
     why_on: int = Field(alias="@whyHeaterIsOn")
 
 
-TelemetryType: TypeAlias = (
+type TelemetryType = (
     TelemetryBackyard
     | TelemetryBoW
     | TelemetryChlorinator
+    | TelemetryCSAD
     | TelemetryColorLogicLight
     | TelemetryFilter
     | TelemetryGroup
@@ -301,15 +337,10 @@ class Telemetry(BaseModel):
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
-        TypeVar("KT")
-        TypeVar("VT", SupportsInt, Any)
-
         @overload
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
-
         @overload
         def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
-
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
             """Post process XML to attempt to convert values to int.
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from pyomnilogic_local.api import OmniLogicAPI
+from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.cli import ensure_connection
 from pyomnilogic_local.cli.pcap_utils import parse_pcap_file, process_pcap_messages
 from pyomnilogic_local.cli.utils import async_get_filter_diagnostics
@@ -39,7 +39,7 @@ def get_mspconfig(ctx: click.Context) -> None:
     """
     ensure_connection(ctx)
     omni: OmniLogicAPI = ctx.obj["OMNI"]
-    mspconfig = asyncio.run(omni.async_get_config(raw=ctx.obj["RAW"]))
+    mspconfig = asyncio.run(omni.async_get_mspconfig(raw=ctx.obj["RAW"]))
     click.echo(mspconfig)
 
 
@@ -104,7 +104,7 @@ def get_filter_diagnostics(ctx: click.Context, pool_id: int, filter_id: int) -> 
 @click.argument("pcap_file", type=click.Path(exists=True, path_type=Path))
 @click.pass_context
 def parse_pcap(ctx: click.Context, pcap_file: Path) -> None:
-    """Parse a PCAP file and reconstruct Omnilogic protocol communication.
+    """Parse a PCAP file and reconstruct OmniLogic protocol communication.
 
     Analyzes network packet captures to decode OmniLogic protocol messages.
     Automatically reassembles multi-part messages (LeadMessage + BlockMessages)

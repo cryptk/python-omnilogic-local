@@ -1,5 +1,7 @@
 """Tests for chlorinator bitmask decoding."""
 
+# pylint: skip-file
+
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 

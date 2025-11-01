@@ -4,7 +4,3 @@ class OmniLogicException(Exception):
 
 class OmniTimeoutException(OmniLogicException):
     pass
-
-
-class OmniParsingException(OmniLogicException):
-    pass

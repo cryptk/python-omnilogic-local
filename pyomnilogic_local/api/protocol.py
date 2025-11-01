@@ -9,9 +9,9 @@ from typing import Any, cast
 
 from typing_extensions import Self
 
+from ..models.leadmessage import LeadMessage
+from ..omnitypes import ClientType, MessageType
 from .exceptions import OmniTimeoutException
-from .models.leadmessage import LeadMessage
-from .omnitypes import ClientType, MessageType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                 exc = error_task.result()
                 if isinstance(exc, Exception):
                     raise exc
-                _LOGGER.error("Unknown error occurred during communication with Omnilogic: %s", exc)
+                _LOGGER.error("Unknown error occurred during communication with OmniLogic: %s", exc)
             if data_task in done:
                 message = data_task.result()
                 if message.id == ack_id:

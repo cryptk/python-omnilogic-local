@@ -1,5 +1,7 @@
 """Tests for chlorinator multi-bit field special case handling."""
 
+# pylint: skip-file
+
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 
