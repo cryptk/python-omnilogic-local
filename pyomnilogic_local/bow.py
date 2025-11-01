@@ -5,6 +5,7 @@ from pyomnilogic_local.chlorinator import Chlorinator
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.colorlogiclight import _LOGGER, ColorLogicLight
 from pyomnilogic_local.csad import CSAD
+from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.filter import Filter
 from pyomnilogic_local.heater import Heater
 from pyomnilogic_local.models.mspconfig import MSPBoW
@@ -13,6 +14,7 @@ from pyomnilogic_local.omnitypes import BodyOfWaterType
 from pyomnilogic_local.pump import Pump
 from pyomnilogic_local.relay import Relay
 from pyomnilogic_local.sensor import Sensor
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
     from pyomnilogic_local.omnilogic import OmniLogic
@@ -61,6 +63,58 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             Flow value (255 typically indicates flow present, 0 indicates no flow)
         """
         return self.telemetry.flow
+
+    # Control methods
+    @dirties_state()
+    async def set_spillover(self, speed: int) -> None:
+        """Set the spillover speed for this body of water.
+
+        Spillover allows water to flow between pool and spa. This method sets
+        the speed at which the spillover pump operates.
+
+        Args:
+            speed: Spillover speed value (0-100 percent). A value of 0 will turn spillover off.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If system_id is None.
+            ValueError: If spillover is not supported by this body of water.
+        """
+        if self.system_id is None:
+            msg = "Bow system_id must be set"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        if not self.supports_spillover:
+            msg = f"Spillover is not supported by {self.name}"
+            raise ValueError(msg)
+
+        await self._api.async_set_spillover(
+            pool_id=self.system_id,
+            speed=speed,
+        )
+
+    @dirties_state()
+    async def turn_on_spillover(self) -> None:
+        """Turn on spillover at maximum speed (100%).
+
+        This is a convenience method that calls set_spillover(100).
+
+        Raises:
+            OmniEquipmentNotInitializedError: If system_id is None.
+            ValueError: If spillover is not supported by this body of water.
+        """
+        await self.set_spillover(100)
+
+    @dirties_state()
+    async def turn_off_spillover(self) -> None:
+        """Turn off spillover.
+
+        This is a convenience method that calls set_spillover(0).
+
+        Raises:
+            OmniEquipmentNotInitializedError: If system_id is None.
+            ValueError: If spillover is not supported by this body of water.
+        """
+        await self.set_spillover(0)
 
     def _update_equipment(self, mspconfig: MSPBoW, telemetry: Telemetry | None) -> None:
         """Update both the configuration and telemetry data for the equipment."""
