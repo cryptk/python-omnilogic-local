@@ -31,10 +31,10 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     multiple light models with different capabilities:
 
     Light Models:
-        - ColorLogic 2.5: Classic model with 10 preset shows
-        - ColorLogic 4.0: Enhanced model with 15 preset shows
-        - ColorLogic UCL (UniversaLogic): Universal controller for various lights
-        - ColorLogic SAM: Smart lighting system
+        - ColorLogic 2.5
+        - ColorLogic 4.0
+        - ColorLogic UCL
+        - ColorLogic SAM
         - Pentair and Zodiac compatible lights (limited functionality)
 
     Each light model supports different shows, speeds, and brightness levels.
