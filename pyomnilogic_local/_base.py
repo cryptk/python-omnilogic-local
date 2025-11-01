@@ -149,3 +149,19 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
             self.telemetry = cast(TelemetryT, specific_telemetry)
         else:
             self.telemetry = cast(TelemetryT, None)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the equipment for debugging.
+
+        Returns:
+            A string showing the class name, system_id, name, and state (if available).
+        """
+        class_name = self.__class__.__name__
+        parts = [f"system_id={self.system_id!r}", f"name={self.name!r}"]
+
+        # Include state if the equipment has telemetry with a state attribute
+        if hasattr(self, "telemetry") and self.telemetry is not None:
+            if (state := getattr(self.telemetry, "state", None)) is not None:
+                parts.append(f"state={state!r}")
+
+        return f"{class_name}({', '.join(parts)})"

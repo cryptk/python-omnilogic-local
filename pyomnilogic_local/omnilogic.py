@@ -42,6 +42,27 @@ class OmniLogic:
         self._api = OmniLogicAPI(host, port)
         self._refresh_lock = asyncio.Lock()
 
+    def __repr__(self) -> str:
+        """Return a string representation of the OmniLogic instance for debugging.
+
+        Returns:
+            A string showing host, port, and counts of various equipment types.
+        """
+        # Only show equipment counts if backyard has been initialized
+        if hasattr(self, "backyard"):
+            bow_count = len(self.backyard.bow)
+            light_count = len(self.all_lights)
+            relay_count = len(self.all_relays)
+            pump_count = len(self.all_pumps)
+            filter_count = len(self.all_filters)
+
+            return (
+                f"OmniLogic(host={self.host!r}, port={self.port}, "
+                f"bows={bow_count}, lights={light_count}, relays={relay_count}, "
+                f"pumps={pump_count}, filters={filter_count})"
+            )
+        return f"OmniLogic(host={self.host!r}, port={self.port}, not_initialized=True)"
+
     async def refresh(
         self,
         *,

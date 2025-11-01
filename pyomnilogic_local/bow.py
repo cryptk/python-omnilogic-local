@@ -138,6 +138,31 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     def __init__(self, omni: "OmniLogic", mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Bow for debugging.
+
+        Returns:
+            A string showing the class name, system_id, name, type, and equipment counts.
+        """
+        parts = [f"system_id={self.system_id!r}", f"name={self.name!r}", f"type={self.equip_type!r}"]
+
+        # Add equipment counts
+        parts.append(f"filters={len(self.filters)}")
+        parts.append(f"pumps={len(self.pumps)}")
+        parts.append(f"lights={len(self.lights)}")
+        parts.append(f"relays={len(self.relays)}")
+        parts.append(f"sensors={len(self.sensors)}")
+
+        # Add heater and chlorinator status (present or not)
+        if self.heater is not None:
+            parts.append("heater=True")
+        if self.chlorinator is not None:
+            parts.append("chlorinator=True")
+        if len(self.csads) > 0:
+            parts.append(f"csads={len(self.csads)}")
+
+        return f"Bow({', '.join(parts)})"
+
     @property
     def equip_type(self) -> BodyOfWaterType | str:
         """The equipment type of the bow (POOL or SPA)."""
