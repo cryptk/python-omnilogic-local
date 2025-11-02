@@ -149,6 +149,12 @@ class ChlorinatorOperatingMode(IntEnum, PrettyEnum):
     ORP_TIMED_RW = 3  # CSAD in ORP mode experienced condition that prevents ORP operation
 
 
+class ChlorinatorType(StrEnum, PrettyEnum):
+    MAIN_PANEL = "CHLOR_TYPE_MAIN_PANEL"
+    DISPENSER = "CHLOR_TYPE_DISPENSER"
+    AQUA_RITE = "CHLOR_TYPE_AQUA_RITE"
+
+
 class ChlorinatorDispenserType(StrEnum, PrettyEnum):
     SALT = "SALT_DISPENSING"
     LIQUID = "LIQUID_DISPENSING"

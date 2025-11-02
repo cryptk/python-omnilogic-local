@@ -1,13 +1,20 @@
+from typing import TYPE_CHECKING
+
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
+from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPChlorinator
-from pyomnilogic_local.models.telemetry import TelemetryChlorinator
+from pyomnilogic_local.models.telemetry import Telemetry, TelemetryChlorinator
 from pyomnilogic_local.omnitypes import (
     ChlorinatorCellType,
     ChlorinatorOperatingMode,
     ChlorinatorStatus,
 )
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnilogic import OmniLogic
 
 
 class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
@@ -21,6 +28,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
     Attributes:
         mspconfig: The MSP configuration for this chlorinator
         telemetry: Real-time telemetry data for this chlorinator
+        chlorinator_equipment: Collection of physical chlorinator equipment units
 
     Example:
         >>> chlorinator = pool.get_chlorinator()
@@ -32,6 +40,26 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
 
     mspconfig: MSPChlorinator
     telemetry: TelemetryChlorinator
+    chlorinator_equipment: EquipmentDict[ChlorinatorEquipment] = EquipmentDict()
+
+    def __init__(self, omni: "OmniLogic", mspconfig: MSPChlorinator, telemetry: Telemetry) -> None:
+        super().__init__(omni, mspconfig, telemetry)
+
+    def _update_equipment(self, mspconfig: MSPChlorinator, telemetry: Telemetry | None) -> None:
+        """Update both the configuration and telemetry data for the equipment."""
+        if telemetry is None:
+            return
+        self._update_chlorinator_equipment(mspconfig, telemetry)
+
+    def _update_chlorinator_equipment(self, mspconfig: MSPChlorinator, telemetry: Telemetry) -> None:
+        """Update the chlorinator equipment based on the MSP configuration."""
+        if mspconfig.chlorinator_equipment is None:
+            self.chlorinator_equipment = EquipmentDict()
+            return
+
+        self.chlorinator_equipment = EquipmentDict(
+            [ChlorinatorEquipment(self._omni, equip, telemetry) for equip in mspconfig.chlorinator_equipment]
+        )
 
     # Expose MSPConfig attributes
     @property

@@ -22,6 +22,7 @@ from ..omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,
+    ChlorinatorType,
     ColorLogicLightType,
     ColorLogicShow25,
     ColorLogicShow40,
@@ -202,6 +203,8 @@ class MSPChlorinatorEquip(OmniBase):
 
     omni_type: OmniType = OmniType.CHLORINATOR_EQUIP
 
+    equip_type: Literal["PET_CHLORINATOR"] = Field(alias="Type")
+    chlorinator_type: ChlorinatorType = Field(alias="Chlorinator-Type")
     enabled: bool = Field(alias="Enabled")
 
 
@@ -240,10 +243,8 @@ class MSPChlorinator(OmniBase):
         # The chlorinator equipment are nested down inside a list of "Operations", which also includes non Chlorinator-Equipment items.
         # We need to first filter down to just the chlorinator equipment items, then populate our self.chlorinator_equipment with parsed
         # versions of those items.
-        chlorinator_equip_data = [op for op in data.get("Operation", {}) if OmniType.CHLORINATOR_EQUIP in op][0]
-        self.chlorinator_equipment = [
-            MSPChlorinatorEquip.model_validate(equip) for equip in chlorinator_equip_data[OmniType.CHLORINATOR_EQUIP]
-        ]
+        chlorinator_equip_data = [op[OmniType.CHLORINATOR_EQUIP] for op in data.get("Operation", {}) if OmniType.CHLORINATOR_EQUIP in op]
+        self.chlorinator_equipment = [MSPChlorinatorEquip.model_validate(equip) for equip in chlorinator_equip_data]
 
 
 class MSPCSAD(OmniBase):
@@ -374,7 +375,6 @@ class MSPConfig(BaseModel):
             # everything that *could* be a list into a list to make the parsing more consistent.
             force_list=(
                 OmniType.BOW_MSP,
-                OmniType.CHLORINATOR_EQUIP,
                 OmniType.CSAD,
                 OmniType.CL_LIGHT,
                 OmniType.FAVORITES,

@@ -7,6 +7,7 @@ from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.backyard import Backyard
 from pyomnilogic_local.chlorinator import Chlorinator
+from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.colorlogiclight import ColorLogicLight
 from pyomnilogic_local.csad import CSAD
@@ -212,6 +213,14 @@ class OmniLogic:
         return EquipmentDict(chlorinators)
 
     @property
+    def all_chlorinator_equipment(self) -> EquipmentDict[ChlorinatorEquipment]:
+        """Returns all ChlorinatorEquipment instances across all chlorinators in the backyard."""
+        chlorinator_equipment: list[ChlorinatorEquipment] = []
+        for chlorinator in self.all_chlorinators.values():
+            chlorinator_equipment.extend(chlorinator.chlorinator_equipment.values())
+        return EquipmentDict(chlorinator_equipment)
+
+    @property
     def all_csads(self) -> EquipmentDict[CSAD]:
         """Returns all CSAD instances across all bows in the backyard."""
         csads: list[CSAD] = []
@@ -240,6 +249,7 @@ class OmniLogic:
         all_equipment.extend(self.all_heaters.values())
         all_equipment.extend(self.all_heater_equipment.values())
         all_equipment.extend(self.all_chlorinators.values())
+        all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
 
         for equipment in all_equipment:
@@ -268,6 +278,7 @@ class OmniLogic:
         all_equipment.extend(self.all_heaters.values())
         all_equipment.extend(self.all_heater_equipment.values())
         all_equipment.extend(self.all_chlorinators.values())
+        all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
 
         for equipment in all_equipment:
