@@ -17,18 +17,94 @@ from ..omnitypes import (
     LightShows,
     MessageType,
 )
+from .constants import (
+    DEFAULT_CONTROLLER_PORT,
+    DEFAULT_RESPONSE_TIMEOUT,
+    MAX_SPEED_PERCENT,
+    MAX_TEMPERATURE_F,
+    MIN_SPEED_PERCENT,
+    MIN_TEMPERATURE_F,
+    XML_ENCODING,
+    XML_NAMESPACE,
+)
+from .exceptions import OmniValidationException
 from .protocol import OmniLogicProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def _validate_temperature(temperature: int, param_name: str = "temperature") -> None:
+    """Validate temperature is within acceptable range.
+
+    Args:
+        temperature: Temperature value in Fahrenheit.
+        param_name: Name of the parameter for error messages.
+
+    Raises:
+        OmniValidationException: If temperature is out of range.
+    """
+    if not isinstance(temperature, int):
+        raise OmniValidationException(f"{param_name} must be an integer, got {type(temperature).__name__}")
+    if not MIN_TEMPERATURE_F <= temperature <= MAX_TEMPERATURE_F:
+        raise OmniValidationException(f"{param_name} must be between {MIN_TEMPERATURE_F}°F and {MAX_TEMPERATURE_F}°F, got {temperature}°F")
+
+
+def _validate_speed(speed: int, param_name: str = "speed") -> None:
+    """Validate speed percentage is within acceptable range.
+
+    Args:
+        speed: Speed percentage (0-100).
+        param_name: Name of the parameter for error messages.
+
+    Raises:
+        OmniValidationException: If speed is out of range.
+    """
+    if not isinstance(speed, int):
+        raise OmniValidationException(f"{param_name} must be an integer, got {type(speed).__name__}")
+    if not MIN_SPEED_PERCENT <= speed <= MAX_SPEED_PERCENT:
+        raise OmniValidationException(f"{param_name} must be between {MIN_SPEED_PERCENT} and {MAX_SPEED_PERCENT}, got {speed}")
+
+
+def _validate_id(id_value: int, param_name: str) -> None:
+    """Validate an ID is a positive integer.
+
+    Args:
+        id_value: The ID value to validate.
+        param_name: Name of the parameter for error messages.
+
+    Raises:
+        OmniValidationException: If ID is invalid.
+    """
+    if not isinstance(id_value, int):
+        raise OmniValidationException(f"{param_name} must be an integer, got {type(id_value).__name__}")
+    if id_value < 0:
+        raise OmniValidationException(f"{param_name} must be non-negative, got {id_value}")
+
+
 class OmniLogicAPI:
-    def __init__(self, controller_ip: str, controller_port: int, response_timeout: float = 5.0) -> None:
+    def __init__(
+        self, controller_ip: str, controller_port: int = DEFAULT_CONTROLLER_PORT, response_timeout: float = DEFAULT_RESPONSE_TIMEOUT
+    ) -> None:
+        """Initialize the OmniLogic API client.
+
+        Args:
+            controller_ip: IP address of the OmniLogic controller.
+            controller_port: UDP port of the OmniLogic controller (default: 10444).
+            response_timeout: Timeout in seconds for receiving responses (default: 5.0).
+
+        Raises:
+            OmniValidationException: If parameters are invalid.
+        """
+        if not controller_ip:
+            raise OmniValidationException("controller_ip cannot be empty")
+        if not isinstance(controller_port, int) or controller_port <= 0 or controller_port > 65535:
+            raise OmniValidationException(f"controller_port must be between 1 and 65535, got {controller_port}")
+        if not isinstance(response_timeout, (int, float)) or response_timeout <= 0:
+            raise OmniValidationException(f"response_timeout must be positive, got {response_timeout}")
+
         self.controller_ip = controller_ip
         self.controller_port = controller_port
         self.response_timeout = response_timeout
-        # self._loop = asyncio.get_running_loop()
-        # self._protocol_factory = OmniLogicProtocol
 
     @overload
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
@@ -76,12 +152,12 @@ class OmniLogicAPI:
         Returns:
             MSPConfig|str: Either a parsed .models.mspconfig.MSPConfig object or a str depending on arg raw
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "RequestConfiguration"
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         resp = await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
 
@@ -107,7 +183,7 @@ class OmniLogicAPI:
         Returns:
             FilterDiagnostics|str: Either a parsed .models.mspconfig.FilterDiagnostics object or a str depending on arg raw
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "GetUIFilterDiagnosticInfo"
@@ -118,7 +194,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="equipmentId", dataType="int")
         parameter.text = str(equipment_id)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         resp = await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
 
@@ -138,12 +214,12 @@ class OmniLogicAPI:
         Returns:
             Telemetry|str: Either a parsed .models.telemetry.Telemetry object or a str depending on arg raw
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "RequestTelemetryData"
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         resp = await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
 
@@ -167,7 +243,7 @@ class OmniLogicAPI:
         Returns:
             None
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUIHeaterCmd"
@@ -180,7 +256,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit="F", alias="Data")
         parameter.text = str(temperature)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
@@ -200,7 +276,7 @@ class OmniLogicAPI:
         Returns:
             None
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUISolarSetPointCmd"
@@ -213,7 +289,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Temp", dataType="int", unit="F", alias="Data")
         parameter.text = str(temperature)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
@@ -233,7 +309,7 @@ class OmniLogicAPI:
         Returns:
             None
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUIHeaterModeCmd"
@@ -246,7 +322,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Mode", dataType="int", alias="Data")
         parameter.text = str(mode.value)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
 
@@ -266,7 +342,7 @@ class OmniLogicAPI:
         Returns:
             _type_: _description_
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetHeaterEnable"
@@ -279,7 +355,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
         parameter.text = str(int(enabled))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_HEATER_ENABLED, req_body, False)
 
@@ -312,7 +388,7 @@ class OmniLogicAPI:
             daysActive (int, optional): For potential future use, included to be "API complete". Defaults to 0.
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUIEquipmentCmd"
@@ -339,7 +415,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
         parameter.text = str(int(recurring))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
 
@@ -351,7 +427,7 @@ class OmniLogicAPI:
             equipment_id (int): Which equipment_id within that Pool to address
             speed (int): Speed value from 0-100 to set the filter to.  A value of 0 will turn the filter off.
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUIFilterSpeedCmd"
@@ -365,7 +441,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Speed", dataType="int", unit="RPM", alias="Data")
         parameter.text = str(speed)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_FILTER_SPEED, req_body, False)
 
@@ -402,7 +478,7 @@ class OmniLogicAPI:
             days_active (int, optional): For potential future use, included to be "API complete". Defaults to 0.
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetStandAloneLightShow"
@@ -435,11 +511,11 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
         parameter.text = str(int(recurring))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
         return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
 
     async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetCHLOREnable"
@@ -450,7 +526,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
         parameter.text = str(int(enabled))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
 
@@ -466,7 +542,7 @@ class OmniLogicAPI:
         orp_timeout: int,
         cfg_state: int = 3,
     ) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetCHLORParams"
@@ -491,7 +567,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="ORPTimout", dataType="byte", unit="hour", alias="Data7")
         parameter.text = str(orp_timeout)
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
 
@@ -501,7 +577,7 @@ class OmniLogicAPI:
         equipment_id: int,
         enabled: int | bool,
     ) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUISuperCHLORCmd"
@@ -514,19 +590,19 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="IsOn", dataType="byte", alias="Data1")
         parameter.text = str(int(enabled))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)
 
     async def async_restore_idle_state(self) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "RestoreIdleState"
 
         ET.SubElement(body_element, "Parameters")
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.RESTORE_IDLE_STATE, req_body, False)
 
@@ -542,7 +618,7 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "SetUISpilloverCmd"
@@ -567,7 +643,7 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
         parameter.text = str(int(recurring))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.SET_SPILLOVER, req_body, False)
 
@@ -583,7 +659,7 @@ class OmniLogicAPI:
         days_active: int = 0,
         recurring: bool = False,
     ) -> None:
-        body_element = ET.Element("Request", {"xmlns": "http://nextgen.hayward.com/api"})
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "RunGroupCmd"
@@ -608,6 +684,6 @@ class OmniLogicAPI:
         parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
         parameter.text = str(int(recurring))
 
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding="unicode")
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.RUN_GROUP_CMD, req_body, False)
