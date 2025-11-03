@@ -28,6 +28,7 @@ from ..omnitypes import (
     ColorLogicShow40,
     ColorLogicShowUCL,
     ColorLogicShowUCLV2,
+    CSADEquipmentType,
     CSADType,
     FilterType,
     HeaterType,
@@ -247,7 +248,18 @@ class MSPChlorinator(OmniBase):
         self.chlorinator_equipment = [MSPChlorinatorEquip.model_validate(equip) for equip in chlorinator_equip_data]
 
 
+class MSPCSADEquip(OmniBase):
+    _YES_NO_FIELDS = {"enabled"}
+
+    omni_type: OmniType = OmniType.CSAD_EQUIP
+
+    equip_type: Literal["PET_CSAD"] = Field(alias="Type")
+    csad_type: CSADEquipmentType | str = Field(alias="CSAD-Type")
+    enabled: bool = Field(alias="Enabled")
+
+
 class MSPCSAD(OmniBase):
+    _sub_devices = {"csad_equipment"}
     _YES_NO_FIELDS = {"enabled"}
 
     omni_type: OmniType = OmniType.CSAD
@@ -264,6 +276,30 @@ class MSPCSAD(OmniBase):
     orp_high_alarm_level: int = Field(alias="ORP-High-Alarm-Level")
     orp_forced_on_time: int = Field(alias="ORP-Forced-On-Time")
     orp_forced_enabled: bool = Field(alias="ORP-Forced-Enabled")
+    csad_equipment: list[MSPCSADEquip] | None = None
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+
+        # The CSAD equipment are nested down inside a list of "Operations", which also includes non CSAD-Equipment items.
+        # We need to first filter down to just the CSAD equipment items, then populate our self.csad_equipment with parsed
+        # versions of those items.
+        csad_equip_data = [op[OmniType.CSAD_EQUIP] for op in data.get("Operation", {}) if OmniType.CSAD_EQUIP in op]
+        self.csad_equipment = [MSPCSADEquip.model_validate(equip) for equip in csad_equip_data]
+
+        # The CSAD equipment are nested down inside a list of "Operations", which also includes non CSAD-Equipment items.
+        # We need to first filter down to just the CSAD equipment items, then populate our self.csad_equipment with parsed
+        # versions of those items.
+        # operations_list = data.get("Operation", [])
+        # if operations_list:
+        #     csad_equip_ops = [op for op in operations_list if OmniType.CSAD_EQUIP in op]
+        #     if csad_equip_ops:
+        #         csad_equip_data = csad_equip_ops[0][OmniType.CSAD_EQUIP]
+        #         self.csad_equipment = [MSPCSADEquip.model_validate(equip) for equip in csad_equip_data]
+        #     else:
+        #         self.csad_equipment = []
+        # else:
+        #     self.csad_equipment = []
 
 
 class MSPColorLogicLight(OmniBase):
@@ -355,6 +391,7 @@ type MSPEquipmentType = (
     | MSPChlorinator
     | MSPChlorinatorEquip
     | MSPCSAD
+    | MSPCSADEquip
     | MSPColorLogicLight
 )
 

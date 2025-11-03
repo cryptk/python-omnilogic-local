@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING
+
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.collections import EquipmentDict
+from pyomnilogic_local.csad_equip import CSADEquipment
 from pyomnilogic_local.models.mspconfig import MSPCSAD
-from pyomnilogic_local.models.telemetry import TelemetryCSAD
+from pyomnilogic_local.models.telemetry import Telemetry, TelemetryCSAD
 from pyomnilogic_local.omnitypes import CSADMode, CSADStatus, CSADType
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnilogic import OmniLogic
 
 
 class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
@@ -20,6 +27,7 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
     Attributes:
         mspconfig: The MSP configuration for this CSAD
         telemetry: Real-time telemetry data for this CSAD
+        csad_equipment: Collection of physical CSAD equipment devices
 
     Example:
         >>> csad = pool.get_csad()
@@ -31,6 +39,24 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
 
     mspconfig: MSPCSAD
     telemetry: TelemetryCSAD
+    csad_equipment: EquipmentDict[CSADEquipment] = EquipmentDict()
+
+    def __init__(self, omni: "OmniLogic", mspconfig: MSPCSAD, telemetry: Telemetry) -> None:
+        super().__init__(omni, mspconfig, telemetry)
+
+    def _update_equipment(self, mspconfig: MSPCSAD, telemetry: Telemetry | None) -> None:
+        """Update both the configuration and telemetry data for the equipment."""
+        if telemetry is None:
+            return
+        self._update_csad_equipment(mspconfig, telemetry)
+
+    def _update_csad_equipment(self, mspconfig: MSPCSAD, telemetry: Telemetry) -> None:
+        """Update the CSAD equipment based on the MSP configuration."""
+        if mspconfig.csad_equipment is None:
+            self.csad_equipment = EquipmentDict()
+            return
+
+        self.csad_equipment = EquipmentDict([CSADEquipment(self._omni, equip, telemetry) for equip in mspconfig.csad_equipment])
 
     # Expose MSPConfig attributes
     @property

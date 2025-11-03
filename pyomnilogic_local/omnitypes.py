@@ -45,6 +45,7 @@ class OmniType(StrEnum):
     CHLORINATOR = "Chlorinator"
     CHLORINATOR_EQUIP = "Chlorinator-Equipment"
     CSAD = "CSAD"
+    CSAD_EQUIP = "CSAD-Equipment"
     CL_LIGHT = "ColorLogic-Light"
     FAVORITES = "Favorites"
     FILTER = "Filter"
@@ -336,6 +337,10 @@ class ColorLogicLightType(StrEnum, PrettyEnum):
 class CSADType(StrEnum, PrettyEnum):
     ACID = "ACID"
     CO2 = "CO2"
+
+
+class CSADEquipmentType(StrEnum, PrettyEnum):
+    AQL_CHEM = "AQL-CHEM"
 
 
 # Chemistry Sense and Dispense

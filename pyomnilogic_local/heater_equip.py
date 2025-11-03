@@ -37,7 +37,7 @@ class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
         heater_type: Type of heating unit (GAS, HEAT_PUMP, SOLAR)
         min_filter_speed: Minimum filter speed required for operation
         sensor_id: System ID of the temperature sensor
-        supports_cooling: Whether this unit can cool (heat pumps only)
+        supports_cooling: Whether this unit can cool
 
     Properties (Telemetry):
         state: Current heater state (OFF, ON, PAUSE)
