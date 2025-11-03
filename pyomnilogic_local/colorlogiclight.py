@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.collections import LightEffectsCollection
 from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPColorLogicLight
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
@@ -47,7 +48,8 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     Properties (Configuration):
         model: Light model type (TWO_FIVE, FOUR_ZERO, UCL, SAM, etc.)
         v2_active: Whether V2 protocol features are active
-        effects: List of available light shows for this model
+        effects: Collection of available light shows for this model with
+                 attribute and dict-like access patterns
 
     Properties (Telemetry):
         state: Current power state (ON, OFF, transitional states)
@@ -82,12 +84,16 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         ...     print(f"Speed: {pool_light.speed}")
         ...     print(f"Brightness: {pool_light.brightness}")
         >>>
-        >>> # Control light
+        >>> # Control light - use attribute access for available effects!
         >>> await pool_light.turn_on()
-        >>> await pool_light.set_show(ColorLogicShow25.TROPICAL)
+        >>> await pool_light.set_show(pool_light.effects.TROPICAL)
         >>> await pool_light.set_speed(ColorLogicSpeed.TWO_TIMES)
         >>> await pool_light.set_brightness(ColorLogicBrightness.SEVENTY_FIVE_PERCENT)
         >>> await pool_light.turn_off()
+        >>>
+        >>> # Or use traditional enum imports
+        >>> from pyomnilogic_local import ColorLogicShow25
+        >>> await pool_light.set_show(ColorLogicShow25.TROPICAL)
 
     Important - Light State Transitions:
         ColorLogic lights go through several transitional states when changing
@@ -126,9 +132,38 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         return self.mspconfig.v2_active
 
     @property
-    def effects(self) -> list[LightShows] | None:
-        """Returns the effects of the light."""
-        return self.mspconfig.effects
+    def effects(self) -> LightEffectsCollection | None:
+        """Returns the available light effects as a collection with attribute and dict-like access.
+
+        The effects collection provides multiple access patterns:
+        - Attribute access: `light.effects.VOODOO_LOUNGE`
+        - Dict-like access: `light.effects["VOODOO_LOUNGE"]`
+        - Index access: `light.effects[0]`
+        - Membership testing: `"TROPICAL" in light.effects`
+        - Iteration: `for effect in light.effects: ...`
+
+        Returns:
+            LightEffectsCollection containing the available shows for this light model,
+            or None if effects are not available.
+
+        Example:
+            >>> # Attribute access - most intuitive
+            >>> await light.set_show(light.effects.TROPICAL)
+            >>>
+            >>> # Dict-like access
+            >>> await light.set_show(light.effects["TROPICAL"])
+            >>>
+            >>> # Check availability
+            >>> if "VOODOO_LOUNGE" in light.effects:
+            ...     await light.set_show(light.effects.VOODOO_LOUNGE)
+            >>>
+            >>> # List all available effects
+            >>> for effect in light.effects:
+            ...     print(f"{effect.name}: {effect.value}")
+        """
+        if self.mspconfig.effects is None:
+            return None
+        return LightEffectsCollection(self.mspconfig.effects)
 
     @property
     def state(self) -> ColorLogicPowerState:

@@ -287,20 +287,6 @@ class MSPCSAD(OmniBase):
         csad_equip_data = [op[OmniType.CSAD_EQUIP] for op in data.get("Operation", {}) if OmniType.CSAD_EQUIP in op]
         self.csad_equipment = [MSPCSADEquip.model_validate(equip) for equip in csad_equip_data]
 
-        # The CSAD equipment are nested down inside a list of "Operations", which also includes non CSAD-Equipment items.
-        # We need to first filter down to just the CSAD equipment items, then populate our self.csad_equipment with parsed
-        # versions of those items.
-        # operations_list = data.get("Operation", [])
-        # if operations_list:
-        #     csad_equip_ops = [op for op in operations_list if OmniType.CSAD_EQUIP in op]
-        #     if csad_equip_ops:
-        #         csad_equip_data = csad_equip_ops[0][OmniType.CSAD_EQUIP]
-        #         self.csad_equipment = [MSPCSADEquip.model_validate(equip) for equip in csad_equip_data]
-        #     else:
-        #         self.csad_equipment = []
-        # else:
-        #     self.csad_equipment = []
-
 
 class MSPColorLogicLight(OmniBase):
     _YES_NO_FIELDS = {"v2_active"}

@@ -3,9 +3,11 @@
 import logging
 from collections import Counter
 from collections.abc import Iterator
+from enum import Enum
 from typing import Any, Generic, TypeVar, overload
 
 from pyomnilogic_local._base import OmniEquipment
+from pyomnilogic_local.omnitypes import LightShows
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 _WARNED_DUPLICATE_NAMES: set[str] = set()
 
 # Type variable for equipment types
-T = TypeVar("T", bound=OmniEquipment[Any, Any])
+OE = TypeVar("OE", bound=OmniEquipment[Any, Any])
 
 
-class EquipmentDict(Generic[T]):
+class EquipmentDict(Generic[OE]):
     """A dictionary-like collection that supports lookup by both name and system_id.
 
     This collection allows accessing equipment using either their name (str) or
@@ -54,7 +56,7 @@ class EquipmentDict(Generic[T]):
         always lookup by name. This type-based differentiation prevents ambiguity.
     """
 
-    def __init__(self, items: list[T] | None = None) -> None:
+    def __init__(self, items: list[OE] | None = None) -> None:
         """Initialize the equipment collection.
 
         Args:
@@ -63,7 +65,7 @@ class EquipmentDict(Generic[T]):
         Raises:
             ValueError: If any item has neither a system_id nor a name.
         """
-        self._items: list[T] = items if items is not None else []
+        self._items: list[OE] = items if items is not None else []
         self._validate()
 
     def _validate(self) -> None:
@@ -102,22 +104,22 @@ class EquipmentDict(Generic[T]):
             _WARNED_DUPLICATE_NAMES.add(name)
 
     @property
-    def _by_name(self) -> dict[str, T]:
+    def _by_name(self) -> dict[str, OE]:
         """Dynamically build name-to-equipment mapping."""
         return {item.name: item for item in self._items if item.name is not None}
 
     @property
-    def _by_id(self) -> dict[int, T]:
+    def _by_id(self) -> dict[int, OE]:
         """Dynamically build system_id-to-equipment mapping."""
         return {item.system_id: item for item in self._items if item.system_id is not None}
 
     @overload
-    def __getitem__(self, key: str) -> T: ...
+    def __getitem__(self, key: str) -> OE: ...
 
     @overload
-    def __getitem__(self, key: int) -> T: ...
+    def __getitem__(self, key: int) -> OE: ...
 
-    def __getitem__(self, key: str | int) -> T:
+    def __getitem__(self, key: str | int) -> OE:
         """Get equipment by name (str) or system_id (int).
 
         Args:
@@ -141,7 +143,7 @@ class EquipmentDict(Generic[T]):
 
         raise TypeError(f"Key must be str or int, got {type(key).__name__}")
 
-    def __setitem__(self, key: str | int, value: T) -> None:
+    def __setitem__(self, key: str | int, value: OE) -> None:
         """Add or update equipment in the collection.
 
         The key is only used to determine the operation type (add vs update).
@@ -230,7 +232,7 @@ class EquipmentDict(Generic[T]):
 
         return False
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[OE]:
         """Iterate over all equipment items in the collection.
 
         Returns:
@@ -264,7 +266,7 @@ class EquipmentDict(Generic[T]):
         # names = [item.name or f"<ID:{item.system_id}>" for item in self._items]
         return f"EquipmentDict({names})"
 
-    def append(self, item: T) -> None:
+    def append(self, item: OE) -> None:
         """Add or update equipment in the collection (list-like interface).
 
         If equipment with the same system_id or name already exists, it will be
@@ -298,7 +300,7 @@ class EquipmentDict(Generic[T]):
         # Validate after modification
         self._validate()
 
-    def get_by_name(self, name: str) -> T | None:
+    def get_by_name(self, name: str) -> OE | None:
         """Get equipment by name with explicit method (returns None if not found).
 
         Args:
@@ -314,7 +316,7 @@ class EquipmentDict(Generic[T]):
         """
         return self._by_name.get(name)
 
-    def get_by_id(self, system_id: int) -> T | None:
+    def get_by_id(self, system_id: int) -> OE | None:
         """Get equipment by system_id with explicit method (returns None if not found).
 
         Args:
@@ -330,7 +332,7 @@ class EquipmentDict(Generic[T]):
         """
         return self._by_id.get(system_id)
 
-    def get(self, key: str | int, default: T | None = None) -> T | None:
+    def get(self, key: str | int, default: OE | None = None) -> OE | None:
         """Get equipment by name or system_id with optional default.
 
         Args:
@@ -362,7 +364,7 @@ class EquipmentDict(Generic[T]):
         """
         return list(self._by_name.keys())
 
-    def values(self) -> list[T]:
+    def values(self) -> list[OE]:
         """Get list of all equipment items.
 
         Returns:
@@ -374,7 +376,7 @@ class EquipmentDict(Generic[T]):
         """
         return self._items.copy()
 
-    def items(self) -> list[tuple[int | None, str | None, T]]:
+    def items(self) -> list[tuple[int | None, str | None, OE]]:
         """Get list of (system_id, name, equipment) tuples.
 
         Returns:
@@ -386,3 +388,135 @@ class EquipmentDict(Generic[T]):
             ...     print(f"ID: {system_id}, Name: {name}")
         """
         return [(item.system_id, item.name, item) for item in self._items]
+
+
+# Type variable for enum types
+E = TypeVar("E", bound=Enum)
+
+
+class EffectsCollection(Generic[E]):
+    """A collection that provides both attribute and dict-like access to light effects.
+
+    This class wraps a list of light shows and exposes them through multiple access patterns:
+    - Attribute access: `effects.VOODOO_LOUNGE`
+    - Dict-like access: `effects["VOODOO_LOUNGE"]`
+    - Iteration: `for effect in effects: ...`
+    - Length: `len(effects)`
+    - Membership: `effect in effects`
+
+    The collection is read-only and provides type-safe access to only the shows
+    supported by a specific light model.
+
+    Example:
+        >>> light = pool.lights["Pool Light"]
+        >>> # Attribute access
+        >>> await light.set_show(light.effects.TROPICAL)
+        >>> # Dict-like access
+        >>> await light.set_show(light.effects["TROPICAL"])
+        >>> # Check if a show is available
+        >>> if "VOODOO_LOUNGE" in light.effects:
+        ...     await light.set_show(light.effects.VOODOO_LOUNGE)
+        >>> # Iterate through available shows
+        >>> for effect in light.effects:
+        ...     print(f"{effect.name}: {effect.value}")
+    """
+
+    def __init__(self, effects: list[E]) -> None:
+        """Initialize the effects collection.
+
+        Args:
+            effects: List of light show enums available for this light model.
+        """
+        self._effects = effects
+        # Create a lookup dict for fast access by name
+        self._effects_by_name = {effect.name: effect for effect in effects}
+
+    def __getattr__(self, name: str) -> E:
+        """Enable attribute access to effects by name.
+
+        Args:
+            name: The name of the light show (e.g., "VOODOO_LOUNGE")
+
+        Returns:
+            The light show enum value.
+
+        Raises:
+            AttributeError: If the show name is not available for this light model.
+        """
+        if name.startswith("_"):
+            # Avoid infinite recursion for internal attributes
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+        try:
+            return self._effects_by_name[name]
+        except KeyError as exc:
+            raise AttributeError(f"Light effect '{name}' is not available for this light model") from exc
+
+    def __getitem__(self, key: str | int) -> E:
+        """Enable dict-like and index access to effects.
+
+        Args:
+            key: Either the effect name (str) or index position (int)
+
+        Returns:
+            The light show enum value.
+
+        Raises:
+            KeyError: If the show name is not available for this light model.
+            IndexError: If the index is out of range.
+            TypeError: If key is not a string or integer.
+        """
+        if isinstance(key, str):
+            try:
+                return self._effects_by_name[key]
+            except KeyError as exc:
+                raise KeyError(f"Light effect '{key}' is not available for this light model") from exc
+        elif isinstance(key, int):
+            return self._effects[key]
+        else:
+            raise TypeError(f"indices must be integers or strings, not {type(key).__name__}")
+
+    def __contains__(self, item: str | E) -> bool:
+        """Check if an effect is available in this collection.
+
+        Args:
+            item: Either the effect name (str) or the effect enum value
+
+        Returns:
+            True if the effect is available, False otherwise.
+
+        Note:
+            When checking enum membership, this uses identity checking (is),
+            not value equality (==). This ensures that only the exact enum
+            instance from this collection's type is matched, even if different
+            enum types share the same value.
+        """
+        if isinstance(item, str):
+            return item in self._effects_by_name
+        # Use identity check to ensure exact type match
+        return any(item is effect for effect in self._effects)
+
+    def __iter__(self) -> Iterator[E]:
+        """Enable iteration over the effects."""
+        return iter(self._effects)
+
+    def __len__(self) -> int:
+        """Return the number of effects in the collection."""
+        return len(self._effects)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the collection."""
+        effect_names = [effect.name for effect in self._effects]
+        return f"EffectsCollection({effect_names})"
+
+    def to_list(self) -> list[E]:
+        """Return the underlying list of effects.
+
+        Returns:
+            A list of all light show enums in this collection.
+        """
+        return self._effects.copy()
+
+
+# Type alias for light effects specifically
+LightEffectsCollection = EffectsCollection[LightShows]

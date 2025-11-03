@@ -1,3 +1,4 @@
+from .collections import EffectsCollection, LightEffectsCollection
 from .omnilogic import OmniLogic
 from .util import (
     OmniConnectionError,
@@ -7,6 +8,8 @@ from .util import (
 )
 
 __all__ = [
+    "EffectsCollection",
+    "LightEffectsCollection",
     "OmniLogic",
     "OmniLogicLocalError",
     "OmniEquipmentNotReadyError",
