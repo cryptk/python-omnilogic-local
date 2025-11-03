@@ -510,29 +510,18 @@ class RelayType(StrEnum, PrettyEnum):
 
 
 class RelayWhyOn(IntEnum, PrettyEnum):
-    OFF = 0
-    ON = 1
-    FREEZE_PROTECT = 2
-    WAITING_FOR_INTERLOCK = 3
-    PAUSED = 4
-    WAITING_FOR_FILTER = 5
-    UNKNOWN_1 = 6  # We have seen 8, so we assume 6 exists
-    # whyOn value 7 is assumed to be TIMED_EVENT
-    # ref: https://github.com/cryptk/haomnilogic-local/issues/150
-    # ref: https://github.com/cryptk/haomnilogic-local/issues/60
-    # the relay in question is a high voltage relay that is scheduled to run 24x7
-    TIMED_EVENT = 7
-    # whyOn value 8 is assumed to be GROUP_COMMAND
-    # ref: https://github.com/cryptk/haomnilogic-local/issues/148
-    # ref: https://github.com/cryptk/haomnilogic-local/issues/106
-    # the relays in question for for a cleaner and water feature that were activated via a running group command
-    GROUP_COMMAND = 8
-    UNKNOWN_4 = 9  # We have seen 10, so we assume 9 exists
-    # whyOn value 10 is assumed to be EXTERNAL_INTERLOCK
-    # ref: https://github.com/cryptk/haomnilogic-local/issues/73
-    # the relay in question was a high voltage relay controlling an ozonator interlocked with the filter
-    # and the filter was on due to a timed event
-    EXTERNAL_INTERLOCK = 10
+    NO_MESSAGE = 0
+    MANUAL_OFF = 1
+    COUNTDOWN_DONE = 2
+    END_SCHEDULE = 3
+    GROUP_OFF = 4
+    MANUAL_ON = 5
+    COUNTDOWN_TIMER = 6
+    SCHEDULE_ON = 7
+    GROUP_ON = 8
+    FREEZE_PROTECT = 9
+    INTERLOCK = 10
+    MAX_ACTION = 11
 
 
 # Sensors

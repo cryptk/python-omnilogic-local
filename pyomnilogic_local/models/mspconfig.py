@@ -254,7 +254,7 @@ class MSPCSADEquip(OmniBase):
     omni_type: OmniType = OmniType.CSAD_EQUIP
 
     equip_type: Literal["PET_CSAD"] = Field(alias="Type")
-    csad_type: CSADEquipmentType | str = Field(alias="CSAD-Type")
+    csad_type: CSADEquipmentType = Field(alias="CSAD-Type")
     enabled: bool = Field(alias="Enabled")
 
 
@@ -265,7 +265,7 @@ class MSPCSAD(OmniBase):
     omni_type: OmniType = OmniType.CSAD
 
     enabled: bool = Field(alias="Enabled")
-    equip_type: CSADType | str = Field(alias="Type")
+    equip_type: CSADType = Field(alias="Type")
     target_value: float = Field(alias="TargetValue")
     calibration_value: float = Field(alias="CalibrationValue")
     ph_low_alarm_value: float = Field(alias="PHLowAlarmLevel")
@@ -323,7 +323,7 @@ class MSPBoW(OmniBase):
 
     omni_type: OmniType = OmniType.BOW
 
-    equip_type: BodyOfWaterType | str = Field(alias="Type")
+    equip_type: BodyOfWaterType = Field(alias="Type")
     supports_spillover: bool = Field(alias="Supports-Spillover", default=False)
     filter: list[MSPFilter] | None = Field(alias="Filter", default=None)
     relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
