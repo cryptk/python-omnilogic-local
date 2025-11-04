@@ -254,7 +254,7 @@ class MSPCSADEquip(OmniBase):
     omni_type: OmniType = OmniType.CSAD_EQUIP
 
     equip_type: Literal["PET_CSAD"] = Field(alias="Type")
-    csad_type: CSADEquipmentType = Field(alias="CSAD-Type")
+    csad_type: CSADEquipmentType | str = Field(alias="CSAD-Type")
     enabled: bool = Field(alias="Enabled")
 
 
