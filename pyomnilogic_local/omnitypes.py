@@ -417,6 +417,12 @@ class FilterSpeedPresets(StrEnum, PrettyEnum):
     HIGH = auto()
 
 
+# Groups
+class GroupState(IntEnum, PrettyEnum):
+    OFF = 0
+    ON = 1
+
+
 # Heaters
 class HeaterState(IntEnum, PrettyEnum):
     OFF = 0

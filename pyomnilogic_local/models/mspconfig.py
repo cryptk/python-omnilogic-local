@@ -317,6 +317,12 @@ class MSPColorLogicLight(OmniBase):
                 self.effects = list(ZodiacShow)
 
 
+class MSPGroup(OmniBase):
+    omni_type: OmniType = OmniType.GROUP
+
+    icon_id: int = Field(alias="Icon-Id")
+
+
 class MSPBoW(OmniBase):
     _sub_devices = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
     _YES_NO_FIELDS = {"supports_spillover"}
@@ -379,6 +385,7 @@ type MSPEquipmentType = (
     | MSPCSAD
     | MSPCSADEquip
     | MSPColorLogicLight
+    | MSPGroup
 )
 
 type MSPConfigType = MSPSystem | MSPEquipmentType
@@ -389,6 +396,18 @@ class MSPConfig(BaseModel):
 
     system: MSPSystem = Field(alias="System")
     backyard: MSPBackyard = Field(alias="Backyard")
+    groups: list[MSPGroup] | None = None
+
+    def __init__(self, **data: Any) -> None:
+        # Extract groups from the Groups container if present
+        group_data: dict[Any, Any] | None = None
+        if (groups_data := data.get("Groups", None)) is not None:
+            group_data = groups_data.get("Group", None)
+
+        if group_data is not None:
+            data["groups"] = [MSPGroup.model_validate(g) for g in group_data]
+
+        super().__init__(**data)
 
     @staticmethod
     def load_xml(xml: str) -> MSPConfig:
@@ -402,7 +421,7 @@ class MSPConfig(BaseModel):
                 OmniType.CL_LIGHT,
                 OmniType.FAVORITES,
                 OmniType.FILTER,
-                OmniType.GROUPS,
+                OmniType.GROUP,
                 OmniType.PUMP,
                 OmniType.RELAY,
                 OmniType.SENSOR,

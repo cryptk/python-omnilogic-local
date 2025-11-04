@@ -1,6 +1,6 @@
 {
   "files.trimTrailingWhitespace": true,
-  "editor.rulers": [140],
+  "editor.rulers": [80, 100, 140],
   // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
   "python.testing.pytestEnabled": true,
   "python.testing.pytestArgs": [

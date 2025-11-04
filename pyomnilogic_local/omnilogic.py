@@ -13,6 +13,7 @@ from pyomnilogic_local.colorlogiclight import ColorLogicLight
 from pyomnilogic_local.csad import CSAD
 from pyomnilogic_local.csad_equip import CSADEquipment
 from pyomnilogic_local.filter import Filter
+from pyomnilogic_local.groups import Group
 from pyomnilogic_local.heater import Heater
 from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models import MSPConfig, Telemetry
@@ -30,6 +31,7 @@ class OmniLogic:
 
     system: System
     backyard: Backyard
+    groups: EquipmentDict[Group]
 
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
@@ -136,6 +138,20 @@ class OmniLogic:
             self.backyard.update(self.mspconfig.backyard, self.telemetry)
         except AttributeError:
             self.backyard = Backyard(self, self.mspconfig.backyard, self.telemetry)
+
+        # Update groups
+        # groups_list: list[Group] = []
+        # if self.mspconfig.groups is not None:
+        #     for group_config in self.mspconfig.groups:
+        #         group_telemetry = self.telemetry.get_telem_by_systemid(group_config.system_id)
+        #         if (group_telemetry := self.telemetry.get_telem_by_systemid(group_config.system_id)) is not None:
+        #             groups_list.append(Group(self, group_config, self.telemetry))
+
+        if self.mspconfig.groups is None:
+            self.groups = EquipmentDict()
+            return
+
+        self.groups = EquipmentDict([Group(self, group_, self.telemetry) for group_ in self.mspconfig.groups])
 
     # Equipment discovery properties
     @property
@@ -261,6 +277,7 @@ class OmniLogic:
         all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
         all_equipment.extend(self.all_csad_equipment.values())
+        all_equipment.extend(self.groups.values())
 
         for equipment in all_equipment:
             if equipment.name == name:
@@ -291,6 +308,7 @@ class OmniLogic:
         all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
         all_equipment.extend(self.all_csad_equipment.values())
+        all_equipment.extend(self.groups.values())
 
         for equipment in all_equipment:
             if equipment.system_id == system_id:

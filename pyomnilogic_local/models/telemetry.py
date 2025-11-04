@@ -23,6 +23,7 @@ from ..omnitypes import (
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
+    GroupState,
     HeaterMode,
     HeaterState,
     LightShows,
@@ -244,7 +245,7 @@ class TelemetryGroup(BaseModel):
 
     omni_type: OmniType = OmniType.GROUP
     system_id: int = Field(alias="@systemId")
-    state: int = Field(alias="@groupState")
+    state: GroupState = Field(alias="@groupState")
 
 
 class TelemetryHeater(BaseModel):
