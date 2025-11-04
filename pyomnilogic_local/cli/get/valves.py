@@ -31,6 +31,8 @@ def valves(ctx: click.Context) -> None:
     Valve actuators control physical valves for features like waterfalls, fountains,
     and other water features.
 
+    Valves will also show under the output of `get relays` as they are a type of relay.
+
     Example:
         omnilogic get valves
     """
