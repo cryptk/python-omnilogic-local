@@ -687,3 +687,76 @@ class OmniLogicAPI:
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
         return await self.async_send_message(MessageType.RUN_GROUP_CMD, req_body, False)
+
+    async def async_edit_schedule(
+        self,
+        equipment_id: int,
+        data: int,
+        action_id: int,
+        start_time_hours: int,
+        start_time_minutes: int,
+        end_time_hours: int,
+        end_time_minutes: int,
+        days_active: int,
+        is_enabled: bool,
+        recurring: bool,
+    ) -> None:
+        """Edit an existing schedule on the Omni.
+
+        Args:
+            equipment_id (int): The schedule's system ID (schedule-system-id from MSPConfig), NOT the equipment-id.
+                This identifies which schedule to edit.
+            data (int): The data value for the schedule action (e.g., 50 for 50% speed, 1 for on, 0 for off).
+                Maps to the 'data' field in the schedule and is passed to the action.
+            action_id (int): The action/event ID that will be executed (e.g., 164 for SetUIEquipmentCmd).
+                Maps to the 'event' field in the schedule. Common values:
+                - 164: SetUIEquipmentCmd (turn equipment on/off or set speed)
+                - 308: SetStandAloneLightShow
+                - 311: SetUISpilloverCmd
+            start_time_hours (int): Hour to start the schedule (0-23). Maps to 'start-hour'.
+            start_time_minutes (int): Minute to start the schedule (0-59). Maps to 'start-minute'.
+            end_time_hours (int): Hour to end the schedule (0-23). Maps to 'end-hour'.
+            end_time_minutes (int): Minute to end the schedule (0-59). Maps to 'end-minute'.
+            days_active (int): Bitmask of active days. Maps to 'days-active'.
+                1=Monday, 2=Tuesday, 4=Wednesday, 8=Thursday, 16=Friday, 32=Saturday, 64=Sunday
+                127=All days (1+2+4+8+16+32+64)
+            is_enabled (bool): Whether the schedule is enabled. Maps to 'enabled' (0 or 1).
+            recurring (bool): Whether the schedule repeats. Maps to 'recurring' (0 or 1).
+
+        Returns:
+            None
+
+        Note:
+            The schedule's equipment-id (which equipment is controlled) cannot be changed via this call.
+            Only the schedule parameters (timing, data, enabled state) can be modified.
+        """
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "EditUIScheduleCmd"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="EquipmentID", dataType="int")
+        parameter.text = str(equipment_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Data", dataType="int")
+        parameter.text = str(data)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ActionID", dataType="int")
+        parameter.text = str(action_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="StartTimeHours", dataType="int")
+        parameter.text = str(start_time_hours)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="StartTimeMinutes", dataType="int")
+        parameter.text = str(start_time_minutes)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="EndTimeHours", dataType="int")
+        parameter.text = str(end_time_hours)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="EndTimeMinutes", dataType="int")
+        parameter.text = str(end_time_minutes)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="DaysActive", dataType="int")
+        parameter.text = str(days_active)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="IsEnabled", dataType="bool")
+        parameter.text = str(int(is_enabled))
+        parameter = ET.SubElement(parameters_element, "Parameter", name="Recurring", dataType="bool")
+        parameter.text = str(int(recurring))
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        return await self.async_send_message(MessageType.EDIT_SCHEDULE, req_body, False)

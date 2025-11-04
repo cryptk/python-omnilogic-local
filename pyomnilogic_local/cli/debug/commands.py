@@ -136,3 +136,66 @@ def parse_pcap(ctx: click.Context, pcap_file: Path) -> None:
             click.echo("Decoded message content:")
             click.echo(decoded_content)
             click.echo()  # Extra newline for readability
+
+
+@debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("equip_id", type=int)
+@click.argument("is_on")
+@click.pass_context
+def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) -> None:
+    """Control equipment by turning it on/off or setting a value.
+
+    BOW_ID: The Body of Water (pool/spa) system ID
+    EQUIP_ID: The equipment system ID to control
+    IS_ON: Equipment state - can be:
+        - Boolean: true/false, on/off, 1/0
+        - Integer: 0-100 for variable speed equipment (0=off, 1-100=speed percentage)
+
+    For most equipment (relays, lights), use true/false or 1/0.
+    For variable speed pumps/filters, use 0-100 to set speed percentage.
+
+    Examples:
+        # Turn on a relay
+        omnilogic --host 192.168.1.100 debug set-equipment 7 10 true
+
+        # Turn off a light
+        omnilogic --host 192.168.1.100 debug set-equipment 7 15 false
+
+        # Set pump to 50% speed
+        omnilogic --host 192.168.1.100 debug set-equipment 7 8 50
+
+        # Turn off pump (0% speed)
+        omnilogic --host 192.168.1.100 debug set-equipment 7 8 0
+    """
+    ensure_connection(ctx)
+    omni: OmniLogicAPI = ctx.obj["OMNI"]
+
+    # Parse is_on parameter - can be bool-like string or integer
+    is_on_lower = is_on.lower()
+    if is_on_lower in ("true", "on", "yes", "1"):
+        is_on_value: int | bool = True
+    elif is_on_lower in ("false", "off", "no", "0"):
+        is_on_value = False
+    else:
+        # Try to parse as integer for variable speed equipment
+        try:
+            is_on_value = int(is_on)
+            if not 0 <= is_on_value <= 100:
+                click.echo(f"Error: Integer value must be between 0-100, got {is_on_value}", err=True)
+                raise click.Abort()
+        except ValueError as exc:
+            click.echo(f"Error: Invalid value '{is_on}'. Use true/false, on/off, or 0-100 for speed.", err=True)
+            raise click.Abort() from exc
+
+    # Execute the command
+    try:
+        asyncio.run(omni.async_set_equipment(bow_id, equip_id, is_on_value))
+        if isinstance(is_on_value, bool):
+            state = "ON" if is_on_value else "OFF"
+            click.echo(f"Successfully set equipment {equip_id} in BOW {bow_id} to {state}")
+        else:
+            click.echo(f"Successfully set equipment {equip_id} in BOW {bow_id} to {is_on_value}%")
+    except Exception as e:
+        click.echo(f"Error setting equipment: {e}", err=True)
+        raise click.Abort()
