@@ -19,6 +19,7 @@ from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models import MSPConfig, Telemetry
 from pyomnilogic_local.pump import Pump
 from pyomnilogic_local.relay import Relay
+from pyomnilogic_local.schedule import Schedule
 from pyomnilogic_local.sensor import Sensor
 from pyomnilogic_local.system import System
 
@@ -32,6 +33,7 @@ class OmniLogic:
     system: System
     backyard: Backyard
     groups: EquipmentDict[Group]
+    schedules: EquipmentDict[Schedule]
 
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
@@ -140,18 +142,16 @@ class OmniLogic:
             self.backyard = Backyard(self, self.mspconfig.backyard, self.telemetry)
 
         # Update groups
-        # groups_list: list[Group] = []
-        # if self.mspconfig.groups is not None:
-        #     for group_config in self.mspconfig.groups:
-        #         group_telemetry = self.telemetry.get_telem_by_systemid(group_config.system_id)
-        #         if (group_telemetry := self.telemetry.get_telem_by_systemid(group_config.system_id)) is not None:
-        #             groups_list.append(Group(self, group_config, self.telemetry))
-
         if self.mspconfig.groups is None:
             self.groups = EquipmentDict()
-            return
+        else:
+            self.groups = EquipmentDict([Group(self, group_, self.telemetry) for group_ in self.mspconfig.groups])
 
-        self.groups = EquipmentDict([Group(self, group_, self.telemetry) for group_ in self.mspconfig.groups])
+        # Update schedules
+        if self.mspconfig.schedules is None:
+            self.schedules = EquipmentDict()
+        else:
+            self.schedules = EquipmentDict([Schedule(self, schedule_, self.telemetry) for schedule_ in self.mspconfig.schedules])
 
     # Equipment discovery properties
     @property
@@ -309,6 +309,7 @@ class OmniLogic:
         all_equipment.extend(self.all_csads.values())
         all_equipment.extend(self.all_csad_equipment.values())
         all_equipment.extend(self.groups.values())
+        all_equipment.extend(self.schedules.values())
 
         for equipment in all_equipment:
             if equipment.system_id == system_id:

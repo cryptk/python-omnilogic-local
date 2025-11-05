@@ -14,6 +14,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationError,
+    computed_field,
     model_validator,
 )
 from xmltodict import parse as xml_parse
@@ -33,12 +34,14 @@ from ..omnitypes import (
     FilterType,
     HeaterType,
     LightShows,
+    MessageType,
     OmniType,
     PentairShow,
     PumpFunction,
     PumpType,
     RelayFunction,
     RelayType,
+    ScheduleDaysActive,
     SensorType,
     SensorUnits,
     ZodiacShow,
@@ -364,10 +367,36 @@ class MSPBackyard(OmniBase):
 class MSPSchedule(OmniBase):
     omni_type: OmniType = OmniType.SCHEDULE
 
-    system_id: int = Field(alias="schedule-system-id")
     bow_id: int = Field(alias="bow-system-id")  # pyright: ignore[reportGeneralTypeIssues]
     equipment_id: int = Field(alias="equipment-id")
+    system_id: int = Field(alias="schedule-system-id")
+    event: MessageType = Field(alias="event")
+    data: int = Field(alias="data")
     enabled: bool = Field()
+    start_minute: int = Field(alias="start-minute")
+    start_hour: int = Field(alias="start-hour")
+    end_minute: int = Field(alias="end-minute")
+    end_hour: int = Field(alias="end-hour")
+    days_active_raw: int = Field(alias="days-active")
+    recurring: bool = Field(alias="recurring")
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def days_active(self) -> list[str]:
+        """Decode days_active_raw bitmask into a list of active day names.
+
+        Returns:
+            List of active day names as strings
+
+        Example:
+            >>> schedule.days_active
+            ['Monday', 'Wednesday', 'Friday']
+        """
+
+        flags = ScheduleDaysActive(self.days_active_raw)
+        final_flags = [flag.name for flag in ScheduleDaysActive if flags & flag and flag.name is not None]
+
+        return final_flags
 
 
 type MSPEquipmentType = (
@@ -397,6 +426,7 @@ class MSPConfig(BaseModel):
     system: MSPSystem = Field(alias="System")
     backyard: MSPBackyard = Field(alias="Backyard")
     groups: list[MSPGroup] | None = None
+    schedules: list[MSPSchedule] | None = None
 
     def __init__(self, **data: Any) -> None:
         # Extract groups from the Groups container if present
@@ -406,6 +436,14 @@ class MSPConfig(BaseModel):
 
         if group_data is not None:
             data["groups"] = [MSPGroup.model_validate(g) for g in group_data]
+
+        # Extract schedules from the Schedules container if present
+        schedule_data: dict[Any, Any] | None = None
+        if (schedules_data := data.get("Schedules", None)) is not None:
+            schedule_data = schedules_data.get("sche", None)
+
+        if schedule_data is not None:
+            data["schedules"] = [MSPSchedule.model_validate(s) for s in schedule_data]
 
         super().__init__(**data)
 

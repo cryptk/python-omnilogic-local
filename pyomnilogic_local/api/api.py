@@ -705,9 +705,7 @@ class OmniLogicAPI:
 
         Args:
             equipment_id (int): The schedule's system ID (schedule-system-id from MSPConfig), NOT the equipment-id.
-                This identifies which schedule to edit.
             data (int): The data value for the schedule action (e.g., 50 for 50% speed, 1 for on, 0 for off).
-                Maps to the 'data' field in the schedule and is passed to the action.
             action_id (int): The action/event ID that will be executed (e.g., 164 for SetUIEquipmentCmd).
                 Maps to the 'event' field in the schedule. Common values:
                 - 164: SetUIEquipmentCmd (turn equipment on/off or set speed)

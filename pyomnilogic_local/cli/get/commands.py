@@ -14,6 +14,7 @@ from pyomnilogic_local.cli.get.heaters import heaters
 from pyomnilogic_local.cli.get.lights import lights
 from pyomnilogic_local.cli.get.pumps import pumps
 from pyomnilogic_local.cli.get.relays import relays
+from pyomnilogic_local.cli.get.schedules import schedules
 from pyomnilogic_local.cli.get.sensors import sensors
 from pyomnilogic_local.cli.get.valves import valves
 
@@ -42,5 +43,6 @@ get.add_command(heaters)
 get.add_command(lights)
 get.add_command(pumps)
 get.add_command(relays)
+get.add_command(schedules)
 get.add_command(sensors)
 get.add_command(valves)

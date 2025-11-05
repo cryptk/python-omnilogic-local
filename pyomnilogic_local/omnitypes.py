@@ -1,10 +1,10 @@
-from enum import Enum, Flag, IntEnum, StrEnum, auto
+from enum import Flag, IntEnum, StrEnum, auto
 
 from .util import PrettyEnum
 
 
 # OmniAPI Enums
-class MessageType(Enum):
+class MessageType(IntEnum, PrettyEnum):
     XML_ACK = 0000
     REQUEST_CONFIGURATION = 1
     SET_FILTER_SPEED = 9
@@ -555,3 +555,14 @@ class SensorUnits(StrEnum, PrettyEnum):
 class ValveActuatorState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
+
+
+# Schedules
+class ScheduleDaysActive(Flag, PrettyEnum):
+    MONDAY = 1 << 0
+    TUESDAY = 1 << 1
+    WEDNESDAY = 1 << 2
+    THURSDAY = 1 << 3
+    FRIDAY = 1 << 4
+    SATURDAY = 1 << 5
+    SUNDAY = 1 << 6
