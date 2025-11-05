@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -101,7 +103,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
     telemetry: TelemetryVirtualHeater
     heater_equipment: EquipmentDict[HeaterEquipment] = EquipmentDict()
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPVirtualHeater, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPVirtualHeater, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     def _update_equipment(self, mspconfig: MSPVirtualHeater, telemetry: Telemetry | None) -> None:

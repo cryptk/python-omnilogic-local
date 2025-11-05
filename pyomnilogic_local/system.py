@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyomnilogic_local.models.mspconfig import MSPSystem
 
 

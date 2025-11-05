@@ -5,6 +5,8 @@ and reconstruct OmniLogic protocol messages, including multi-part message
 reassembly and payload decompression.
 """
 
+from __future__ import annotations
+
 import xml.etree.ElementTree as ET
 import zlib
 from collections import defaultdict

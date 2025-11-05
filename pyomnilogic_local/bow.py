@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -135,7 +137,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     chlorinator: Chlorinator | None = None
     csads: EquipmentDict[CSAD] = EquipmentDict()
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPBoW, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     def __repr__(self) -> str:

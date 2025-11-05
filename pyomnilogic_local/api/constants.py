@@ -1,6 +1,8 @@
-"""Constants for the OmniLogic protocol implementation."""
+"""Constants for the OmniLogic API."""
 
-# Protocol Message Constants
+from __future__ import annotations
+
+# Protocol Configuration
 PROTOCOL_HEADER_SIZE = 24  # Size of the message header in bytes
 PROTOCOL_HEADER_FORMAT = "!LQ4sLBBBB"  # struct format for header
 PROTOCOL_VERSION = "1.19"  # Current protocol version

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class OmniLogicException(Exception):
     """Base exception for all OmniLogic errors."""
 

@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import click
 
 from pyomnilogic_local.cli.debug import commands as debug
 from pyomnilogic_local.cli.get import commands as get
 
 
-@click.group(invoke_without_command=True)
+@click.group()
 @click.pass_context
 @click.option("--host", default="127.0.0.1", help="Hostname or IP address of OmniLogic system (default: 127.0.0.1)")
 def entrypoint(ctx: click.Context, host: str) -> None:

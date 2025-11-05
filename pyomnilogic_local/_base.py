@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
@@ -58,9 +60,9 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
     telemetry: TelemetryT
 
     # Use a forward reference for the type hint to avoid issues with self-referential generics
-    child_equipment: dict[int, "OmniEquipment[MSPConfigT, TelemetryT]"]
+    child_equipment: dict[int, OmniEquipment[MSPConfigT, TelemetryT]]
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPConfigT, telemetry: Telemetry | None) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPConfigT, telemetry: Telemetry | None) -> None:
         """Initialize the equipment with configuration and telemetry data.
 
         Args:
@@ -73,7 +75,7 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         self.update(mspconfig, telemetry)
 
     @property
-    def _api(self) -> "OmniLogicAPI":
+    def _api(self) -> OmniLogicAPI:
         """Access the OmniLogic API through the parent controller."""
         return self._omni._api  # pylint: disable=protected-access
 

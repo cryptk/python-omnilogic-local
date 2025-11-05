@@ -1,5 +1,7 @@
 """Custom collection types for OmniLogic equipment management."""
 
+from __future__ import annotations
+
 import logging
 from collections import Counter
 from collections.abc import Iterator

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import dirties_state
 from pyomnilogic_local.models.mspconfig import MSPFilter

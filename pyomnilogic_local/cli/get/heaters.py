@@ -1,6 +1,8 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
+from __future__ import annotations
+
 from typing import Any
 
 import click

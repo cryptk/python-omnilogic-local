@@ -1,5 +1,7 @@
 """Decorators for equipment control methods."""
 
+from __future__ import annotations
+
 import functools
 import logging
 from collections.abc import Callable

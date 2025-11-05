@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -71,7 +73,7 @@ class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
     mspconfig: MSPRelay
     telemetry: TelemetryRelay
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPRelay, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPRelay, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -42,7 +44,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
     telemetry: TelemetryChlorinator
     chlorinator_equipment: EquipmentDict[ChlorinatorEquipment] = EquipmentDict()
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPChlorinator, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPChlorinator, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     def _update_equipment(self, mspconfig: MSPChlorinator, telemetry: Telemetry | None) -> None:

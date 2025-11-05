@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -99,7 +101,7 @@ class Backyard(OmniEquipment[MSPBackyard, TelemetryBackyard]):
     relays: EquipmentDict[Relay] = EquipmentDict()
     sensors: EquipmentDict[Sensor] = EquipmentDict()
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPBackyard, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPBackyard, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

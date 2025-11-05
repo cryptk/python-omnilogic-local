@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -80,7 +82,7 @@ class Sensor(OmniEquipment[MSPSensor, None]):
 
     mspconfig: MSPSensor
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPSensor, telemetry: Telemetry | None) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPSensor, telemetry: Telemetry | None) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

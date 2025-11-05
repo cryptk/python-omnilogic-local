@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -68,7 +70,7 @@ class Group(OmniEquipment[MSPGroup, TelemetryGroup]):
     mspconfig: MSPGroup
     telemetry: TelemetryGroup
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPGroup, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPGroup, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

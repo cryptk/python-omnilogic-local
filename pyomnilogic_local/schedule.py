@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 from pyomnilogic_local._base import OmniEquipment
@@ -67,7 +69,7 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
     mspconfig: MSPSchedule
     telemetry: None
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPSchedule, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPSchedule, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

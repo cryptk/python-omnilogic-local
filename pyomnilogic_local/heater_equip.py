@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -82,7 +84,7 @@ class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
     mspconfig: MSPHeaterEquip
     telemetry: TelemetryHeater
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPHeaterEquip, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPHeaterEquip, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

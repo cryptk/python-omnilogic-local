@@ -1,5 +1,7 @@
 """CSAD equipment classes for Omnilogic."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal
 
 from pyomnilogic_local._base import OmniEquipment
@@ -56,7 +58,7 @@ class CSADEquipment(OmniEquipment[MSPCSADEquip, None]):
     mspconfig: MSPCSADEquip
     telemetry: None
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPCSADEquip, telemetry: Telemetry | None) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPCSADEquip, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

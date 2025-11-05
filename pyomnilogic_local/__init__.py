@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .collections import EffectsCollection, LightEffectsCollection
 from .omnilogic import OmniLogic
 from .util import (

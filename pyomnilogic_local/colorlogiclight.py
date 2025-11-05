@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -118,7 +120,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     mspconfig: MSPColorLogicLight
     telemetry: TelemetryColorLogicLight
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPColorLogicLight, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPColorLogicLight, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     @property

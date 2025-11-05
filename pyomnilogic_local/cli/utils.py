@@ -4,6 +4,8 @@ This module provides helper functions for CLI commands, primarily for
 accessing controller data within the Click context.
 """
 
+from __future__ import annotations
+
 import asyncio
 from typing import Literal, overload
 

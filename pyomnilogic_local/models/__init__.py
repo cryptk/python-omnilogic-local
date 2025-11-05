@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .filter_diagnostics import FilterDiagnostics
 from .mspconfig import MSPConfig, MSPConfigType, MSPEquipmentType
 from .telemetry import Telemetry, TelemetryType

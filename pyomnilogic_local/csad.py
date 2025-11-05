@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
@@ -41,7 +43,7 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
     telemetry: TelemetryCSAD
     csad_equipment: EquipmentDict[CSADEquipment] = EquipmentDict()
 
-    def __init__(self, omni: "OmniLogic", mspconfig: MSPCSAD, telemetry: Telemetry) -> None:
+    def __init__(self, omni: OmniLogic, mspconfig: MSPCSAD, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
 
     def _update_equipment(self, mspconfig: MSPCSAD, telemetry: Telemetry | None) -> None:
