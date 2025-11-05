@@ -128,7 +128,6 @@ class OmniLogic:
 
             # Update MSPConfig if needed
             if update_mspconfig:
-                _LOGGER.warning("MSPConfig data is outdated or changed; refreshing configuration data")
                 self.mspconfig = await self._api.async_get_mspconfig()
                 self._mspconfig_last_updated = time.time()
                 self._mspconfig_checksum = self.telemetry.backyard.config_checksum
