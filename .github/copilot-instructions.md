@@ -186,7 +186,18 @@ def _validate_temperature(temperature: int, param_name: str = "temperature") -> 
 - Provide clear error messages with parameter names and values
 
 ### Async Patterns
-- **Prefix async methods**: `async_get_telemetry`, `async_set_heater`, etc.
+
+#### Async Method Naming
+- **API layer**: All async methods MUST use `async_` prefix
+  - Example: `async_send_message`, `async_get_telemetry`, `async_set_equipment`, `async_set_heater`
+  - Rationale: Clear indication that these are async protocol/network operations
+- **Equipment layer**: User-facing control methods do NOT use `async_` prefix
+  - Example: `turn_on`, `turn_off`, `set_speed`, `set_temperature`, `set_show`
+  - Rationale: Cleaner, more intuitive API for end users (they already use `await`)
+- **Internal utilities**: Use `async_` prefix for non-user-facing async functions
+  - Example: `async_get_filter_diagnostics` in CLI utils
+
+#### Async Best Practices
 - Use `asyncio.get_running_loop()` for low-level operations
 - Properly manage transport lifecycle (create and close in try/finally)
 - Equipment control methods are async and use `@control_method` decorator
