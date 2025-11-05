@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
 from pyomnilogic_local.collections import EquipmentDict
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPChlorinator
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryChlorinator
 from pyomnilogic_local.omnitypes import (
@@ -359,7 +359,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         return self.is_authenticated and not self.has_error
 
     # Control methods
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """Turn the chlorinator on (enable it).
 
@@ -370,7 +370,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             raise OmniEquipmentNotInitializedError("Cannot turn on chlorinator: bow_id is None")
         await self._api.async_set_chlorinator_enable(self.bow_id, True)
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
         """Turn the chlorinator off (disable it).
 
@@ -381,7 +381,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             raise OmniEquipmentNotInitializedError("Cannot turn off chlorinator: bow_id is None")
         await self._api.async_set_chlorinator_enable(self.bow_id, False)
 
-    @dirties_state()
+    @control_method
     async def set_timed_percent(self, percent: int) -> None:
         """Set the timed percent for chlorine generation.
 

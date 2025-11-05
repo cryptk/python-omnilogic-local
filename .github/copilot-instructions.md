@@ -189,7 +189,7 @@ def _validate_temperature(temperature: int, param_name: str = "temperature") -> 
 - **Prefix async methods**: `async_get_telemetry`, `async_set_heater`, etc.
 - Use `asyncio.get_running_loop()` for low-level operations
 - Properly manage transport lifecycle (create and close in try/finally)
-- Equipment control methods are async and use `@dirties_state` decorator
+- Equipment control methods are async and use `@control_method` decorator
 
 ## Architectural Patterns
 
@@ -202,16 +202,19 @@ All equipment classes inherit from `OmniEquipment[MSPConfigT, TelemetryT]`:
 - Store child equipment in `self.child_equipment: dict[int, OmniEquipment]`
 
 ### State Management
-- Use `@dirties_state(mspconfig=False, telemetry=True)` decorator on control methods
-- Marks state as needing refresh after commands
-- Default: marks telemetry dirty, not mspconfig
+- Use `@control_method` decorator on all equipment control methods
+- Decorator automatically checks `is_ready` before execution
+- Raises `OmniEquipmentNotReadyError` with descriptive message if not ready
+- Marks telemetry as dirty after successful execution
 - Users call `await omni.refresh()` to update state
 
 Example:
 ```python
-@dirties_state(telemetry=True)
+@control_method
 async def turn_on(self) -> None:
-    """Turn on equipment and mark telemetry as needing refresh."""
+    """Turn on equipment (readiness check and state marking handled by decorator)."""
+    if self.bow_id is None or self.system_id is None:
+        raise OmniEquipmentNotInitializedError("Cannot turn on: bow_id or system_id is None")
     await self._api.async_set_equipment(...)
 ```
 
@@ -338,11 +341,16 @@ API methods follow consistent patterns:
 
 ### Equipment Control Methods
 Equipment control methods:
-1. Check `is_ready` property before executing
-2. Raise `OmniEquipmentNotReadyError` if not ready
-3. Use `@dirties_state` decorator
+1. Use `@control_method` decorator (handles readiness check and state dirtying)
+2. Check for required attributes (bow_id, system_id) and raise `OmniEquipmentNotInitializedError` if None
+3. Validate input parameters (temperature, speed, etc.)
 4. Call appropriate API method
 5. Return `None` (state updated via refresh)
+
+The `@control_method` decorator automatically:
+- Checks `self.is_ready` before execution
+- Raises `OmniEquipmentNotReadyError` if not ready (auto-generated message from method name)
+- Marks telemetry as dirty after successful execution
 
 ## Version Control & Semantic Versioning
 
@@ -393,11 +401,16 @@ class NewEquipment(OmniEquipment[MSPNewEquipment, TelemetryNewEquipment]):
         """Equipment-specific property."""
         return self.mspconfig.some_field
 
-    @dirties_state(telemetry=True)
+    @control_method
     async def control_method(self) -> None:
-        """Control method with state dirtying."""
-        if not self.is_ready:
-            raise OmniEquipmentNotReadyError(...)
+        """Control method (readiness and state handled by decorator).
+
+        Raises:
+            OmniEquipmentNotInitializedError: If required IDs are None.
+            OmniEquipmentNotReadyError: If equipment is not ready (handled by decorator).
+        """
+        if self.bow_id is None or self.system_id is None:
+            raise OmniEquipmentNotInitializedError("Cannot control: bow_id or system_id is None")
         await self._api.async_some_command(...)
 ```
 

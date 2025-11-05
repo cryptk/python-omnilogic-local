@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.collections import EquipmentDict
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models.mspconfig import MSPVirtualHeater
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryVirtualHeater
@@ -185,31 +185,33 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         """Returns whether the heater is currently enabled (from telemetry)."""
         return self.telemetry.enabled
 
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """
         Turns the heater on (enables it).
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
         """
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn on heater: bow_id or system_id is None")
         await self._api.async_set_heater_enable(self.bow_id, self.system_id, True)
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
         """
         Turns the heater off (disables it).
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
         """
         if self.bow_id is None or self.system_id is None:
             raise OmniEquipmentNotInitializedError("Cannot turn off heater: bow_id or system_id is None")
         await self._api.async_set_heater_enable(self.bow_id, self.system_id, False)
 
-    @dirties_state()
+    @control_method
     async def set_temperature(self, temperature: int) -> None:
         """
         Sets the target temperature for the heater.
@@ -220,6 +222,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
             ValueError: If temperature is outside the valid range.
 
         Note:
@@ -237,7 +240,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         # Always use Fahrenheit as that's what the OmniLogic system uses internally
         await self._api.async_set_heater(self.bow_id, self.system_id, temperature)
 
-    @dirties_state()
+    @control_method
     async def set_solar_temperature(self, temperature: int) -> None:
         """
         Sets the solar heater set point.
@@ -248,6 +251,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
             ValueError: If temperature is outside the valid range.
 
         Note:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPRelay
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryRelay
 from pyomnilogic_local.omnitypes import RelayFunction, RelayState, RelayType, RelayWhyOn
@@ -101,7 +101,7 @@ class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
         """Returns whether the relay is currently on."""
         return self.state == RelayState.ON
 
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """
         Turns the relay on.
@@ -113,7 +113,7 @@ class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
             raise OmniEquipmentNotInitializedError("Cannot turn on relay: bow_id or system_id is None")
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
         """
         Turns the relay off.

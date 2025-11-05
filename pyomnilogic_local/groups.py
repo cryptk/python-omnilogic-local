@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPGroup
 from pyomnilogic_local.models.telemetry import Telemetry, TelemetryGroup
 from pyomnilogic_local.omnitypes import GroupState
@@ -88,7 +88,7 @@ class Group(OmniEquipment[MSPGroup, TelemetryGroup]):
         """Returns whether the group is currently active."""
         return self.state == GroupState.ON
 
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """
         Activates the group, turning on all equipment assigned to it.
@@ -100,7 +100,7 @@ class Group(OmniEquipment[MSPGroup, TelemetryGroup]):
             raise OmniEquipmentNotInitializedError("Cannot turn on group: system_id is None")
         await self._api.async_set_group_enable(self.system_id, True)
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
         """
         Deactivates the group, turning off all equipment assigned to it.

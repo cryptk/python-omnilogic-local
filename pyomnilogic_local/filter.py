@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPFilter
 from pyomnilogic_local.models.telemetry import TelemetryFilter
 from pyomnilogic_local.omnitypes import FilterSpeedPresets, FilterState
@@ -197,11 +197,14 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         return self.state in (FilterState.OFF, FilterState.ON)
 
     # Control methods
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """Turn the filter on.
 
         This will turn on the filter at its last used speed setting.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
@@ -213,9 +216,13 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             is_on=self.last_speed,
         )
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
-        """Turn the filter off."""
+        """Turn the filter off.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+        """
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
             raise OmniEquipmentNotInitializedError(msg)
@@ -226,12 +233,16 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             is_on=False,
         )
 
-    @dirties_state()
+    @control_method
     async def run_preset_speed(self, speed: FilterSpeedPresets) -> None:
         """Run the filter at a preset speed.
 
         Args:
             speed: The preset speed to use (LOW, MEDIUM, or HIGH)
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If an invalid speed preset is provided.
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Filter bow_id and system_id must be set"
@@ -255,7 +266,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             is_on=speed_value,
         )
 
-    @dirties_state()
+    @control_method
     async def set_speed(self, speed: int) -> None:
         """Set the filter to a specific speed.
 

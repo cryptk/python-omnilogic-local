@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPSchedule
 from pyomnilogic_local.models.telemetry import Telemetry
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
@@ -145,7 +145,7 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
         """
         return self._omni.get_equipment_by_id(self.equipment_id)
 
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """
         Enable the schedule.
@@ -172,7 +172,7 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
             recurring=self.recurring,
         )
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
         """
         Disable the schedule.

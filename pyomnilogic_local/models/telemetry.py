@@ -63,7 +63,7 @@ class TelemetryBackyard(BaseModel):
     air_temp: int | None = Field(alias="@airTemp")
     state: BackyardState = Field(alias="@state")
     # The below two fields are only available for telemetry with a status_version >= 11
-    config_checksum: int | None = Field(alias="@ConfigChksum", default=None)
+    config_checksum: int = Field(alias="@ConfigChksum", default=0)
     msp_version: str | None = Field(alias="@mspVersion", default=None)
 
 

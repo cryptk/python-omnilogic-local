@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pyomnilogic_local._base import OmniEquipment
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPPump
 from pyomnilogic_local.models.telemetry import TelemetryPump
 from pyomnilogic_local.omnitypes import PumpSpeedPresets, PumpState
@@ -179,11 +179,14 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
         return self.state in (PumpState.OFF, PumpState.ON)
 
     # Control methods
-    @dirties_state()
+    @control_method
     async def turn_on(self) -> None:
         """Turn the pump on.
 
         This will turn on the pump at its last used speed setting.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Pump bow_id and system_id must be set"
@@ -195,9 +198,13 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             is_on=True,
         )
 
-    @dirties_state()
+    @control_method
     async def turn_off(self) -> None:
-        """Turn the pump off."""
+        """Turn the pump off.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+        """
         if self.bow_id is None or self.system_id is None:
             msg = "Pump bow_id and system_id must be set"
             raise OmniEquipmentNotInitializedError(msg)
@@ -208,7 +215,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             is_on=False,
         )
 
-    @dirties_state()
+    @control_method
     async def run_preset_speed(self, speed: PumpSpeedPresets) -> None:
         """Run the pump at a preset speed.
 
@@ -241,7 +248,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             is_on=speed_value,
         )
 
-    @dirties_state()
+    @control_method
     async def set_speed(self, speed: int) -> None:
         """Set the pump to a specific speed.
 

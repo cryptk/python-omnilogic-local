@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.chlorinator import Chlorinator
 from pyomnilogic_local.collections import EquipmentDict
-from pyomnilogic_local.colorlogiclight import _LOGGER, ColorLogicLight
+from pyomnilogic_local.colorlogiclight import ColorLogicLight
 from pyomnilogic_local.csad import CSAD
-from pyomnilogic_local.decorators import dirties_state
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.filter import Filter
 from pyomnilogic_local.heater import Heater
 from pyomnilogic_local.models.mspconfig import MSPBoW
@@ -20,6 +21,8 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
     from pyomnilogic_local.omnilogic import OmniLogic
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
@@ -197,7 +200,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         return self.telemetry.flow > 0
 
     # Control methods
-    @dirties_state()
+    @control_method
     async def set_spillover(self, speed: int) -> None:
         """Set the spillover speed for this body of water.
 
@@ -224,7 +227,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             speed=speed,
         )
 
-    @dirties_state()
+    @control_method
     async def turn_on_spillover(self) -> None:
         """Turn on spillover at maximum speed (100%).
 
@@ -236,7 +239,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         """
         await self.set_spillover(100)
 
-    @dirties_state()
+    @control_method
     async def turn_off_spillover(self) -> None:
         """Turn off spillover.
 

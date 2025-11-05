@@ -39,9 +39,13 @@ class OmniLogic:
 
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
-    _mspconfig_dirty: bool = True
+    _mspconfig_checksum: int = 0
     _telemetry_dirty: bool = True
     _refresh_lock: asyncio.Lock
+    # This is the minimum supported MSP version for full functionality
+    # we just string match the value from the start of the string
+    _min_mspversion: str = "R05"
+    _warned_mspversion: bool = False
 
     def __init__(self, host: str, port: int = 10444) -> None:
         self.host = host
@@ -74,8 +78,6 @@ class OmniLogic:
     async def refresh(
         self,
         *,
-        mspconfig: bool = True,
-        telemetry: bool = True,
         if_dirty: bool = True,
         if_older_than: float = 10.0,
         force: bool = False,
@@ -92,36 +94,44 @@ class OmniLogic:
         async with self._refresh_lock:
             current_time = time.time()
 
-            # Determine if mspconfig needs updating
-            update_mspconfig = False
-            if mspconfig:
-                if force:
-                    update_mspconfig = True
-                elif if_dirty and self._mspconfig_dirty:
-                    update_mspconfig = True
-                elif (current_time - self._mspconfig_last_updated) > if_older_than:
-                    update_mspconfig = True
-
             # Determine if telemetry needs updating
             update_telemetry = False
-            if telemetry:
-                if force:
-                    update_telemetry = True
-                elif if_dirty and self._telemetry_dirty:
-                    update_telemetry = True
-                elif (current_time - self._telemetry_last_updated) > if_older_than:
-                    update_telemetry = True
+            if force:
+                update_telemetry = True
+            elif if_dirty and self._telemetry_dirty:
+                update_telemetry = True
+            elif (current_time - self._telemetry_last_updated) > if_older_than:
+                update_telemetry = True
 
-            # Perform the updates
-            if update_mspconfig:
-                self.mspconfig = await self._api.async_get_mspconfig()
-                self._mspconfig_last_updated = time.time()
-                self._mspconfig_dirty = False
-
+            # Update telemetry if needed
             if update_telemetry:
                 self.telemetry = await self._api.async_get_telemetry()
                 self._telemetry_last_updated = time.time()
                 self._telemetry_dirty = False
+
+            # Determine if MSPConfig needs updating
+            update_mspconfig = False
+            if force:
+                update_mspconfig = True
+            if self.telemetry.backyard.config_checksum != self._mspconfig_checksum:
+                update_mspconfig = True
+
+            if self.telemetry.backyard.msp_version is not None:
+                if not self._warned_mspversion and not self.telemetry.backyard.msp_version.startswith(self._min_mspversion):
+                    _LOGGER.warning(
+                        "Detected OmniLogic MSP version %s, which is below the minimum supported version %s. "
+                        "Some features may not work correctly. Please consider updating your OmniLogic controller firmware.",
+                        self.telemetry.backyard.msp_version,
+                        self._min_mspversion,
+                    )
+                    self._warned_mspversion = True
+
+            # Update MSPConfig if needed
+            if update_mspconfig:
+                _LOGGER.warning("MSPConfig data is outdated or changed; refreshing configuration data")
+                self.mspconfig = await self._api.async_get_mspconfig()
+                self._mspconfig_last_updated = time.time()
+                self._mspconfig_checksum = self.telemetry.backyard.config_checksum
 
             if update_mspconfig or update_telemetry:
                 self._update_equipment()
