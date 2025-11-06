@@ -381,6 +381,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-xml"
+version = "2.18.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5e/64/cd62cbbba095d69fe601c8d6a1924988907eb5845b397a124fb49e0e5e44/pydantic_xml-2.18.0.tar.gz", hash = "sha256:e6838c9247de2ffe28127581de3cc360bc7176abe5fd87751dbafdd966416749", size = 26168, upload-time = "2025-10-10T20:12:43.251Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/cd/6a9174b5a432ef4f49e271418104b62a0da2881cc6dfc6b73dd20498931e/pydantic_xml-2.18.0-py3-none-any.whl", hash = "sha256:9b2412c8c84242223979e9274ade1d3566028cf6a9b1cdb6389384d2db5292c0", size = 42484, upload-time = "2025-10-10T20:12:42.258Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -470,6 +483,7 @@ source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "pydantic" },
+    { name = "pydantic-xml" },
     { name = "xmltodict" },
 ]
 
@@ -493,6 +507,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.0.0,<8.4.0" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
+    { name = "pydantic-xml", specifier = ">=2.18.0" },
     { name = "scapy", marker = "extra == 'cli'", specifier = ">=2.6.1,<3.0.0" },
     { name = "xmltodict", specifier = ">=1.0.2,<2.0.0" },
 ]

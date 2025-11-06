@@ -123,9 +123,9 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
 
     # Expose Telemetry attributes
     @property
-    def status_raw(self) -> int:
+    def status(self) -> CSADStatus:
         """Raw status value from telemetry."""
-        return self.telemetry.status_raw
+        return self.telemetry.status
 
     @property
     def current_ph(self) -> float:
@@ -188,7 +188,7 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
             >>> if csad.state == CSADStatus.DISPENSING:
             ...     print("Dispensing chemicals")
         """
-        return CSADStatus(self.status_raw)
+        return self.status
 
     @property
     def is_on(self) -> bool:

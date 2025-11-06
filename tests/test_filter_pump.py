@@ -55,14 +55,14 @@ def sample_filter_telemetry():
     return TelemetryFilter(
         omni_type=OmniType.FILTER,
         **{
-            "@systemId": 8,
-            "@filterState": 1,
-            "@filterSpeed": 60,
-            "@valvePosition": 1,
-            "@whyFilterIsOn": 14,
-            "@reportedFilterSpeed": 60,
-            "@power": 500,
-            "@lastSpeed": 50,
+            "system_id": 8,
+            "state": 1,
+            "speed": 60,
+            "valve_position": 1,
+            "why_on": 14,
+            "reported_speed": 60,
+            "power": 500,
+            "last_speed": 50,
         },
     )
 
@@ -94,11 +94,11 @@ def sample_pump_telemetry():
     return TelemetryPump(
         omni_type=OmniType.PUMP,
         **{
-            "@systemId": 15,
-            "@pumpState": 1,
-            "@pumpSpeed": 60,
-            "@lastSpeed": 50,
-            "@whyOn": 11,
+            "system_id": 15,
+            "state": 1,
+            "speed": 60,
+            "last_speed": 50,
+            "why_on": 11,
         },
     )
 

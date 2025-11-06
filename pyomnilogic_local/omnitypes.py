@@ -507,7 +507,7 @@ class RelayFunction(StrEnum, PrettyEnum):
     CLEANER_IN_FLOOR = "RLY_CLEANER_IN_FLOOR"
 
 
-class RelayState(PrettyEnum):
+class RelayState(IntEnum, PrettyEnum):
     OFF = 0
     ON = 1
 

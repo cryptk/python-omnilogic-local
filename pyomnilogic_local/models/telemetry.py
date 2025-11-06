@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, SupportsInt, cast, overload
+from typing import cast
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
-from xmltodict import parse as xml_parse
+from pydantic import ConfigDict, ValidationError
+from pydantic_xml import BaseXmlModel, attr, element
 
 from ..omnitypes import (
     BackyardState,
@@ -55,7 +55,7 @@ from .exceptions import OmniParsingException
 # </STATUS>
 
 
-class TelemetryBackyard(BaseModel):
+class TelemetryBackyard(BaseXmlModel, tag="Backyard"):
     """Real-time telemetry for the backyard/controller system.
 
     This is the top-level telemetry object containing system-wide state information.
@@ -71,16 +71,16 @@ class TelemetryBackyard(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.BACKYARD
-    system_id: int = Field(alias="@systemId")
-    status_version: int = Field(alias="@statusVersion")
-    air_temp: int | None = Field(alias="@airTemp")
-    state: BackyardState = Field(alias="@state")
+    system_id: int = attr(name="systemId")
+    status_version: int = attr(name="statusVersion")
+    air_temp: int | None = attr(name="airTemp")
+    state: BackyardState = attr()
     # The below two fields are only available for telemetry with a status_version >= 11
-    config_checksum: int = Field(alias="@ConfigChksum", default=0)
-    msp_version: str | None = Field(alias="@mspVersion", default=None)
+    config_checksum: int = attr(name="ConfigChksum", default=0)
+    msp_version: str | None = attr(name="mspVersion", default=None)
 
 
-class TelemetryBoW(BaseModel):
+class TelemetryBoW(BaseXmlModel, tag="BodyOfWater"):
     """Real-time telemetry for a body of water (pool or spa).
 
     Contains current water conditions and flow status.
@@ -93,12 +93,12 @@ class TelemetryBoW(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.BOW
-    system_id: int = Field(alias="@systemId")
-    water_temp: int = Field(alias="@waterTemp")
-    flow: int = Field(alias="@flow")
+    system_id: int = attr(name="systemId")
+    water_temp: int = attr(name="waterTemp")
+    flow: int = attr()
 
 
-class TelemetryChlorinator(BaseModel):
+class TelemetryChlorinator(BaseXmlModel, tag="Chlorinator"):
     """Real-time telemetry for salt chlorinator systems.
 
     Includes salt levels, operational status, alerts, and errors. Use computed
@@ -118,19 +118,18 @@ class TelemetryChlorinator(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CHLORINATOR
-    system_id: int = Field(alias="@systemId")
-    status_raw: int = Field(alias="@status")
-    instant_salt_level: int = Field(alias="@instantSaltLevel")
-    avg_salt_level: int = Field(alias="@avgSaltLevel")
-    chlr_alert_raw: int = Field(alias="@chlrAlert")
-    chlr_error_raw: int = Field(alias="@chlrError")
-    sc_mode: int = Field(alias="@scMode")
-    operating_state: int = Field(alias="@operatingState")
-    timed_percent: int | None = Field(alias="@Timed-Percent", default=None)
-    operating_mode: ChlorinatorOperatingMode = Field(alias="@operatingMode")
-    enable: bool = Field(alias="@enable")
+    system_id: int = attr(name="systemId")
+    status_raw: int = attr(name="status")
+    instant_salt_level: int = attr(name="instantSaltLevel")
+    avg_salt_level: int = attr(name="avgSaltLevel")
+    chlr_alert_raw: int = attr(name="chlrAlert")
+    chlr_error_raw: int = attr(name="chlrError")
+    sc_mode: int = attr(name="scMode")
+    operating_state: int = attr(name="operatingState")
+    timed_percent: int | None = attr(name="Timed-Percent", default=None)
+    operating_mode: ChlorinatorOperatingMode = attr(name="operatingMode")
+    enable: bool = attr()
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def status(self) -> list[str]:
         """Decode status bitmask into a list of active status flag names.
@@ -144,7 +143,6 @@ class TelemetryChlorinator(BaseModel):
         """
         return [flag.name for flag in ChlorinatorStatus if self.status_raw & flag.value and flag.name is not None]
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def alerts(self) -> list[str]:
         """Decode chlrAlert bitmask into a list of active alert flag names.
@@ -175,7 +173,6 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def errors(self) -> list[str]:
         """Decode chlrError bitmask into a list of active error flag names.
@@ -206,7 +203,6 @@ class TelemetryChlorinator(BaseModel):
 
         return final_flags
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
     def active(self) -> bool:
         """Check if the chlorinator is actively generating chlorine.
@@ -217,7 +213,7 @@ class TelemetryChlorinator(BaseModel):
         return ChlorinatorStatus.GENERATING.value & self.status_raw == ChlorinatorStatus.GENERATING.value
 
 
-class TelemetryCSAD(BaseModel):
+class TelemetryCSAD(BaseXmlModel, tag="CSAD"):
     """Real-time telemetry for Chemistry Sense and Dispense systems.
 
     Provides current water chemistry readings and dispensing status.
@@ -232,14 +228,14 @@ class TelemetryCSAD(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CSAD
-    system_id: int = Field(alias="@systemId")
-    status: CSADStatus = Field(alias="@status")
-    ph: float = Field(alias="@ph")
-    orp: int = Field(alias="@orp")
-    mode: CSADMode = Field(alias="@mode")
+    system_id: int = attr(name="systemId")
+    status: CSADStatus = attr()
+    ph: float = attr()
+    orp: int = attr()
+    mode: CSADMode = attr()
 
 
-class TelemetryColorLogicLight(BaseModel):
+class TelemetryColorLogicLight(BaseXmlModel, tag="ColorLogic-Light"):
     """Real-time telemetry for ColorLogic LED lighting systems.
 
     Tracks power state, active show, speed, and brightness settings. Light cannot
@@ -258,12 +254,12 @@ class TelemetryColorLogicLight(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CL_LIGHT
-    system_id: int = Field(alias="@systemId")
-    state: ColorLogicPowerState = Field(alias="@lightState")
-    show: LightShows = Field(alias="@currentShow")
-    speed: ColorLogicSpeed = Field(alias="@speed")
-    brightness: ColorLogicBrightness = Field(alias="@brightness")
-    special_effect: int = Field(alias="@specialEffect")
+    system_id: int = attr(name="systemId")
+    state: ColorLogicPowerState = attr(name="lightState")
+    show: LightShows = attr(name="currentShow")
+    speed: ColorLogicSpeed = attr()
+    brightness: ColorLogicBrightness = attr()
+    special_effect: int = attr(name="specialEffect")
 
     def show_name(
         self, model: ColorLogicLightType, v2: bool, pretty: bool = False
@@ -290,7 +286,7 @@ class TelemetryColorLogicLight(BaseModel):
         return self.show  # Return raw int if type is unknown
 
 
-class TelemetryFilter(BaseModel):
+class TelemetryFilter(BaseXmlModel, tag="Filter"):
     """Real-time telemetry for filter pump systems.
 
     Includes operational state, speed settings, and valve position. Filter cannot
@@ -309,17 +305,17 @@ class TelemetryFilter(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.FILTER
-    system_id: int = Field(alias="@systemId")
-    state: FilterState = Field(alias="@filterState")
-    speed: int = Field(alias="@filterSpeed")
-    valve_position: FilterValvePosition = Field(alias="@valvePosition")
-    why_on: FilterWhyOn = Field(alias="@whyFilterIsOn")
-    reported_speed: int = Field(alias="@reportedFilterSpeed")
-    power: int = Field(alias="@power")
-    last_speed: int = Field(alias="@lastSpeed")
+    system_id: int = attr(name="systemId")
+    state: FilterState = attr(name="filterState")
+    speed: int = attr(name="filterSpeed")
+    valve_position: FilterValvePosition = attr(name="valvePosition")
+    why_on: FilterWhyOn = attr(name="whyFilterIsOn")
+    reported_speed: int = attr(name="reportedFilterSpeed")
+    power: int = attr()
+    last_speed: int = attr(name="lastSpeed")
 
 
-class TelemetryGroup(BaseModel):
+class TelemetryGroup(BaseXmlModel, tag="Group"):
     """Real-time telemetry for equipment groups.
 
     Groups allow controlling multiple pieces of equipment together as a single unit.
@@ -331,11 +327,11 @@ class TelemetryGroup(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.GROUP
-    system_id: int = Field(alias="@systemId")
-    state: GroupState = Field(alias="@groupState")
+    system_id: int = attr(name="systemId")
+    state: GroupState = attr(name="groupState")
 
 
-class TelemetryHeater(BaseModel):
+class TelemetryHeater(BaseXmlModel, tag="Heater"):
     """Real-time telemetry for physical heater equipment.
 
     Represents actual heater hardware (gas, heat pump, solar, etc.) controlled
@@ -352,15 +348,15 @@ class TelemetryHeater(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.HEATER
-    system_id: int = Field(alias="@systemId")
-    state: HeaterState = Field(alias="@heaterState")
-    temp: int = Field(alias="@temp")
-    enabled: bool = Field(alias="@enable")
-    priority: int = Field(alias="@priority")
-    maintain_for: int = Field(alias="@maintainFor")
+    system_id: int = attr(name="systemId")
+    state: HeaterState = attr(name="heaterState")
+    temp: int = attr()
+    enabled: bool = attr(name="enable")
+    priority: int = attr()
+    maintain_for: int = attr(name="maintainFor")
 
 
-class TelemetryPump(BaseModel):
+class TelemetryPump(BaseXmlModel, tag="Pump"):
     """Real-time telemetry for auxiliary pump equipment.
 
     Auxiliary pumps are separate from filter pumps and used for water features,
@@ -376,14 +372,14 @@ class TelemetryPump(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.PUMP
-    system_id: int = Field(alias="@systemId")
-    state: PumpState = Field(alias="@pumpState")
-    speed: int = Field(alias="@pumpSpeed")
-    last_speed: int = Field(alias="@lastSpeed")
-    why_on: int = Field(alias="@whyOn")
+    system_id: int = attr(name="systemId")
+    state: PumpState = attr(name="pumpState")
+    speed: int = attr(name="pumpSpeed")
+    last_speed: int = attr(name="lastSpeed")
+    why_on: int = attr(name="whyOn")
 
 
-class TelemetryRelay(BaseModel):
+class TelemetryRelay(BaseXmlModel, tag="Relay"):
     """Real-time telemetry for relay-controlled equipment.
 
     Relays provide simple on/off control for lights, water features, and other
@@ -397,12 +393,12 @@ class TelemetryRelay(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.RELAY
-    system_id: int = Field(alias="@systemId")
-    state: RelayState = Field(alias="@relayState")
-    why_on: RelayWhyOn = Field(alias="@whyOn")
+    system_id: int = attr(name="systemId")
+    state: RelayState = attr(name="relayState")
+    why_on: RelayWhyOn = attr(name="whyOn")
 
 
-class TelemetryValveActuator(BaseModel):
+class TelemetryValveActuator(BaseXmlModel, tag="ValveActuator"):
     """Real-time telemetry for valve actuator equipment.
 
     Valve actuators control motorized valves for directing water flow. Functionally
@@ -416,13 +412,13 @@ class TelemetryValveActuator(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
-    system_id: int = Field(alias="@systemId")
-    state: ValveActuatorState = Field(alias="@valveActuatorState")
+    system_id: int = attr(name="systemId")
+    state: ValveActuatorState = attr(name="valveActuatorState")
     # Valve actuators are actually relays, so we can reuse the RelayWhyOn enum here
-    why_on: RelayWhyOn = Field(alias="@whyOn")
+    why_on: RelayWhyOn = attr(name="whyOn")
 
 
-class TelemetryVirtualHeater(BaseModel):
+class TelemetryVirtualHeater(BaseXmlModel, tag="VirtualHeater"):
     """Real-time telemetry for virtual heater controller.
 
     Virtual heater acts as the control logic for one or more physical heaters,
@@ -440,13 +436,13 @@ class TelemetryVirtualHeater(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.VIRT_HEATER
-    system_id: int = Field(alias="@systemId")
-    current_set_point: int = Field(alias="@Current-Set-Point")
-    enabled: bool = Field(alias="@enable")
-    solar_set_point: int = Field(alias="@SolarSetPoint")
-    mode: HeaterMode = Field(alias="@Mode")
-    silent_mode: int = Field(alias="@SilentMode")
-    why_on: int = Field(alias="@whyHeaterIsOn")
+    system_id: int = attr(name="systemId")
+    current_set_point: int = attr(name="Current-Set-Point")
+    enabled: bool = attr(name="enable")
+    solar_set_point: int = attr(name="SolarSetPoint")
+    mode: HeaterMode = attr(name="Mode")
+    silent_mode: int = attr(name="SilentMode")
+    why_on: int = attr(name="whyHeaterIsOn")
 
 
 type TelemetryType = (
@@ -465,7 +461,7 @@ type TelemetryType = (
 )
 
 
-class Telemetry(BaseModel):
+class Telemetry(BaseXmlModel, tag="STATUS", search_mode="unordered"):
     """Complete real-time telemetry snapshot from the OmniLogic controller.
 
     Contains the current state of all equipment in the system. Telemetry is requested
@@ -492,66 +488,35 @@ class Telemetry(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    version: str = Field(alias="@version")
-    backyard: TelemetryBackyard = Field(alias="Backyard")
-    bow: list[TelemetryBoW] = Field(alias="BodyOfWater")
-    chlorinator: list[TelemetryChlorinator] | None = Field(alias="Chlorinator", default=None)
-    colorlogic_light: list[TelemetryColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
-    csad: list[TelemetryCSAD] | None = Field(alias="CSAD", default=None)
-    filter: list[TelemetryFilter] | None = Field(alias="Filter", default=None)
-    group: list[TelemetryGroup] | None = Field(alias="Group", default=None)
-    heater: list[TelemetryHeater] | None = Field(alias="Heater", default=None)
-    pump: list[TelemetryPump] | None = Field(alias="Pump", default=None)
-    relay: list[TelemetryRelay] | None = Field(alias="Relay", default=None)
-    valve_actuator: list[TelemetryValveActuator] | None = Field(alias="ValveActuator", default=None)
-    virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater", default=None)
+    version: str = attr()
+    backyard: TelemetryBackyard = element()
+    bow: list[TelemetryBoW] = element(tag="BodyOfWater", default=[])
+    chlorinator: list[TelemetryChlorinator] | None = element(tag="Chlorinator", default=None)
+    colorlogic_light: list[TelemetryColorLogicLight] | None = element(tag="ColorLogic-Light", default=None)
+    csad: list[TelemetryCSAD] | None = element(tag="CSAD", default=None)
+    filter: list[TelemetryFilter] | None = element(tag="Filter", default=None)
+    group: list[TelemetryGroup] | None = element(tag="Group", default=None)
+    heater: list[TelemetryHeater] | None = element(tag="Heater", default=None)
+    pump: list[TelemetryPump] | None = element(tag="Pump", default=None)
+    relay: list[TelemetryRelay] | None = element(tag="Relay", default=None)
+    valve_actuator: list[TelemetryValveActuator] | None = element(tag="ValveActuator", default=None)
+    virtual_heater: list[TelemetryVirtualHeater] | None = element(tag="VirtualHeater", default=None)
 
     @staticmethod
     def load_xml(xml: str) -> Telemetry:
-        @overload
-        def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
-        @overload
-        def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
-        def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
-            """Post process XML to attempt to convert values to int.
+        """Load telemetry from XML string.
 
-            Pydantic can coerce values natively, but the Omni API returns values as strings of numbers (I.E. "2", "5", etc) and we need them
-            coerced into int enums.  Pydantic only seems to be able to handle one coercion, so it could coerce an int into an Enum, but it
-            cannot coerce a string into an int and then into the Enum. We help it out a little bit here by preemptively coercing any
-            string ints into an int, then pydantic handles the int to enum coercion if necessary.
-            """
-            newvalue: SupportsInt | Any
+        Args:
+            xml: XML string containing telemetry data
 
-            try:
-                newvalue = int(value)
-            except (ValueError, TypeError):
-                newvalue = value
+        Returns:
+            Parsed Telemetry object
 
-            return key, newvalue
-
-        data = xml_parse(
-            xml,
-            postprocessor=xml_postprocessor,
-            # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
-            # everything into lists to make the parsing more consistent. This does mean that some things that would normally never be lists
-            # will become lists (I.E.: Backyard, VirtualHeater), but the upside is that we need far less conditional code to deal with the
-            # "maybe list maybe not" devices.
-            force_list=(
-                OmniType.BOW,
-                OmniType.CHLORINATOR,
-                OmniType.CSAD,
-                OmniType.CL_LIGHT,
-                OmniType.FILTER,
-                OmniType.GROUP,
-                OmniType.HEATER,
-                OmniType.PUMP,
-                OmniType.RELAY,
-                OmniType.VALVE_ACTUATOR,
-                OmniType.VIRT_HEATER,
-            ),
-        )
+        Raises:
+            OmniParsingException: If XML parsing or validation fails
+        """
         try:
-            return Telemetry.model_validate(data["STATUS"])
+            return Telemetry.from_xml(xml)
         except ValidationError as exc:
             raise OmniParsingException(f"Failed to parse Telemetry: {exc}") from exc
 
