@@ -20,6 +20,7 @@ from ..omnitypes import (
     ColorLogicShowUCLV2,
     ColorLogicSpeed,
     CSADMode,
+    CSADStatus,
     FilterState,
     FilterValvePosition,
     FilterWhyOn,
@@ -55,6 +56,18 @@ from .exceptions import OmniParsingException
 
 
 class TelemetryBackyard(BaseModel):
+    """Real-time telemetry for the backyard/controller system.
+
+    This is the top-level telemetry object containing system-wide state information.
+    Always present in telemetry responses.
+
+    Fields:
+        air_temp: Air temperature in Fahrenheit, None if sensor unavailable
+        state: Current operational state (ON, OFF, SERVICE_MODE, etc.)
+        config_checksum: Configuration version identifier for detecting changes
+        msp_version: Controller firmware version (available in status_version >= 11)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.BACKYARD
@@ -68,6 +81,15 @@ class TelemetryBackyard(BaseModel):
 
 
 class TelemetryBoW(BaseModel):
+    """Real-time telemetry for a body of water (pool or spa).
+
+    Contains current water conditions and flow status.
+
+    Fields:
+        water_temp: Water temperature in Fahrenheit, -1 if sensor unavailable
+        flow: Flow sensor value, 255 or 1 typically indicate flow detected, 0 for no flow
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.BOW
@@ -77,6 +99,22 @@ class TelemetryBoW(BaseModel):
 
 
 class TelemetryChlorinator(BaseModel):
+    """Real-time telemetry for salt chlorinator systems.
+
+    Includes salt levels, operational status, alerts, and errors. Use computed
+    properties (status, alerts, errors) for decoded bitmask values.
+
+    Fields:
+        instant_salt_level: Current salt reading in PPM
+        avg_salt_level: Average salt level in PPM over time
+        status_raw: Bitmask of operational status flags (use .status property for decoded properties)
+        chlr_alert_raw: Bitmask of alert conditions (use .alerts property for decoded properties)
+        chlr_error_raw: Bitmask of error conditions (use .errors property for decoded properties)
+        timed_percent: Chlorination output percentage in timed mode (0-100), None if not applicable
+        operating_mode: DISABLED, TIMED, ORP_AUTO, or ORP_TIMED_RW
+        enable: Whether chlorinator is enabled for operation
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CHLORINATOR
@@ -180,17 +218,43 @@ class TelemetryChlorinator(BaseModel):
 
 
 class TelemetryCSAD(BaseModel):
+    """Real-time telemetry for Chemistry Sense and Dispense systems.
+
+    Provides current water chemistry readings and dispensing status.
+
+    Fields:
+        ph: Current pH level reading (typically 0.0-14.0)
+        orp: Oxidation-Reduction Potential in millivolts
+        mode: Current operation mode (OFF, AUTO, FORCE_ON, MONITORING, DISPENSING_OFF)
+        status: Dispensing status (NOT_DISPENSING, DISPENSING)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CSAD
     system_id: int = Field(alias="@systemId")
-    status_raw: int = Field(alias="@status")
+    status: CSADStatus = Field(alias="@status")
     ph: float = Field(alias="@ph")
     orp: int = Field(alias="@orp")
     mode: CSADMode = Field(alias="@mode")
 
 
 class TelemetryColorLogicLight(BaseModel):
+    """Real-time telemetry for ColorLogic LED lighting systems.
+
+    Tracks power state, active show, speed, and brightness settings. Light cannot
+    accept commands during transitional states (CHANGING_SHOW, POWERING_OFF, COOLDOWN).
+
+    Not all fields are applicable to all light models.
+
+    Fields:
+        state: Power/operational state (OFF, ACTIVE, transitional states)
+        show: Currently active light show (type depends on light model)
+        speed: Animation speed (ONE_SIXTEENTH to SIXTEEN_TIMES)
+        brightness: Light brightness level (TWENTY_PERCENT to ONE_HUNDRED_PERCENT)
+        special_effect: Special effect identifier (usage varies by model)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.CL_LIGHT
@@ -227,6 +291,21 @@ class TelemetryColorLogicLight(BaseModel):
 
 
 class TelemetryFilter(BaseModel):
+    """Real-time telemetry for filter pump systems.
+
+    Includes operational state, speed settings, and valve position. Filter cannot
+    accept commands during transitional states (PRIMING, COOLDOWN, etc.).
+
+    Fields:
+        state: Current operational state (OFF, ON, transitional states)
+        speed: Current speed setting (percentage 0-100)
+        valve_position: Current valve position for multi-port systems
+        why_on: Reason filter is running (MANUAL_ON, TIMED_EVENT, FREEZE_PROTECT, etc.)
+        reported_speed: Actual reported speed from variable speed pump (percentage 0-100)
+        power: Current power consumption (watts)
+        last_speed: Previous speed setting before state change
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.FILTER
@@ -241,6 +320,14 @@ class TelemetryFilter(BaseModel):
 
 
 class TelemetryGroup(BaseModel):
+    """Real-time telemetry for equipment groups.
+
+    Groups allow controlling multiple pieces of equipment together as a single unit.
+
+    Fields:
+        state: Current group state (OFF or ON)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.GROUP
@@ -249,6 +336,19 @@ class TelemetryGroup(BaseModel):
 
 
 class TelemetryHeater(BaseModel):
+    """Real-time telemetry for physical heater equipment.
+
+    Represents actual heater hardware (gas, heat pump, solar, etc.) controlled
+    by a VirtualHeater. See TelemetryVirtualHeater for set points and modes.
+
+    Fields:
+        state: Current heater state (OFF, ON, PAUSE)
+        temp: Current water temperature reading in Fahrenheit
+        enabled: Whether heater is enabled for operation
+        priority: Heater priority for sequencing
+        maintain_for: Hours to maintain temperature after reaching set point
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.HEATER
@@ -261,6 +361,18 @@ class TelemetryHeater(BaseModel):
 
 
 class TelemetryPump(BaseModel):
+    """Real-time telemetry for auxiliary pump equipment.
+
+    Auxiliary pumps are separate from filter pumps and used for water features,
+    cleaners, etc. Pump cannot accept commands during transitional states.
+
+    Fields:
+        state: Current pump state (OFF, ON, FREEZE_PROTECT)
+        speed: Current speed setting (percentage 0-100 or RPM depending on type)
+        last_speed: Previous speed setting before state change
+        why_on: Reason pump is running (usage similar to FilterWhyOn)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.PUMP
@@ -272,6 +384,16 @@ class TelemetryPump(BaseModel):
 
 
 class TelemetryRelay(BaseModel):
+    """Real-time telemetry for relay-controlled equipment.
+
+    Relays provide simple on/off control for lights, water features, and other
+    accessories not requiring variable speed control.
+
+    Fields:
+        state: Current relay state (OFF or ON)
+        why_on: Reason relay is on (MANUAL_ON, SCHEDULE_ON, GROUP_ON, FREEZE_PROTECT, etc.)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.RELAY
@@ -281,6 +403,16 @@ class TelemetryRelay(BaseModel):
 
 
 class TelemetryValveActuator(BaseModel):
+    """Real-time telemetry for valve actuator equipment.
+
+    Valve actuators control motorized valves for directing water flow. Functionally
+    similar to relays with on/off states.
+
+    Fields:
+        state: Current valve state (OFF or ON)
+        why_on: Reason valve is active (uses RelayWhyOn enum values)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
@@ -291,6 +423,20 @@ class TelemetryValveActuator(BaseModel):
 
 
 class TelemetryVirtualHeater(BaseModel):
+    """Real-time telemetry for virtual heater controller.
+
+    Virtual heater acts as the control logic for one or more physical heaters,
+    managing set points, modes, and sequencing. Each body of water has one virtual heater.
+
+    Fields:
+        current_set_point: Active temperature target in Fahrenheit
+        enabled: Whether heating/cooling is enabled
+        solar_set_point: Solar heater set point in Fahrenheit
+        mode: Operating mode (HEAT, COOL, or AUTO)
+        silent_mode: Heat pump quiet mode setting
+        why_on: Reason heater is active (usage varies)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     omni_type: OmniType = OmniType.VIRT_HEATER
@@ -320,6 +466,30 @@ type TelemetryType = (
 
 
 class Telemetry(BaseModel):
+    """Complete real-time telemetry snapshot from the OmniLogic controller.
+
+    Contains the current state of all equipment in the system. Telemetry is requested
+    via async_get_telemetry() and should be refreshed periodically to get current values.
+
+    All equipment collections except backyard and bow are optional and will be None
+    if no equipment of that type exists in the system.
+
+    Fields:
+        version: Telemetry format version from controller
+        backyard: System-wide state (always present)
+        bow: Bodies of water telemetry (always present, one or more)
+        chlorinator: Salt chlorinator telemetry (optional)
+        colorlogic_light: LED light telemetry (optional)
+        csad: Chemistry controller telemetry (optional)
+        filter: Filter pump telemetry (optional)
+        group: Equipment group telemetry (optional)
+        heater: Physical heater telemetry (optional)
+        pump: Auxiliary pump telemetry (optional)
+        relay: Relay-controlled equipment telemetry (optional)
+        valve_actuator: Valve actuator telemetry (optional)
+        virtual_heater: Heater controller telemetry (optional)
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     version: str = Field(alias="@version")

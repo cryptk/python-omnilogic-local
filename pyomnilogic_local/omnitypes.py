@@ -150,7 +150,7 @@ class ChlorinatorOperatingMode(IntEnum, PrettyEnum):
     DISABLED = 0
     TIMED = 1
     ORP_AUTO = 2
-    ORP_TIMED_RW = 3  # CSAD in ORP mode experienced condition that prevents ORP operation
+    ORP_TIMED_RW = 3  # Chlorinator in ORP mode experienced condition that prevents ORP operation
 
 
 class ChlorinatorType(StrEnum, PrettyEnum):
