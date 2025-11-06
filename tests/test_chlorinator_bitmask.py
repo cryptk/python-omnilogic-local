@@ -13,17 +13,17 @@ def test_chlorinator_status_decoding() -> None:
     # Bit 7: K2_ACTIVE (128)
     # Total: 2 + 4 + 128 = 134
     data = {
-        "system_id": 5,
-        "status_raw": 134,
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 0,
-        "chlr_error_raw": 0,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "timed_percent": 70,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 134,
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 0,
+        "@chlrError": 0,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@Timed-Percent": 70,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)
@@ -47,16 +47,16 @@ def test_chlorinator_alert_decoding() -> None:
     # Create a chlorinator with chlrAlert = 32 (0b00100000)
     # Bit 5: CELL_TEMP_SCALEBACK (32)
     data = {
-        "system_id": 5,
-        "status_raw": 2,  # ALERT_PRESENT
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 32,
-        "chlr_error_raw": 0,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 2,  # ALERT_PRESENT
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 32,
+        "@chlrError": 0,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)
@@ -77,16 +77,16 @@ def test_chlorinator_error_decoding() -> None:
     # Bit 8: K1_RELAY_SHORT (256)
     # Total: 1 + 256 = 257
     data = {
-        "system_id": 5,
-        "status_raw": 1,  # ERROR_PRESENT
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 0,
-        "chlr_error_raw": 257,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 1,  # ERROR_PRESENT
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 0,
+        "@chlrError": 257,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)
@@ -104,16 +104,16 @@ def test_chlorinator_error_decoding() -> None:
 def test_chlorinator_no_flags() -> None:
     """Test chlorinator with no status/alert/error flags set."""
     data = {
-        "system_id": 5,
-        "status_raw": 0,
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 0,
-        "chlr_error_raw": 0,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 0,
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 0,
+        "@chlrError": 0,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)
@@ -133,16 +133,16 @@ def test_chlorinator_complex_alerts() -> None:
     # Bit 6: BOARD_TEMP_HIGH (64)
     # Total: 1 + 2 + 64 = 67
     data = {
-        "system_id": 5,
-        "status_raw": 2,
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 67,
-        "chlr_error_raw": 0,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 2,
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 67,
+        "@chlrError": 0,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)
@@ -158,16 +158,16 @@ def test_chlorinator_all_status_flags() -> None:
     """Test chlorinator with all status flags set."""
     # status = 255 (0b11111111) - all 8 bits set
     data = {
-        "system_id": 5,
-        "status_raw": 255,
-        "instant_salt_level": 4082,
-        "avg_salt_level": 4042,
-        "chlr_alert_raw": 0,
-        "chlr_error_raw": 0,
-        "sc_mode": 0,
-        "operating_state": 1,
-        "operating_mode": 1,
-        "enable": True,
+        "@systemId": 5,
+        "@status": 255,
+        "@instantSaltLevel": 4082,
+        "@avgSaltLevel": 4042,
+        "@chlrAlert": 0,
+        "@chlrError": 0,
+        "@scMode": 0,
+        "@operatingState": 1,
+        "@operatingMode": 1,
+        "@enable": True,
     }
 
     chlorinator = TelemetryChlorinator.model_validate(data)

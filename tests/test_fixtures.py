@@ -131,7 +131,7 @@ class TestIssue144:
 
     def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
         """Test Telemetry parsing for issue-144."""
-        telem = Telemetry.from_xml(fixture_data["telemetry"])
+        telem = Telemetry.load_xml(fixture_data["telemetry"])
 
         with subtests.test(msg="backyard telemetry"):
             assert telem.backyard is not None
@@ -229,7 +229,7 @@ class TestIssue163:
 
     def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
         """Test Telemetry parsing for issue-163."""
-        telem = Telemetry.from_xml(fixture_data["telemetry"])
+        telem = Telemetry.load_xml(fixture_data["telemetry"])
 
         with subtests.test(msg="backyard telemetry"):
             assert telem.backyard is not None
@@ -342,7 +342,7 @@ class TestIssue60:
 
     def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
         """Test Telemetry parsing for issue-60."""
-        telem = Telemetry.from_xml(fixture_data["telemetry"])
+        telem = Telemetry.load_xml(fixture_data["telemetry"])
 
         with subtests.test(msg="backyard telemetry"):
             assert telem.backyard is not None
@@ -426,6 +426,6 @@ def test_fixture_parses_without_error(fixture_file: str) -> None:
 
     # Parse Telemetry
     if "telemetry" in data and data["telemetry"]:
-        telem = Telemetry.from_xml(data["telemetry"])
+        telem = Telemetry.load_xml(data["telemetry"])
         assert telem is not None
         assert telem.backyard is not None

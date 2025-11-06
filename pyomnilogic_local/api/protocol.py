@@ -363,7 +363,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
         if message.type is MessageType.MSP_LEADMESSAGE:
             try:
-                leadmsg = LeadMessage.from_xml(message.payload[:-1])
+                leadmsg = LeadMessage.model_validate(ET.fromstring(message.payload[:-1]))
             except Exception as exc:
                 raise OmniFragmentationException(f"Failed to parse LeadMessage: {exc}") from exc
 
