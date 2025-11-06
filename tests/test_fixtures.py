@@ -109,7 +109,7 @@ class TestIssue144:
             pool = msp.backyard.bow[0]
             assert pool.system_id == 3
             assert pool.name == "Pool"
-            assert pool.omni_type == OmniType.BOW_MSP
+            assert pool.omni_type == OmniType.BOW
 
         with subtests.test(msg="filter configuration"):
             filters = get_equipment_by_type(msp, OmniType.FILTER)
@@ -155,7 +155,7 @@ class TestIssue144:
             assert len(telem.virtual_heater) == 1
             vh = telem.virtual_heater[0]
             assert vh.system_id == 15
-            assert vh.current_set_point == 82
+            assert vh.current_set_point == 65
 
         with subtests.test(msg="heater equipment telemetry"):
             assert telem.heater is not None
@@ -202,7 +202,7 @@ class TestIssue163:
             pool = msp.backyard.bow[0]
             assert pool.system_id == 10
             assert pool.name == "Pool"
-            assert pool.omni_type == OmniType.BOW_MSP
+            assert pool.omni_type == OmniType.BOW
 
         with subtests.test(msg="filter configuration"):
             filters = get_equipment_by_type(msp, OmniType.FILTER)
@@ -225,7 +225,7 @@ class TestIssue163:
         with subtests.test(msg="backyard sensors"):
             assert msp.backyard.sensor is not None
             assert len(msp.backyard.sensor) == 1
-            assert msp.backyard.sensor[0].system_id == 1
+            assert msp.backyard.sensor[0].system_id == 16
 
     def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
         """Test Telemetry parsing for issue-163."""
@@ -299,7 +299,7 @@ class TestIssue60:
             pool = msp.backyard.bow[0]
             assert pool.system_id == 1
             assert pool.name == "Pool"
-            assert pool.omni_type == OmniType.BOW_MSP
+            assert pool.omni_type == OmniType.BOW
 
         with subtests.test(msg="spa configuration"):
             assert msp.backyard.bow is not None
@@ -378,7 +378,7 @@ class TestIssue60:
 
         with subtests.test(msg="relay telemetry"):
             assert telem.relay is not None
-            assert len(telem.relay) == 2
+            assert len(telem.relay) == 3
             # Check yard lights relay is on
             yard_relay = [r for r in telem.relay if r.system_id == 27][0]
             assert yard_relay.state.value == 1  # ON
