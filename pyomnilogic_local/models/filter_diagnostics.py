@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from pydantic import ConfigDict
-from pydantic_xml import BaseXmlModel, attr, element, wrapped
-
-from .const import XML_NS
+from pydantic import BaseModel, ConfigDict, Field
+from xmltodict import parse as xml_parse
 
 # Example Filter Diagnostics XML:
 #
@@ -32,56 +30,39 @@ from .const import XML_NS
 # </Response>
 
 
-class FilterDiagnosticsParameter(BaseXmlModel, tag="Parameter", ns="api", nsmap=XML_NS):
-    """Individual diagnostic parameter with name, type, and value."""
-
+class FilterDiagnosticsParameter(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name: str = attr()
-    data_type: str = attr(name="dataType")
-    value: int
+    name: str = Field(alias="@name")
+    dataType: str = Field(alias="@dataType")
+    value: int = Field(alias="#text")
 
 
-class FilterDiagnostics(BaseXmlModel, tag="Response", ns="api", nsmap=XML_NS):
-    """Filter diagnostics response containing diagnostic parameters.
-
-    The XML structure has a Parameters wrapper element containing Parameter children:
-    <Response>
-        <Name>FilterDiagnostics</Name>
-        <Parameters>
-            <Parameter name="..." dataType="...">value</Parameter>
-            ...
-        </Parameters>
-    </Response>
-    """
-
+class FilterDiagnosticsParameters(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name: str = element(tag="Name")
-    parameters: list[FilterDiagnosticsParameter] = wrapped("Parameters", element(tag="Parameter", default_factory=list))
+    parameter: list[FilterDiagnosticsParameter] = Field(alias="Parameter")
+
+
+class FilterDiagnostics(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str = Field(alias="Name")
+    # parameters: FilterDiagnosticsParameters = Field(alias="Parameters")
+    parameters: list[FilterDiagnosticsParameter] = Field(alias="Parameters")
 
     def get_param_by_name(self, name: str) -> int:
-        """Get parameter value by name.
-
-        Args:
-            name: Name of the parameter to retrieve
-
-        Returns:
-            The integer value of the parameter
-
-        Raises:
-            IndexError: If parameter name not found
-        """
         return [param.value for param in self.parameters if param.name == name][0]
 
     @staticmethod
     def load_xml(xml: str) -> FilterDiagnostics:
-        """Load filter diagnostics from XML string.
-
-        Args:
-            xml: XML string containing filter diagnostics data
-
-        Returns:
-            Parsed FilterDiagnostics instance
-        """
-        return FilterDiagnostics.from_xml(xml)
+        data = xml_parse(
+            xml,
+            # Some things will be lists or not depending on if a pool has more than one of that piece of equipment.  Here we are coercing
+            # everything that *could* be a list into a list to make the parsing more consistent.
+            force_list=("Parameter"),
+        )
+        # The XML nests the Parameter entries under a Parameters entry, this is annoying to work with.  Here we are adjusting the data to
+        # remove that extra level in the data
+        data["Response"]["Parameters"] = data["Response"]["Parameters"]["Parameter"]
+        return FilterDiagnostics.model_validate(data["Response"])
