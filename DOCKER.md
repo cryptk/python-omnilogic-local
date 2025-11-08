@@ -84,36 +84,8 @@ The container needs to reach your OmniLogic controller on UDP port 10444. Ensure
 1. Your Docker network can reach the controller's IP
 2. No firewall is blocking UDP port 10444
 3. The default bridge networking should work fine
-4. For host networking (if needed):
-
-```bash
-docker run --rm --network host omnilogic-cli --host 192.168.1.100 get lights
-```
 
 ## Advanced Usage
-
-### Save Output to File
-
-```bash
-# Redirect output to a file on the host
-docker run --rm omnilogic-cli --host 192.168.1.100 debug get-telemetry > telemetry.xml
-
-# Using volume mounts
-docker run --rm -v $(pwd):/data omnilogic-cli --host 192.168.1.100 debug get-mspconfig > /data/config.xml
-```
-
-### Interactive Shell
-
-Run multiple commands without rebuilding the connection:
-
-```bash
-docker run --rm -it --entrypoint /bin/bash omnilogic-cli
-
-# Inside container:
-omnilogic --host 192.168.1.100 get lights
-omnilogic --host 192.168.1.100 get pumps
-omnilogic --host 192.168.1.100 debug get-telemetry
-```
 
 ### Parse PCAP Files
 
