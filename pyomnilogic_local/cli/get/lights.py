@@ -3,23 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPColorLogicLight,
-    MSPConfig,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryColorLogicLight,
-)
-from pyomnilogic_local.omnitypes import (
-    ColorLogicBrightness,
-    ColorLogicPowerState,
-    ColorLogicSpeed,
-)
+from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicPowerState, ColorLogicSpeed
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPColorLogicLight, MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
 
 
 @click.command()
@@ -42,7 +34,7 @@ def lights(ctx: click.Context) -> None:
     if mspconfig.backyard.colorlogic_light:
         for light in mspconfig.backyard.colorlogic_light:
             lights_found = True
-            _print_light_info(light, cast(TelemetryColorLogicLight, telemetry.get_telem_by_systemid(light.system_id)))
+            _print_light_info(light, cast("TelemetryColorLogicLight", telemetry.get_telem_by_systemid(light.system_id)))
 
     # Check for lights in Bodies of Water
     if mspconfig.backyard.bow:
@@ -50,7 +42,7 @@ def lights(ctx: click.Context) -> None:
             if bow.colorlogic_light:
                 for cl_light in bow.colorlogic_light:
                     lights_found = True
-                    _print_light_info(cl_light, cast(TelemetryColorLogicLight, telemetry.get_telem_by_systemid(cl_light.system_id)))
+                    _print_light_info(cl_light, cast("TelemetryColorLogicLight", telemetry.get_telem_by_systemid(cl_light.system_id)))
 
     if not lights_found:
         click.echo("No ColorLogic lights found in the system configuration.")
@@ -76,7 +68,7 @@ def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryColorLogicL
             show_names = [show.pretty() if hasattr(show, "pretty") else str(show) for show in value]
             value = ", ".join(show_names) if show_names else "None"
         elif attr_name == "show" and value is not None:
-            value = telemetry.show_name(light.equip_type, light.v2_active, True) if telemetry else str(value)
+            value = telemetry.show_name(light.equip_type, light.v2_active) if telemetry else str(value)
         elif attr_name == "speed":
             value = ColorLogicSpeed(value).pretty()
         elif attr_name == "state":

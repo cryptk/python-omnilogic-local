@@ -3,21 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPConfig,
-    MSPGroup,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryGroup,
-)
-from pyomnilogic_local.omnitypes import (
-    GroupState,
-)
+from pyomnilogic_local.omnitypes import GroupState
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPGroup
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryGroup
 
 
 @click.command()
@@ -40,7 +34,7 @@ def groups(ctx: click.Context) -> None:
     if mspconfig.groups:
         for group in mspconfig.groups:
             groups_found = True
-            _print_group_info(group, cast(TelemetryGroup, telemetry.get_telem_by_systemid(group.system_id)))
+            _print_group_info(group, cast("TelemetryGroup", telemetry.get_telem_by_systemid(group.system_id)))
 
     if not groups_found:
         click.echo("No groups found in the system configuration.")

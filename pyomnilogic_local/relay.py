@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPRelay
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryRelay
-from pyomnilogic_local.omnitypes import RelayFunction, RelayState, RelayType, RelayWhyOn
+from pyomnilogic_local.models.telemetry import TelemetryRelay
+from pyomnilogic_local.omnitypes import RelayState
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import RelayFunction, RelayType, RelayWhyOn
 
 
 class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
@@ -103,24 +105,24 @@ class Relay(OmniEquipment[MSPRelay, TelemetryRelay]):
 
     @control_method
     async def turn_on(self) -> None:
-        """
-        Turns the relay on.
+        """Turn on the relay.
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on relay: bow_id or system_id is None")
+            msg = "Cannot turn on relay: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
     @control_method
     async def turn_off(self) -> None:
-        """
-        Turns the relay off.
+        """Turn off the relay.
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off relay: bow_id or system_id is None")
+            msg = "Cannot turn off relay: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_equipment(self.bow_id, self.system_id, False)

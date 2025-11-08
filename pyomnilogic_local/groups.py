@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPGroup
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryGroup
+from pyomnilogic_local.models.telemetry import TelemetryGroup
 from pyomnilogic_local.omnitypes import GroupState
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
 
 
@@ -90,24 +91,24 @@ class Group(OmniEquipment[MSPGroup, TelemetryGroup]):
 
     @control_method
     async def turn_on(self) -> None:
-        """
-        Activates the group, turning on all equipment assigned to it.
+        """Activate the group, turning on all equipment assigned to it.
 
         Raises:
             OmniEquipmentNotInitializedError: If system_id is None.
         """
         if self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on group: system_id is None")
+            msg = "Cannot turn on group: system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_group_enable(self.system_id, True)
 
     @control_method
     async def turn_off(self) -> None:
-        """
-        Deactivates the group, turning off all equipment assigned to it.
+        """Deactivate the group, turning off all equipment assigned to it.
 
         Raises:
             OmniEquipmentNotInitializedError: If system_id is None.
         """
         if self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off group: system_id is None")
+            msg = "Cannot turn off group: system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_group_enable(self.system_id, False)

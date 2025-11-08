@@ -1,8 +1,4 @@
-# pylint: skip-file
-# type: ignore
-
-"""
-Enhanced comprehensive tests for the OmniLogic protocol layer.
+"""Enhanced comprehensive tests for the OmniLogic protocol layer.
 
 Focuses on:
 - OmniLogicMessage parsing and serialization (table-driven)
@@ -12,23 +8,29 @@ Focuses on:
 - Connection lifecycle
 """
 
+from __future__ import annotations
+
 import asyncio
 import struct
 import time
 import zlib
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
 import pytest
-from pytest_subtests import SubTests
 
 from pyomnilogic_local.api.exceptions import (
-    OmniFragmentationException,
-    OmniMessageFormatException,
-    OmniTimeoutException,
+    OmniFragmentationError,
+    OmniMessageFormatError,
+    OmniTimeoutError,
 )
 from pyomnilogic_local.api.protocol import OmniLogicMessage, OmniLogicProtocol
 from pyomnilogic_local.omnitypes import ClientType, MessageType
+
+if TYPE_CHECKING:
+    from pytest_subtests import SubTests
+
 
 # ============================================================================
 # OmniLogicMessage Tests
@@ -36,7 +38,7 @@ from pyomnilogic_local.omnitypes import ClientType, MessageType
 
 
 def test_parse_basic_ack() -> None:
-    """Validate that we can parse a basic ACK packet"""
+    """Validate that we can parse a basic ACK packet."""
     bytes_ack = b"\x99_\xd1l\x00\x00\x00\x00dv\x8f\xc11.20\x00\x00\x03\xea\x03\x00\x00\x00"
     message = OmniLogicMessage.from_bytes(bytes_ack)
     assert message.id == 2573193580
@@ -46,7 +48,7 @@ def test_parse_basic_ack() -> None:
 
 
 def test_create_basic_ack() -> None:
-    """Validate that we can create a valid basic ACK packet"""
+    """Validate that we can create a valid basic ACK packet."""
     bytes_ack = b"\x99_\xd1l\x00\x00\x00\x00dv\x8f\xc11.20\x00\x00\x03\xea\x03\x00\x00\x00"
     message = OmniLogicMessage(2573193580, MessageType.ACK, payload=None, version="1.20")
     message.client_type = ClientType.OMNI
@@ -72,7 +74,7 @@ def test_parse_leadmessage() -> None:
 
 
 def test_create_leadmessage() -> None:
-    """Validate that we can create a valid MSP LeadMessage"""
+    """Validate that we can create a valid MSP LeadMessage."""
     bytes_leadmessage = (
         b'\x00\x00\x90v\x00\x00\x00\x00dv\x92\xc11.20\x00\x00\x07\xce\x03\x00\x01\x00<?xml version="1.0" encoding="UTF-8" ?>'
         b'<Response xmlns="http://nextgen.hayward.com/api"><Name>LeadMessage</Name><Parameters>'
@@ -96,15 +98,14 @@ def test_create_leadmessage() -> None:
 def test_message_from_bytes_errors(subtests: SubTests) -> None:
     """Test OmniLogicMessage.from_bytes with various error conditions using table-driven approach."""
     test_cases = [
-        # (data, expected_error, description)
-        (b"short", OmniMessageFormatException, "message too short"),
-        (b"\x00" * 10, OmniMessageFormatException, "header too short"),
+        # (data, expected_error, description)  # noqa: ERA001
+        (b"short", OmniMessageFormatError, "message too short"),
+        (b"\x00" * 10, OmniMessageFormatError, "header too short"),
     ]
 
     for data, expected_error, description in test_cases:
-        with subtests.test(msg=description):
-            with pytest.raises(expected_error):
-                OmniLogicMessage.from_bytes(data)
+        with subtests.test(msg=description), pytest.raises(expected_error):
+            OmniLogicMessage.from_bytes(data)
 
 
 def test_message_from_bytes_invalid_message_type() -> None:
@@ -122,7 +123,7 @@ def test_message_from_bytes_invalid_message_type() -> None:
         0,  # reserved
     )
 
-    with pytest.raises(OmniMessageFormatException, match="Unknown message type"):
+    with pytest.raises(OmniMessageFormatError, match="Unknown message type"):
         OmniLogicMessage.from_bytes(header + b"payload")
 
 
@@ -141,7 +142,7 @@ def test_message_from_bytes_invalid_client_type() -> None:
         0,  # reserved
     )
 
-    with pytest.raises(OmniMessageFormatException, match="Unknown client type"):
+    with pytest.raises(OmniMessageFormatError, match="Unknown client type"):
         OmniLogicMessage.from_bytes(header + b"payload")
 
 
@@ -271,9 +272,11 @@ def test_datagram_received_unexpected_exception(caplog: pytest.LogCaptureFixture
     protocol = OmniLogicProtocol()
 
     # Patch OmniLogicMessage.from_bytes to raise an unexpected exception
-    with patch("pyomnilogic_local.api.protocol.OmniLogicMessage.from_bytes", side_effect=RuntimeError("Unexpected")):
-        with caplog.at_level("ERROR"):
-            protocol.datagram_received(b"data", ("127.0.0.1", 12345))
+    with (
+        patch("pyomnilogic_local.api.protocol.OmniLogicMessage.from_bytes", side_effect=RuntimeError("Unexpected")),
+        caplog.at_level("ERROR"),
+    ):
+        protocol.datagram_received(b"data", ("127.0.0.1", 12345))
 
     assert any("Unexpected error processing datagram" in r.message for r in caplog.records)
     assert protocol.error_queue.qsize() == 1
@@ -438,15 +441,13 @@ async def test_ensure_sent_timeout_and_retry_logs(caplog: pytest.LogCaptureFixtu
     protocol = OmniLogicProtocol()
     protocol.transport = MagicMock()
 
-    async def always_timeout(*args: object, **kwargs: object) -> None:
+    async def always_timeout(*args: object, **kwargs: object) -> None:  # noqa: ARG001
         await asyncio.sleep(0)
-        raise TimeoutError()
+        raise TimeoutError
 
     message = OmniLogicMessage(123, MessageType.REQUEST_CONFIGURATION)
-    with patch.object(protocol, "_wait_for_ack", always_timeout):
-        with caplog.at_level("WARNING"):
-            with pytest.raises(OmniTimeoutException):
-                await protocol._ensure_sent(message, max_attempts=3)
+    with patch.object(protocol, "_wait_for_ack", always_timeout), caplog.at_level("WARNING"), pytest.raises(OmniTimeoutError):
+        await protocol._ensure_sent(message, max_attempts=3)
 
     assert any("attempt 1/3" in r.message for r in caplog.records)
     assert any("attempt 2/3" in r.message for r in caplog.records)
@@ -614,9 +615,8 @@ async def test_receive_file_decompression_error() -> None:
 
     await protocol.data_queue.put(response_msg)
 
-    with patch.object(protocol, "_send_ack", new_callable=AsyncMock):
-        with pytest.raises(OmniMessageFormatException, match="Failed to decompress"):
-            await protocol._receive_file()
+    with patch.object(protocol, "_send_ack", new_callable=AsyncMock), pytest.raises(OmniMessageFormatError, match="Failed to decompress"):
+        await protocol._receive_file()
 
 
 # ============================================================================
@@ -704,9 +704,11 @@ async def test_receive_file_fragmented_invalid_leadmessage() -> None:
     leadmsg = OmniLogicMessage(100, MessageType.MSP_LEADMESSAGE, payload="invalid xml")
     await protocol.data_queue.put(leadmsg)
 
-    with patch.object(protocol, "_send_ack", new_callable=AsyncMock):
-        with pytest.raises(OmniFragmentationException, match="Failed to parse LeadMessage"):
-            await protocol._receive_file()
+    with (
+        patch.object(protocol, "_send_ack", new_callable=AsyncMock),
+        pytest.raises(OmniFragmentationError, match="Failed to parse LeadMessage"),
+    ):
+        await protocol._receive_file()
 
 
 @pytest.mark.asyncio
@@ -726,9 +728,11 @@ async def test_receive_file_fragmented_timeout_waiting() -> None:
     await protocol.data_queue.put(leadmsg)
     # Don't put any BlockMessages - will timeout
 
-    with patch.object(protocol, "_send_ack", new_callable=AsyncMock):
-        with pytest.raises(OmniFragmentationException, match="Timeout receiving fragment"):
-            await protocol._receive_file()
+    with (
+        patch.object(protocol, "_send_ack", new_callable=AsyncMock),
+        pytest.raises(OmniFragmentationError, match="Timeout receiving fragment"),
+    ):
+        await protocol._receive_file()
 
 
 @pytest.mark.asyncio
@@ -751,7 +755,7 @@ async def test_receive_file_fragmented_max_wait_time_exceeded() -> None:
     with patch.object(protocol, "_send_ack", new_callable=AsyncMock), patch("time.time") as mock_time:
         mock_time.side_effect = [0, 31]  # Start at 0, then 31 seconds later (> 30s max)
 
-        with pytest.raises(OmniFragmentationException, match="Timeout waiting for fragments"):
+        with pytest.raises(OmniFragmentationError, match="Timeout waiting for fragments"):
             await protocol._receive_file()
 
 

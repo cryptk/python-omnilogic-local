@@ -4,23 +4,22 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
-from collections.abc import Iterator
 from enum import Enum
-from typing import Any, Generic, TypeVar, overload
+from typing import TYPE_CHECKING, Any, overload
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.omnitypes import LightShows
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 _LOGGER = logging.getLogger(__name__)
 
 # Track which duplicate names we've already warned about to avoid log spam
 _WARNED_DUPLICATE_NAMES: set[str] = set()
 
-# Type variable for equipment types
-OE = TypeVar("OE", bound=OmniEquipment[Any, Any])
 
-
-class EquipmentDict(Generic[OE]):
+class EquipmentDict[OE: OmniEquipment[Any, Any]]:
     """A dictionary-like collection that supports lookup by both name and system_id.
 
     This collection allows accessing equipment using either their name (str) or
@@ -82,11 +81,12 @@ class EquipmentDict(Generic[OE]):
         """
         # Check for items with no system_id AND no name
         if invalid_items := [item for item in self._items if item.system_id is None and item.name is None]:
-            raise ValueError(
+            msg = (
                 f"Equipment collection contains {len(invalid_items)} item(s) "
                 "with neither a system_id nor a name. All equipment must have "
                 "at least one identifier for addressing."
             )
+            raise ValueError(msg)
 
         # Find duplicate names that we haven't warned about yet
         name_counts = Counter(item.name for item in self._items if item.name is not None)
@@ -143,7 +143,8 @@ class EquipmentDict(Generic[OE]):
         if isinstance(key, int):
             return self._by_id[key]
 
-        raise TypeError(f"Key must be str or int, got {type(key).__name__}")
+        msg = f"Key must be str or int, got {type(key).__name__}"
+        raise TypeError(msg)
 
     def __setitem__(self, key: str | int, value: OE) -> None:
         """Add or update equipment in the collection.
@@ -167,12 +168,15 @@ class EquipmentDict(Generic[OE]):
         """
         if isinstance(key, str):
             if value.name != key:
-                raise ValueError(f"Equipment name '{value.name}' does not match key '{key}'")
+                msg = f"Equipment name '{value.name}' does not match key '{key}'"
+                raise ValueError(msg)
         elif isinstance(key, int):
             if value.system_id != key:
-                raise ValueError(f"Equipment system_id {value.system_id} does not match key {key}")
+                msg = f"Equipment system_id {value.system_id} does not match key {key}"
+                raise ValueError(msg)
         else:
-            raise TypeError(f"Key must be str or int, got {type(key).__name__}")
+            msg = f"Key must be str or int, got {type(key).__name__}"
+            raise TypeError(msg)
 
         # Check if we're updating an existing item (prioritize system_id)
         existing_item = None
@@ -265,7 +269,6 @@ class EquipmentDict(Generic[OE]):
             String representation showing item count and names
         """
         names = [f"<ID:{item.system_id},NAME:{item.name}>" for item in self._items]
-        # names = [item.name or f"<ID:{item.system_id}>" for item in self._items]
         return f"EquipmentDict({names})"
 
     def append(self, item: OE) -> None:
@@ -392,11 +395,7 @@ class EquipmentDict(Generic[OE]):
         return [(item.system_id, item.name, item) for item in self._items]
 
 
-# Type variable for enum types
-E = TypeVar("E", bound=Enum)
-
-
-class EffectsCollection(Generic[E]):
+class EffectsCollection[E: Enum]:
     """A collection that provides both attribute and dict-like access to light effects.
 
     This class wraps a list of light shows and exposes them through multiple access patterns:
@@ -447,12 +446,14 @@ class EffectsCollection(Generic[E]):
         """
         if name.startswith("_"):
             # Avoid infinite recursion for internal attributes
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+            msg = f"'{type(self).__name__}' object has no attribute '{name}'"
+            raise AttributeError(msg)
 
         try:
             return self._effects_by_name[name]
         except KeyError as exc:
-            raise AttributeError(f"Light effect '{name}' is not available for this light model") from exc
+            msg = f"Light effect '{name}' is not available for this light model"
+            raise AttributeError(msg) from exc
 
     def __getitem__(self, key: str | int) -> E:
         """Enable dict-like and index access to effects.
@@ -472,11 +473,13 @@ class EffectsCollection(Generic[E]):
             try:
                 return self._effects_by_name[key]
             except KeyError as exc:
-                raise KeyError(f"Light effect '{key}' is not available for this light model") from exc
+                msg = f"Light effect '{key}' is not available for this light model"
+                raise KeyError(msg) from exc
         elif isinstance(key, int):
             return self._effects[key]
         else:
-            raise TypeError(f"indices must be integers or strings, not {type(key).__name__}")
+            msg = f"indices must be integers or strings, not {type(key).__name__}"
+            raise TypeError(msg)
 
     def __contains__(self, item: str | E) -> bool:
         """Check if an effect is available in this collection.

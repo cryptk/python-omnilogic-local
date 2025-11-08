@@ -34,7 +34,7 @@ class FilterDiagnosticsParameter(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(alias="@name")
-    dataType: str = Field(alias="@dataType")
+    data_type: str = Field(alias="@dataType")
     value: int = Field(alias="#text")
 
 
@@ -48,11 +48,10 @@ class FilterDiagnostics(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(alias="Name")
-    # parameters: FilterDiagnosticsParameters = Field(alias="Parameters")
     parameters: list[FilterDiagnosticsParameter] = Field(alias="Parameters")
 
     def get_param_by_name(self, name: str) -> int:
-        return [param.value for param in self.parameters if param.name == name][0]
+        return next(param.value for param in self.parameters if param.name == name)
 
     @staticmethod
     def load_xml(xml: str) -> FilterDiagnostics:

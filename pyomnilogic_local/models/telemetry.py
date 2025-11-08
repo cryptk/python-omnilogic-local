@@ -1,3 +1,4 @@
+# ruff: noqa: TC001  # pydantic relies on the omnitypes imports at runtime
 from __future__ import annotations
 
 from typing import Any, SupportsInt, cast, overload
@@ -5,7 +6,7 @@ from typing import Any, SupportsInt, cast, overload
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
 from xmltodict import parse as xml_parse
 
-from ..omnitypes import (
+from pyomnilogic_local.omnitypes import (
     BackyardState,
     ChlorinatorAlert,
     ChlorinatorError,
@@ -36,7 +37,8 @@ from ..omnitypes import (
     ValveActuatorState,
     ZodiacShow,
 )
-from .exceptions import OmniParsingException
+
+from .exceptions import OmniParsingError
 
 # Example telemetry XML data:
 #
@@ -160,7 +162,6 @@ class TelemetryChlorinator(BaseModel):
             >>> chlorinator.alerts
             ['SALT_LOW', 'HIGH_CURRENT']
         """
-
         flags = ChlorinatorAlert(self.chlr_alert_raw)
         high_temp_bits = ChlorinatorAlert.CELL_TEMP_LOW | ChlorinatorAlert.CELL_TEMP_SCALEBACK
         cell_temp_high = False
@@ -191,7 +192,6 @@ class TelemetryChlorinator(BaseModel):
             >>> chlorinator.errors
             ['CURRENT_SENSOR_SHORT', 'VOLTAGE_SENSOR_OPEN']
         """
-
         flags = ChlorinatorError(self.chlr_error_raw)
         cell_comm_loss_bits = ChlorinatorError.CELL_ERROR_TYPE | ChlorinatorError.CELL_ERROR_AUTH
         cell_comm_loss = False
@@ -266,7 +266,7 @@ class TelemetryColorLogicLight(BaseModel):
     special_effect: int = Field(alias="@specialEffect")
 
     def show_name(
-        self, model: ColorLogicLightType, v2: bool, pretty: bool = False
+        self, model: ColorLogicLightType, v2: bool
     ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow | int:
         """Get the current light show depending on the light type.
 
@@ -512,7 +512,7 @@ class Telemetry(BaseModel):
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
         @overload
         def xml_postprocessor(path: Any, key: Any, value: Any) -> tuple[Any, Any]: ...
-        def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:
+        def xml_postprocessor(path: Any, key: Any, value: SupportsInt | Any) -> tuple[Any, SupportsInt | Any]:  # noqa: ARG001  # Unused argument is part of the xmltodict postprocessor signature
             """Post process XML to attempt to convert values to int.
 
             Pydantic can coerce values natively, but the Omni API returns values as strings of numbers (I.E. "2", "5", etc) and we need them
@@ -553,7 +553,8 @@ class Telemetry(BaseModel):
         try:
             return Telemetry.model_validate(data["STATUS"])
         except ValidationError as exc:
-            raise OmniParsingException(f"Failed to parse Telemetry: {exc}") from exc
+            msg = f"Failed to parse Telemetry: {exc}"
+            raise OmniParsingError(msg) from exc
 
     def get_telem_by_systemid(self, system_id: int) -> TelemetryType | None:
         for field_name, value in self:
@@ -561,11 +562,11 @@ class Telemetry(BaseModel):
                 continue
             if isinstance(value, list):
                 for model in value:
-                    cast_model = cast(TelemetryType, model)
+                    cast_model = cast("TelemetryType", model)
                     if cast_model.system_id == system_id:
                         return cast_model
             else:
-                cast_model = cast(TelemetryType, value)
+                cast_model = cast("TelemetryType", value)
                 if cast_model.system_id == system_id:
                     return cast_model
         return None

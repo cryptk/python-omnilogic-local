@@ -3,27 +3,30 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.backyard import Backyard
-from pyomnilogic_local.chlorinator import Chlorinator
-from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
 from pyomnilogic_local.collections import EquipmentDict
-from pyomnilogic_local.colorlogiclight import ColorLogicLight
-from pyomnilogic_local.csad import CSAD
-from pyomnilogic_local.csad_equip import CSADEquipment
-from pyomnilogic_local.filter import Filter
 from pyomnilogic_local.groups import Group
-from pyomnilogic_local.heater import Heater
-from pyomnilogic_local.heater_equip import HeaterEquipment
-from pyomnilogic_local.models import MSPConfig, Telemetry
-from pyomnilogic_local.pump import Pump
-from pyomnilogic_local.relay import Relay
 from pyomnilogic_local.schedule import Schedule
-from pyomnilogic_local.sensor import Sensor
 from pyomnilogic_local.system import System
+
+if TYPE_CHECKING:
+    from pyomnilogic_local._base import OmniEquipment
+    from pyomnilogic_local.chlorinator import Chlorinator
+    from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
+    from pyomnilogic_local.colorlogiclight import ColorLogicLight
+    from pyomnilogic_local.csad import CSAD
+    from pyomnilogic_local.csad_equip import CSADEquipment
+    from pyomnilogic_local.filter import Filter
+    from pyomnilogic_local.heater import Heater
+    from pyomnilogic_local.heater_equip import HeaterEquipment
+    from pyomnilogic_local.models import MSPConfig, Telemetry
+    from pyomnilogic_local.pump import Pump
+    from pyomnilogic_local.relay import Relay
+    from pyomnilogic_local.sensor import Sensor
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,11 +99,7 @@ class OmniLogic:
 
             # Determine if telemetry needs updating
             update_telemetry = False
-            if force:
-                update_telemetry = True
-            elif if_dirty and self._telemetry_dirty:
-                update_telemetry = True
-            elif (current_time - self._telemetry_last_updated) > if_older_than:
+            if force or (if_dirty and self._telemetry_dirty) or ((current_time - self._telemetry_last_updated) > if_older_than):
                 update_telemetry = True
 
             # Update telemetry if needed
@@ -116,15 +115,18 @@ class OmniLogic:
             if self.telemetry.backyard.config_checksum != self._mspconfig_checksum:
                 update_mspconfig = True
 
-            if self.telemetry.backyard.msp_version is not None:
-                if not self._warned_mspversion and not self.telemetry.backyard.msp_version.startswith(self._min_mspversion):
-                    _LOGGER.warning(
-                        "Detected OmniLogic MSP version %s, which is below the minimum supported version %s. "
-                        "Some features may not work correctly. Please consider updating your OmniLogic controller firmware.",
-                        self.telemetry.backyard.msp_version,
-                        self._min_mspversion,
-                    )
-                    self._warned_mspversion = True
+            if (
+                self.telemetry.backyard.msp_version is not None
+                and not self._warned_mspversion
+                and not self.telemetry.backyard.msp_version.startswith(self._min_mspversion)
+            ):
+                _LOGGER.warning(
+                    "Detected OmniLogic MSP version %s, which is below the minimum supported version %s. "
+                    "Some features may not work correctly. Please consider updating your OmniLogic controller firmware.",
+                    self.telemetry.backyard.msp_version,
+                    self._min_mspversion,
+                )
+                self._warned_mspversion = True
 
             # Update MSPConfig if needed
             if update_mspconfig:
@@ -137,7 +139,6 @@ class OmniLogic:
 
     def _update_equipment(self) -> None:
         """Update equipment objects based on the latest MSPConfig and Telemetry data."""
-
         if not hasattr(self, "mspconfig") or self.mspconfig is None:
             _LOGGER.debug("No MSPConfig data available; skipping equipment update")
             return
@@ -217,10 +218,7 @@ class OmniLogic:
     @property
     def all_heaters(self) -> EquipmentDict[Heater]:
         """Returns all Heater (VirtualHeater) instances across all bows in the backyard."""
-        heaters: list[Heater] = []
-        for bow in self.backyard.bow.values():
-            if bow.heater is not None:
-                heaters.append(bow.heater)
+        heaters = [bow.heater for bow in self.backyard.bow.values() if bow.heater is not None]
         return EquipmentDict(heaters)
 
     @property
@@ -234,10 +232,7 @@ class OmniLogic:
     @property
     def all_chlorinators(self) -> EquipmentDict[Chlorinator]:
         """Returns all Chlorinator instances across all bows in the backyard."""
-        chlorinators: list[Chlorinator] = []
-        for bow in self.backyard.bow.values():
-            if bow.chlorinator is not None:
-                chlorinators.append(bow.chlorinator)
+        chlorinators = [bow.chlorinator for bow in self.backyard.bow.values() if bow.chlorinator is not None]
         return EquipmentDict(chlorinators)
 
     @property
@@ -266,8 +261,7 @@ class OmniLogic:
 
     # Equipment search methods
     def get_equipment_by_name(self, name: str) -> OmniEquipment[Any, Any] | None:
-        """
-        Find equipment by name across all equipment types.
+        """Find equipment by name across all equipment types.
 
         Args:
             name: The name of the equipment to find
@@ -297,8 +291,7 @@ class OmniLogic:
         return None
 
     def get_equipment_by_id(self, system_id: int) -> OmniEquipment[Any, Any] | None:
-        """
-        Find equipment by system_id across all equipment types.
+        """Find equipment by system_id across all equipment types.
 
         Args:
             system_id: The system ID of the equipment to find

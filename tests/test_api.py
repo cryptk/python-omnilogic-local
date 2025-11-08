@@ -1,8 +1,6 @@
-# pylint: skip-file
 # type: ignore
 
-"""
-Comprehensive tests for the OmniLogic API layer.
+"""Comprehensive tests for the OmniLogic API layer.
 
 Focuses on:
 - Validation function tests (table-driven)
@@ -11,32 +9,21 @@ Focuses on:
 - Transport/protocol integration tests
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
 import pytest
-from pytest_subtests import SubTests
 
-from pyomnilogic_local.api.api import (
-    OmniLogicAPI,
-    _validate_id,
-    _validate_speed,
-    _validate_temperature,
-)
-from pyomnilogic_local.api.constants import (
-    MAX_SPEED_PERCENT,
-    MAX_TEMPERATURE_F,
-    MIN_SPEED_PERCENT,
-    MIN_TEMPERATURE_F,
-    XML_NAMESPACE,
-)
-from pyomnilogic_local.api.exceptions import OmniValidationException
-from pyomnilogic_local.omnitypes import (
-    ColorLogicBrightness,
-    ColorLogicShow40,
-    ColorLogicSpeed,
-    HeaterMode,
-)
+from pyomnilogic_local.api.api import OmniLogicAPI, _validate_id, _validate_speed, _validate_temperature
+from pyomnilogic_local.api.constants import MAX_SPEED_PERCENT, MAX_TEMPERATURE_F, MIN_SPEED_PERCENT, MIN_TEMPERATURE_F, XML_NAMESPACE
+from pyomnilogic_local.api.exceptions import OmniValidationError
+from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicShow40, ColorLogicSpeed, HeaterMode
+
+if TYPE_CHECKING:
+    from pytest_subtests import SubTests
 
 # ============================================================================
 # Helper Functions
@@ -52,7 +39,8 @@ def _find_elem(root: ET.Element, path: str) -> ET.Element:
     """Find element with namespace support, raising if not found."""
     elem = root.find(f".//{{{XML_NAMESPACE}}}{path}")
     if elem is None:
-        raise AssertionError(f"Element {path} not found in XML")
+        msg = f"Element {path} not found in XML"
+        raise AssertionError(msg)
     return elem
 
 
@@ -60,7 +48,8 @@ def _find_param(root: ET.Element, name: str) -> ET.Element:
     """Find parameter by name attribute."""
     elem = root.find(f".//{{{XML_NAMESPACE}}}Parameter[@name='{name}']")
     if elem is None:
-        raise AssertionError(f"Parameter {name} not found in XML")
+        msg = f"Parameter {name} not found in XML"
+        raise AssertionError(msg)
     return elem
 
 
@@ -72,7 +61,7 @@ def _find_param(root: ET.Element, name: str) -> ET.Element:
 def test_validate_temperature(subtests: SubTests) -> None:
     """Test temperature validation with various inputs using table-driven approach."""
     test_cases = [
-        # (temperature, param_name, should_pass, description)
+        # (temperature, param_name, should_pass, description)  # noqa: ERA001
         (MIN_TEMPERATURE_F, "temp", True, "minimum valid temperature"),
         (MAX_TEMPERATURE_F, "temp", True, "maximum valid temperature"),
         (80, "temp", True, "mid-range valid temperature"),
@@ -88,14 +77,14 @@ def test_validate_temperature(subtests: SubTests) -> None:
             if should_pass:
                 _validate_temperature(temperature, param_name)  # Should not raise
             else:
-                with pytest.raises(OmniValidationException):
+                with pytest.raises(OmniValidationError):
                     _validate_temperature(temperature, param_name)
 
 
 def test_validate_speed(subtests: SubTests) -> None:
     """Test speed validation with various inputs using table-driven approach."""
     test_cases = [
-        # (speed, param_name, should_pass, description)
+        # (speed, param_name, should_pass, description)  # noqa: ERA001
         (MIN_SPEED_PERCENT, "speed", True, "minimum valid speed (0)"),
         (MAX_SPEED_PERCENT, "speed", True, "maximum valid speed (100)"),
         (50, "speed", True, "mid-range valid speed"),
@@ -111,14 +100,14 @@ def test_validate_speed(subtests: SubTests) -> None:
             if should_pass:
                 _validate_speed(speed, param_name)  # Should not raise
             else:
-                with pytest.raises(OmniValidationException):
+                with pytest.raises(OmniValidationError):
                     _validate_speed(speed, param_name)
 
 
 def test_validate_id(subtests: SubTests) -> None:
     """Test ID validation with various inputs using table-driven approach."""
     test_cases = [
-        # (id_value, param_name, should_pass, description)
+        # (id_value, param_name, should_pass, description)  # noqa: ERA001
         (0, "pool_id", True, "zero ID"),
         (1, "pool_id", True, "positive ID"),
         (999999, "pool_id", True, "large positive ID"),
@@ -133,7 +122,7 @@ def test_validate_id(subtests: SubTests) -> None:
             if should_pass:
                 _validate_id(id_value, param_name)  # Should not raise
             else:
-                with pytest.raises(OmniValidationException):
+                with pytest.raises(OmniValidationError):
                     _validate_id(id_value, param_name)
 
 
@@ -161,7 +150,7 @@ def test_api_init_custom_params() -> None:
 def test_api_init_validation(subtests: SubTests) -> None:
     """Test OmniLogicAPI initialization validation using table-driven approach."""
     test_cases = [
-        # (ip, port, timeout, should_pass, description)
+        # (ip, port, timeout, should_pass, description)  # noqa: ERA001
         ("", 10444, 5.0, False, "empty IP address"),
         ("192.168.1.100", 0, 5.0, False, "zero port"),
         ("192.168.1.100", -1, 5.0, False, "negative port"),
@@ -178,7 +167,7 @@ def test_api_init_validation(subtests: SubTests) -> None:
                 api = OmniLogicAPI(ip, port, timeout)
                 assert api is not None
             else:
-                with pytest.raises(OmniValidationException):
+                with pytest.raises(OmniValidationError):
                     OmniLogicAPI(ip, port, timeout)
 
 
@@ -405,17 +394,16 @@ async def test_async_set_chlorinator_enable_boolean_conversion(subtests: SubTest
     ]
 
     for enabled, expected, description in test_cases:
-        with subtests.test(msg=description):
-            with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
-                mock_send.return_value = None
+        with subtests.test(msg=description), patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = None
 
-                await api.async_set_chlorinator_enable(pool_id=1, enabled=enabled)
+            await api.async_set_chlorinator_enable(pool_id=1, enabled=enabled)
 
-                call_args = mock_send.call_args
-                xml_payload = call_args[0][1]
-                root = ET.fromstring(xml_payload)
+            call_args = mock_send.call_args
+            xml_payload = call_args[0][1]
+            root = ET.fromstring(xml_payload)
 
-                assert _find_param(root, "Enabled").text == expected
+            assert _find_param(root, "Enabled").text == expected
 
 
 @pytest.mark.asyncio
@@ -431,17 +419,16 @@ async def test_async_set_heater_enable_boolean_conversion(subtests: SubTests) ->
     ]
 
     for enabled, expected, description in test_cases:
-        with subtests.test(msg=description):
-            with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
-                mock_send.return_value = None
+        with subtests.test(msg=description), patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = None
 
-                await api.async_set_heater_enable(pool_id=1, equipment_id=2, enabled=enabled)
+            await api.async_set_heater_enable(pool_id=1, equipment_id=2, enabled=enabled)
 
-                call_args = mock_send.call_args
-                xml_payload = call_args[0][1]
-                root = ET.fromstring(xml_payload)
+            call_args = mock_send.call_args
+            xml_payload = call_args[0][1]
+            root = ET.fromstring(xml_payload)
 
-                assert _find_param(root, "Enabled").text == expected
+            assert _find_param(root, "Enabled").text == expected
 
 
 @pytest.mark.asyncio

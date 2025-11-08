@@ -5,13 +5,16 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 
-from pyomnilogic_local.api.api import OmniLogicAPI
 from pyomnilogic_local.cli import ensure_connection
 from pyomnilogic_local.cli.pcap_utils import parse_pcap_file, process_pcap_messages
 from pyomnilogic_local.cli.utils import async_get_filter_diagnostics
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.api.api import OmniLogicAPI
 
 
 @click.group()
@@ -39,6 +42,7 @@ def get_mspconfig(ctx: click.Context) -> None:
     Example:
         omnilogic debug get-mspconfig
         omnilogic debug --raw get-mspconfig
+
     """
     ensure_connection(ctx)
     omni: OmniLogicAPI = ctx.obj["OMNI"]
@@ -57,6 +61,7 @@ def get_telemetry(ctx: click.Context) -> None:
     Example:
         omnilogic debug get-telemetry
         omnilogic debug --raw get-telemetry
+
     """
     ensure_connection(ctx)
     omni: OmniLogicAPI = ctx.obj["OMNI"]
@@ -78,6 +83,7 @@ def get_filter_diagnostics(ctx: click.Context, pool_id: int, filter_id: int) -> 
 
     Example:
         omnilogic debug get-filter-diagnostics --pool-id 1 --filter-id 5
+
     """
     ensure_connection(ctx)
     filter_diags = asyncio.run(async_get_filter_diagnostics(ctx.obj["OMNI"], pool_id, filter_id, ctx.obj["RAW"]))
@@ -105,8 +111,7 @@ def get_filter_diagnostics(ctx: click.Context, pool_id: int, filter_id: int) -> 
 
 @debug.command()
 @click.argument("pcap_file", type=click.Path(exists=True, path_type=Path))
-@click.pass_context
-def parse_pcap(ctx: click.Context, pcap_file: Path) -> None:
+def parse_pcap(pcap_file: Path) -> None:
     """Parse a PCAP file and reconstruct OmniLogic protocol communication.
 
     Analyzes network packet captures to decode OmniLogic protocol messages.
@@ -120,13 +125,14 @@ def parse_pcap(ctx: click.Context, pcap_file: Path) -> None:
         omnilogic debug parse-pcap /path/to/capture.pcap
         tcpdump -i eth0 -w pool.pcap udp port 10444
         omnilogic debug parse-pcap pool.pcap
+
     """
     # Read the PCAP file
     try:
         packets = parse_pcap_file(str(pcap_file))
     except Exception as e:
         click.echo(f"Error reading PCAP file: {e}", err=True)
-        raise click.Abort()
+        raise click.Abort from e
 
     # Process all packets and extract OmniLogic messages
     results = process_pcap_messages(packets)
@@ -170,6 +176,7 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
 
         # Turn off pump (0% speed)
         omnilogic --host 192.168.1.100 debug set-equipment 7 8 0
+
     """
     ensure_connection(ctx)
     omni: OmniLogicAPI = ctx.obj["OMNI"]
@@ -186,10 +193,10 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
             is_on_value = int(is_on)
             if not 0 <= is_on_value <= 100:
                 click.echo(f"Error: Integer value must be between 0-100, got {is_on_value}", err=True)
-                raise click.Abort()
+                raise click.Abort
         except ValueError as exc:
             click.echo(f"Error: Invalid value '{is_on}'. Use true/false, on/off, or 0-100 for speed.", err=True)
-            raise click.Abort() from exc
+            raise click.Abort from exc
 
     # Execute the command
     try:
@@ -201,4 +208,4 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
             click.echo(f"Successfully set equipment {equip_id} in BOW {bow_id} to {is_on_value}%")
     except Exception as e:
         click.echo(f"Error setting equipment: {e}", err=True)
-        raise click.Abort()
+        raise click.Abort from e

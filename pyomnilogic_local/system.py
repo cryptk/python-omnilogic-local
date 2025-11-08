@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from pyomnilogic_local.models.mspconfig import MSPSystem
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPSystem
 
 
 class System:
@@ -9,8 +12,6 @@ class System:
     mspconfig: MSPSystem
 
     def __init__(self, mspconfig: MSPSystem) -> None:
-        # self.vsp_speed_format = mspconfig.vsp_speed_format
-        # self.units = mspconfig.units
         self.update_config(mspconfig)
 
     @property

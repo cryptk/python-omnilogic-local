@@ -5,20 +5,15 @@ from __future__ import annotations
 import functools
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, cast
 
 from pyomnilogic_local.util import OmniEquipmentNotReadyError
 
-if TYPE_CHECKING:
-    pass
-
 _LOGGER = logging.getLogger(__name__)
 
-F = TypeVar("F", bound=Callable[..., Any])
 
-
-def control_method(func: F) -> F:
-    """Decorator for equipment control methods that checks readiness and dirties state.
+def control_method[F: Callable[..., Any]](func: F) -> F:
+    """Check readiness and mark state as dirty.
 
     This decorator ensures equipment is ready before executing control methods and
     automatically marks telemetry as dirty after execution. It replaces the common
@@ -37,13 +32,6 @@ def control_method(func: F) -> F:
         @control_method
         async def turn_on(self) -> None:
             await self._api.async_set_equipment(...)
-
-        # Replaces this pattern:
-        # @dirties_state()
-        # async def turn_on(self) -> None:
-        #     if not self.is_ready:
-        #         raise OmniEquipmentNotReadyError("Cannot turn on: equipment is not ready")
-        #     await self._api.async_set_equipment(...)
     """
     # Import here to avoid circular dependency
 
@@ -61,10 +49,10 @@ def control_method(func: F) -> F:
 
         # Mark telemetry as dirty
         if hasattr(self, "_omni"):
-            self._omni._telemetry_dirty = True  # pylint: disable=protected-access
+            self._omni._telemetry_dirty = True
         else:
             _LOGGER.warning("%s does not have _omni reference, cannot mark state as dirty", self.__class__.__name__)
 
         return result
 
-    return cast(F, wrapper)
+    return cast("F", wrapper)

@@ -12,15 +12,16 @@ from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.filter import Filter
 from pyomnilogic_local.heater import Heater
 from pyomnilogic_local.models.mspconfig import MSPBoW
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryBoW
-from pyomnilogic_local.omnitypes import BodyOfWaterType
+from pyomnilogic_local.models.telemetry import TelemetryBoW
 from pyomnilogic_local.pump import Pump
 from pyomnilogic_local.relay import Relay
 from pyomnilogic_local.sensor import Sensor
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import BodyOfWaterType
 
 _LOGGER = logging.getLogger(__name__)
 

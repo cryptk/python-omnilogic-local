@@ -7,16 +7,14 @@ from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPChlorinator
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryChlorinator
-from pyomnilogic_local.omnitypes import (
-    ChlorinatorCellType,
-    ChlorinatorOperatingMode,
-    ChlorinatorStatus,
-)
+from pyomnilogic_local.models.telemetry import TelemetryChlorinator
+from pyomnilogic_local.omnitypes import ChlorinatorStatus
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import ChlorinatorCellType, ChlorinatorOperatingMode
 
 
 class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
@@ -367,7 +365,8 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             OmniEquipmentNotInitializedError: If bow_id is None.
         """
         if self.bow_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on chlorinator: bow_id is None")
+            msg = "Cannot turn on chlorinator: bow_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_chlorinator_enable(self.bow_id, True)
 
     @control_method
@@ -378,7 +377,8 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             OmniEquipmentNotInitializedError: If bow_id is None.
         """
         if self.bow_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off chlorinator: bow_id is None")
+            msg = "Cannot turn off chlorinator: bow_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_chlorinator_enable(self.bow_id, False)
 
     @control_method
@@ -398,15 +398,18 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             mspconfig are used for unchanged parameters.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot set timed percent: bow_id or system_id is None")
+            msg = "Cannot set timed percent: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         if not 0 <= percent <= 100:
-            raise ValueError(f"Timed percent {percent} is outside valid range [0, 100]")
+            msg = f"Timed percent {percent} is outside valid range [0, 100]"
+            raise ValueError(msg)
 
         # Get the parent Bow to determine bow_type
         # We need to find our bow in the backyard
         if (bow := self._omni.backyard.bow.get(self.bow_id)) is None:
-            raise OmniEquipmentNotInitializedError(f"Cannot find bow with id {self.bow_id}")
+            msg = f"Cannot find bow with id {self.bow_id}"
+            raise OmniEquipmentNotInitializedError(msg)
 
         # Map equipment type to numeric bow_type value
         # BOW_POOL = 0, BOW_SPA = 1 (based on typical protocol values)

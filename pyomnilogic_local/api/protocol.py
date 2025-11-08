@@ -7,12 +7,11 @@ import struct
 import time
 import xml.etree.ElementTree as ET
 import zlib
-from typing import Any, cast
+from typing import Any, Self, cast
 
-from typing_extensions import Self
+from pyomnilogic_local.models.leadmessage import LeadMessage
+from pyomnilogic_local.omnitypes import ClientType, MessageType
 
-from ..models.leadmessage import LeadMessage
-from ..omnitypes import ClientType, MessageType
 from .constants import (
     ACK_WAIT_TIMEOUT,
     BLOCK_MESSAGE_HEADER_OFFSET,
@@ -27,17 +26,17 @@ from .constants import (
     XML_NAMESPACE,
 )
 from .exceptions import (
-    OmniFragmentationException,
-    OmniMessageFormatException,
-    OmniTimeoutException,
+    OmniFragmentationError,
+    OmniMessageFormatError,
+    OmniTimeoutError,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class OmniLogicMessage:
-    """
-    Represents a protocol message for communication with the OmniLogic controller.
+    """A protocol message for communication with the OmniLogic controller.
+
     Handles serialization and deserialization of message headers and payloads.
     """
 
@@ -59,8 +58,8 @@ class OmniLogicMessage:
         payload: str | None = None,
         version: str = PROTOCOL_VERSION,
     ) -> None:
-        """
-        Initialize a new OmniLogicMessage.
+        """Initialize a new OmniLogicMessage.
+
         Args:
             msg_id: Unique message identifier.
             msg_type: Type of message being sent.
@@ -78,8 +77,8 @@ class OmniLogicMessage:
         self.version = version
 
     def __bytes__(self) -> bytes:
-        """
-        Serialize the message to bytes for UDP transmission.
+        """Serialize the message to bytes for UDP transmission.
+
         Returns:
             Byte representation of the message.
         """
@@ -97,9 +96,7 @@ class OmniLogicMessage:
         return header + self.payload
 
     def __repr__(self) -> str:
-        """
-        Return a string representation of the message for debugging.
-        """
+        """Return a string representation of the message for debugging."""
         if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
             return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}"
         return (
@@ -109,17 +106,20 @@ class OmniLogicMessage:
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
-        """
-        Parse a message from its byte representation.
+        """Parse a message from its byte representation.
+
         Args:
             data: Byte data received from the controller.
+
         Returns:
             OmniLogicMessage instance.
+
         Raises:
             OmniMessageFormatException: If the message format is invalid.
         """
         if len(data) < PROTOCOL_HEADER_SIZE:
-            raise OmniMessageFormatException(f"Message too short: {len(data)} bytes, expected at least {PROTOCOL_HEADER_SIZE}")
+            msg = f"Message too short: {len(data)} bytes, expected at least {PROTOCOL_HEADER_SIZE}"
+            raise OmniMessageFormatError(msg)
 
         # split the header and data
         header = data[:PROTOCOL_HEADER_SIZE]
@@ -128,19 +128,22 @@ class OmniLogicMessage:
         try:
             (msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2) = struct.unpack(cls.header_format, header)
         except struct.error as exc:
-            raise OmniMessageFormatException(f"Failed to unpack message header: {exc}") from exc
+            msg = f"Failed to unpack message header: {exc}"
+            raise OmniMessageFormatError(msg) from exc
 
         # Validate message type
         try:
             message_type_enum = MessageType(msg_type)
         except ValueError as exc:
-            raise OmniMessageFormatException(f"Unknown message type: {msg_type}") from exc
+            msg = f"Unknown message type: {msg_type}: {exc}"
+            raise OmniMessageFormatError(msg) from exc
 
         # Validate client type
         try:
             client_type_enum = ClientType(int(client_type))
         except ValueError as exc:
-            raise OmniMessageFormatException(f"Unknown client type: {client_type}") from exc
+            msg = f"Unknown client type: {client_type}: {exc}"
+            raise OmniMessageFormatError(msg) from exc
 
         message = cls(msg_id=msg_id, msg_type=message_type_enum, version=vers.decode("utf-8"))
         message.timestamp = tstamp
@@ -155,8 +158,8 @@ class OmniLogicMessage:
 
 
 class OmniLogicProtocol(asyncio.DatagramProtocol):
-    """
-    Asyncio DatagramProtocol implementation for OmniLogic UDP communication.
+    """Asyncio DatagramProtocol implementation for OmniLogic UDP communication.
+
     Handles message sending, receiving, retries, and block message reassembly.
     """
 
@@ -170,28 +173,22 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
     error_queue: asyncio.Queue[Exception]
 
     def __init__(self) -> None:
-        """
-        Initialize the protocol handler and message queue.
-        """
+        """Initialize the protocol handler and message queue."""
         self.data_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
         self.error_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
-        """
-        Called when a UDP connection is made.
-        """
-        self.transport = cast(asyncio.DatagramTransport, transport)
+        """Called when a UDP connection is made."""
+        self.transport = cast("asyncio.DatagramTransport", transport)
 
     def connection_lost(self, exc: Exception | None) -> None:
-        """
-        Called when the UDP connection is lost or closed.
-        """
+        """Called when the UDP connection is lost or closed."""
         if exc:
             raise exc
 
     def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
-        """
-        Called when a datagram is received from the controller.
+        """Called when a datagram is received from the controller.
+
         Parses the message and puts it on the queue. Handles corrupt or unexpected data gracefully.
         """
         try:
@@ -200,25 +197,29 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             try:
                 self.data_queue.put_nowait(message)
             except asyncio.QueueFull:
-                _LOGGER.error("Data queue is full. Dropping message: %s", str(message))
-        except OmniMessageFormatException as exc:
-            _LOGGER.error("Failed to parse incoming datagram from %s: %s", addr, exc)
+                _LOGGER.exception("Data queue is full. Dropping message: %s", str(message))
+        except OmniMessageFormatError as exc:
+            _LOGGER.exception("Failed to parse incoming datagram from %s", addr)
             self.error_queue.put_nowait(exc)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Unexpected error processing datagram from %s: %s", addr, exc, exc_info=True)
+        except Exception as exc:
+            _LOGGER.exception("Unexpected error processing datagram from %s", addr)
             self.error_queue.put_nowait(exc)
 
     def error_received(self, exc: Exception) -> None:
-        """
-        Called when a UDP error is received.
+        """Called when a UDP error is received.
+
         Store the error so it can be handled by awaiting coroutines.
         """
         self.error_queue.put_nowait(exc)
 
     async def _wait_for_ack(self, ack_id: int) -> None:
-        """
-        Wait for an ACK message with the given ID.
+        """Wait for an ACK message with the given ID.
+
         Handles dropped or out-of-order ACKs.
+
+        Args:
+            ack_id: The message ID to wait for an ACK.
+
         Raises:
             OmniTimeoutException: If no ACK is received.
             Exception: If a protocol error occurs.
@@ -250,15 +251,16 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         message: OmniLogicMessage,
         max_attempts: int = 5,
     ) -> None:
-        """
-        Send a message and ensure it is acknowledged, retrying if necessary.
+        """Send a message and ensure it is acknowledged, retrying if necessary.
+
         Args:
             message: The message to send.
             max_attempts: Maximum number of send attempts.
+
         Raises:
             OmniTimeoutException: If no ACK is received after retries.
         """
-        for attempt in range(0, max_attempts):
+        for attempt in range(max_attempts):
             self.transport.sendto(bytes(message))
             _LOGGER.debug("Sent message ID %s (attempt %d/%d)", message.id, attempt + 1, max_attempts)
 
@@ -269,7 +271,6 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
             try:
                 await asyncio.wait_for(self._wait_for_ack(message.id), ACK_WAIT_TIMEOUT)
-                return
             except TimeoutError as exc:
                 if attempt < max_attempts - 1:
                     _LOGGER.warning(
@@ -280,10 +281,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                         max_attempts,
                     )
                 else:
-                    _LOGGER.error(
+                    _LOGGER.exception(
                         "Failed to receive ACK for message type %s (ID: %s) after %d attempts.", message.type.name, message.id, max_attempts
                     )
-                    raise OmniTimeoutException("Failed to receive acknowledgement of command, max retries exceeded") from exc
+                    msg = f"Failed to receive acknowledgement of command, max retries exceeded: {exc}"
+                    raise OmniTimeoutError(msg) from exc
+            else:
+                return
 
     async def send_and_receive(
         self,
@@ -291,18 +295,18 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         payload: str | None,
         msg_id: int | None = None,
     ) -> str:
-        """
-        Send a message and wait for a response, returning the response payload as a string.
+        """Send a message and wait for a response, returning the response payload as a string.
+
         Args:
             msg_type: Type of message to send.
             payload: Optional payload string.
             msg_id: Optional message ID.
+
         Returns:
             Response payload as a string.
         """
         await self.send_message(msg_type, payload, msg_id)
-        resp = await self._receive_file()
-        return resp
+        return await self._receive_file()
 
     # Send a message that you do NOT need a response to
     async def send_message(
@@ -311,8 +315,8 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         payload: str | None,
         msg_id: int | None = None,
     ) -> None:
-        """
-        Send a message that does not require a response.
+        """Send a message that does not require a response.
+
         Args:
             msg_type: Type of message to send.
             payload: Optional payload string.
@@ -329,9 +333,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self._ensure_sent(message)
 
     async def _send_ack(self, msg_id: int) -> None:
-        """
-        Send an ACK message for the given message ID.
-        """
+        """Send an ACK message for the given message ID."""
         body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
         name_element = ET.SubElement(body_element, "Name")
         name_element.text = "Ack"
@@ -340,11 +342,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         await self.send_message(MessageType.XML_ACK, req_body, msg_id)
 
     async def _receive_file(self) -> str:
-        """
-        Wait for and reassemble a full response from the controller.
+        """Wait for and reassemble a full response from the controller.
+
         Handles single and multi-block (LeadMessage/BlockMessage) responses.
+
         Returns:
             Response payload as a string.
+
         Raises:
             OmniTimeoutException: If a block message is not received in time.
             OmniFragmentationException: If fragment reassembly fails.
@@ -365,7 +369,8 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             try:
                 leadmsg = LeadMessage.model_validate(ET.fromstring(message.payload[:-1]))
             except Exception as exc:
-                raise OmniFragmentationException(f"Failed to parse LeadMessage: {exc}") from exc
+                msg = f"Failed to parse LeadMessage: {exc}"
+                raise OmniFragmentationError(msg) from exc
 
             _LOGGER.debug("Will receive %s blockmessages for fragmented response", leadmsg.msg_block_count)
 
@@ -379,17 +384,24 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             while len(data_fragments) < leadmsg.msg_block_count:
                 # Check if we've been waiting too long for fragments
                 if time.time() - fragment_start_time > MAX_FRAGMENT_WAIT_TIME:
-                    raise OmniFragmentationException(
-                        f"Timeout waiting for fragments: received {len(data_fragments)}/{leadmsg.msg_block_count} after {MAX_FRAGMENT_WAIT_TIME}s"
+                    _LOGGER.error(
+                        "Timeout waiting for fragments: received %d/%d after %ds",
+                        len(data_fragments),
+                        leadmsg.msg_block_count,
+                        MAX_FRAGMENT_WAIT_TIME,
                     )
+                    msg = (
+                        f"Timeout waiting for fragments: received {len(data_fragments)}/{leadmsg.msg_block_count} "
+                        f"after {MAX_FRAGMENT_WAIT_TIME}s"
+                    )
+                    raise OmniFragmentationError(msg)
 
                 # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
                 try:
                     resp = await asyncio.wait_for(self.data_queue.get(), self._omni_retransmit_time * self._omni_retransmit_count)
                 except TimeoutError as exc:
-                    raise OmniFragmentationException(
-                        f"Timeout receiving fragment: got {len(data_fragments)}/{leadmsg.msg_block_count} fragments"
-                    ) from exc
+                    msg = f"Timeout receiving fragment: got {len(data_fragments)}/{leadmsg.msg_block_count} fragments: {exc}"
+                    raise OmniFragmentationError(msg) from exc
 
                 # We only want to collect blockmessages here
                 if resp.type is not MessageType.MSP_BLOCKMESSAGE:
@@ -420,7 +432,8 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                 retval = zlib.decompress(comp_bytes)
                 _LOGGER.debug("Decompressed %d bytes to %d bytes", len(comp_bytes), len(retval))
             except zlib.error as exc:
-                raise OmniMessageFormatException(f"Failed to decompress message: {exc}") from exc
+                msg = f"Failed to decompress message: {exc}"
+                raise OmniMessageFormatError(msg) from exc
 
         # For some API calls, the Omni null terminates the response, we are stripping that here to make parsing it later easier
         return retval.decode("utf-8").strip("\x00")

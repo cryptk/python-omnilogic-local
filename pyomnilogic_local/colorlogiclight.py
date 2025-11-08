@@ -7,20 +7,14 @@ from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.collections import LightEffectsCollection
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPColorLogicLight
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
-from pyomnilogic_local.omnitypes import (
-    ColorLogicBrightness,
-    ColorLogicLightType,
-    ColorLogicPowerState,
-    ColorLogicSpeed,
-    LightShows,
-)
-from pyomnilogic_local.util import (
-    OmniEquipmentNotInitializedError,
-)
+from pyomnilogic_local.models.telemetry import TelemetryColorLogicLight
+from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicLightType, ColorLogicPowerState, ColorLogicSpeed
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import LightShows
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -199,8 +193,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
 
     @property
     def is_ready(self) -> bool:
-        """
-        Returns whether the light is ready to accept commands.
+        """Return whether the light is ready to accept commands.
 
         The light is not ready when:
         - The backyard is in service/config mode (checked by parent class)
@@ -227,34 +220,33 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
 
     @control_method
     async def turn_on(self) -> None:
-        """
-        Turns the light on.
+        """Turn the light on.
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on light: bow_id or system_id is None")
+            msg = "Cannot turn on light: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_equipment(self.bow_id, self.system_id, True)
 
     @control_method
     async def turn_off(self) -> None:
-        """
-        Turns the light off.
+        """Turn the light off.
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off light: bow_id or system_id is None")
+            msg = "Cannot turn off light: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_equipment(self.bow_id, self.system_id, False)
 
     @control_method
     async def set_show(
         self, show: LightShows | None = None, speed: ColorLogicSpeed | None = None, brightness: ColorLogicBrightness | None = None
     ) -> None:
-        """
-        Sets the light show, speed, and brightness.
+        """Set the light show, speed, and brightness.
 
         Args:
             show: The light show to set. If None, uses the current show.
@@ -269,7 +261,6 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
             If speed or brightness are provided for non color-logic lights, they will be ignored
             and a warning will be logged.
         """
-
         # Non color-logic lights do not support speed or brightness control
         if self.model not in [
             ColorLogicLightType.SAM,
@@ -285,7 +276,8 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
                 brightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT
 
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot set light show: bow_id or system_id is None")
+            msg = "Cannot set light show: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_set_light_show(
             self.bow_id,

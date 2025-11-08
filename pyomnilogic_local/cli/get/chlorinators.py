@@ -3,23 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPChlorinator,
-    MSPConfig,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryChlorinator,
-)
-from pyomnilogic_local.omnitypes import (
-    ChlorinatorCellType,
-    ChlorinatorDispenserType,
-    ChlorinatorOperatingMode,
-)
+from pyomnilogic_local.omnitypes import ChlorinatorCellType, ChlorinatorDispenserType, ChlorinatorOperatingMode
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPChlorinator, MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryChlorinator
 
 
 @click.command()
@@ -44,7 +36,7 @@ def chlorinators(ctx: click.Context) -> None:
             if bow.chlorinator:
                 chlorinators_found = True
                 _print_chlorinator_info(
-                    bow.chlorinator, cast(TelemetryChlorinator, telemetry.get_telem_by_systemid(bow.chlorinator.system_id))
+                    bow.chlorinator, cast("TelemetryChlorinator", telemetry.get_telem_by_systemid(bow.chlorinator.system_id))
                 )
 
     if not chlorinators_found:

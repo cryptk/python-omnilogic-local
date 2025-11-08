@@ -1,22 +1,19 @@
-# pylint: disable=too-many-positional-arguments
 from __future__ import annotations
 
 import asyncio
 import logging
 import xml.etree.ElementTree as ET
-from typing import Literal, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
-
-from ..omnitypes import (
+from pyomnilogic_local.omnitypes import (
     ColorLogicBrightness,
     ColorLogicSpeed,
-    HeaterMode,
-    LightShows,
     MessageType,
 )
+
 from .constants import (
     DEFAULT_CONTROLLER_PORT,
     DEFAULT_RESPONSE_TIMEOUT,
@@ -27,8 +24,11 @@ from .constants import (
     XML_ENCODING,
     XML_NAMESPACE,
 )
-from .exceptions import OmniValidationException
+from .exceptions import OmniValidationError
 from .protocol import OmniLogicProtocol
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnitypes import HeaterMode, LightShows
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,9 +44,11 @@ def _validate_temperature(temperature: int, param_name: str = "temperature") -> 
         OmniValidationException: If temperature is out of range.
     """
     if not isinstance(temperature, int):
-        raise OmniValidationException(f"{param_name} must be an integer, got {type(temperature).__name__}")
+        msg = f"{param_name} must be an integer, got {type(temperature).__name__}"
+        raise OmniValidationError(msg)
     if not MIN_TEMPERATURE_F <= temperature <= MAX_TEMPERATURE_F:
-        raise OmniValidationException(f"{param_name} must be between {MIN_TEMPERATURE_F}°F and {MAX_TEMPERATURE_F}°F, got {temperature}°F")
+        msg = f"{param_name} must be between {MIN_TEMPERATURE_F}°F and {MAX_TEMPERATURE_F}°F, got {temperature}°F"
+        raise OmniValidationError(msg)
 
 
 def _validate_speed(speed: int, param_name: str = "speed") -> None:
@@ -60,9 +62,11 @@ def _validate_speed(speed: int, param_name: str = "speed") -> None:
         OmniValidationException: If speed is out of range.
     """
     if not isinstance(speed, int):
-        raise OmniValidationException(f"{param_name} must be an integer, got {type(speed).__name__}")
+        msg = f"{param_name} must be an integer, got {type(speed).__name__}"
+        raise OmniValidationError(msg)
     if not MIN_SPEED_PERCENT <= speed <= MAX_SPEED_PERCENT:
-        raise OmniValidationException(f"{param_name} must be between {MIN_SPEED_PERCENT} and {MAX_SPEED_PERCENT}, got {speed}")
+        msg = f"{param_name} must be between {MIN_SPEED_PERCENT} and {MAX_SPEED_PERCENT}, got {speed}"
+        raise OmniValidationError(msg)
 
 
 def _validate_id(id_value: int, param_name: str) -> None:
@@ -76,9 +80,11 @@ def _validate_id(id_value: int, param_name: str) -> None:
         OmniValidationException: If ID is invalid.
     """
     if not isinstance(id_value, int):
-        raise OmniValidationException(f"{param_name} must be an integer, got {type(id_value).__name__}")
+        msg = f"{param_name} must be an integer, got {type(id_value).__name__}"
+        raise OmniValidationError(msg)
     if id_value < 0:
-        raise OmniValidationException(f"{param_name} must be non-negative, got {id_value}")
+        msg = f"{param_name} must be non-negative, got {id_value}"
+        raise OmniValidationError(msg)
 
 
 class OmniLogicAPI:
@@ -96,11 +102,14 @@ class OmniLogicAPI:
             OmniValidationException: If parameters are invalid.
         """
         if not controller_ip:
-            raise OmniValidationException("controller_ip cannot be empty")
+            msg = "controller_ip cannot be empty"
+            raise OmniValidationError(msg)
         if not isinstance(controller_port, int) or controller_port <= 0 or controller_port > 65535:
-            raise OmniValidationException(f"controller_port must be between 1 and 65535, got {controller_port}")
+            msg = f"controller_port must be between 1 and 65535, got {controller_port}"
+            raise OmniValidationError(msg)
         if not isinstance(response_timeout, (int, float)) or response_timeout <= 0:
-            raise OmniValidationException(f"response_timeout must be positive, got {response_timeout}")
+            msg = f"response_timeout must be positive, got {response_timeout}"
+            raise OmniValidationError(msg)
 
         self.controller_ip = controller_ip
         self.controller_port = controller_port
@@ -179,6 +188,7 @@ class OmniLogicAPI:
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
             equipment_id (int): Which equipment_id within that Pool to address
+            raw (bool): Do not parse the response into a Pydantic model, just return the raw XML. Defaults to False.
 
         Returns:
             FilterDiagnostics|str: Either a parsed .models.mspconfig.FilterDiagnostics object or a str depending on arg raw
@@ -233,7 +243,7 @@ class OmniLogicAPI:
         equipment_id: int,
         temperature: int,
     ) -> None:
-        """Set the temperature for a heater on the Omni
+        """Set the temperature for a heater on the Omni.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -332,7 +342,7 @@ class OmniLogicAPI:
         equipment_id: int,
         enabled: int | bool,
     ) -> None:
-        """async_set_heater_enable handles sending a SetHeaterEnable XML API call to the Hayward Omni pool controller
+        """Send a SetHeaterEnable XML API call to the Hayward Omni pool controller.
 
         Args:
             pool_id (int): The Pool/BodyOfWater ID that you want to address
@@ -381,11 +391,11 @@ class OmniLogicAPI:
                 For Variable Speed Pumps, you can optionally provide an int from 0-100 to set the speed percentage with 0 being Off.
                 The interpretation of value depends on the piece of equipment being targeted.
             is_countdown_timer (bool, optional): For potential future use, included to be "API complete". Defaults to False.
-            startTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
-            startTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
-            endTimeHours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
-            endTimeMinutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
-            daysActive (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            start_time_hours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            start_time_minutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            end_time_hours (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            end_time_minutes (int, optional): For potential future use, included to be "API complete". Defaults to 0.
+            days_active (int, optional): For potential future use, included to be "API complete". Defaults to 0.
             recurring (bool, optional): For potential future use, included to be "API complete". Defaults to False.
         """
         body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})

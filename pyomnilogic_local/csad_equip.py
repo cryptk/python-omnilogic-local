@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Literal
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.models.mspconfig import MSPCSADEquip
-from pyomnilogic_local.models.telemetry import Telemetry
-from pyomnilogic_local.omnitypes import CSADEquipmentType
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import CSADEquipmentType
 
 
 class CSADEquipment(OmniEquipment[MSPCSADEquip, None]):

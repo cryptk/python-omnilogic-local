@@ -263,8 +263,8 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             msg = "Pump bow_id and system_id must be set"
             raise OmniEquipmentNotInitializedError(msg)
 
-        if not 0 <= speed <= 100:
-            msg = f"Speed {speed} is outside valid range [0, 100]"
+        if not self.min_percent <= speed <= self.max_percent:
+            msg = f"Speed {speed} is outside valid range [{self.min_percent}, {self.max_percent}]"
             raise ValueError(msg)
 
         # Note: The API validates against min_percent/max_percent internally

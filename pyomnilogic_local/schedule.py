@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPSchedule
-from pyomnilogic_local.models.telemetry import Telemetry
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
 
 
@@ -147,8 +147,7 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
 
     @control_method
     async def turn_on(self) -> None:
-        """
-        Enable the schedule.
+        """Enable the schedule.
 
         Sends an edit command with all current schedule parameters but sets
         the enabled state to True.
@@ -157,7 +156,8 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
             OmniEquipmentNotInitializedError: If system_id is None.
         """
         if self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on schedule: system_id is None")
+            msg = "Cannot turn on schedule: system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_edit_schedule(
             equipment_id=self.system_id,  # This is the schedule-system-id
@@ -174,8 +174,7 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
 
     @control_method
     async def turn_off(self) -> None:
-        """
-        Disable the schedule.
+        """Disable the schedule.
 
         Sends an edit command with all current schedule parameters but sets
         the enabled state to False.
@@ -184,7 +183,8 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
             OmniEquipmentNotInitializedError: If system_id is None.
         """
         if self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off schedule: system_id is None")
+            msg = "Cannot turn off schedule: system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         await self._api.async_edit_schedule(
             equipment_id=self.system_id,  # This is the schedule-system-id

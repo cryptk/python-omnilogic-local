@@ -4,11 +4,13 @@ from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.models.mspconfig import MSPHeaterEquip
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryHeater
-from pyomnilogic_local.omnitypes import HeaterState, HeaterType
+from pyomnilogic_local.models.telemetry import TelemetryHeater
+from pyomnilogic_local.omnitypes import HeaterState
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import HeaterType
 
 
 class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
@@ -114,8 +116,7 @@ class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
 
     @property
     def current_temp(self) -> int:
-        """
-        Returns the current temperature reading from telemetry.
+        """Return the current temperature reading from telemetry.
 
         Note: Temperature is always in Fahrenheit internally.
         Use the system.units property to determine if conversion to Celsius is needed for display.

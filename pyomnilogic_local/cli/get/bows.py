@@ -3,21 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPBoW,
-    MSPConfig,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryType,
-)
-from pyomnilogic_local.omnitypes import (
-    BodyOfWaterType,
-)
+from pyomnilogic_local.omnitypes import BodyOfWaterType
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPBoW, MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
 
 @click.command()

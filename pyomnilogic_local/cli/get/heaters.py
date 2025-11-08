@@ -3,23 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPConfig,
-    MSPHeaterEquip,
-    MSPVirtualHeater,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-)
-from pyomnilogic_local.omnitypes import (
-    HeaterMode,
-    HeaterState,
-    HeaterType,
-)
+from pyomnilogic_local.omnitypes import HeaterMode, HeaterState, HeaterType
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPHeaterEquip, MSPVirtualHeater
+    from pyomnilogic_local.models.telemetry import Telemetry
 
 
 @click.command()

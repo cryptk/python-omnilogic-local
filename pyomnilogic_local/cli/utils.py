@@ -7,14 +7,16 @@ accessing controller data within the Click context.
 from __future__ import annotations
 
 import asyncio
-from typing import Literal, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 import click
 
 from pyomnilogic_local.api.api import OmniLogicAPI
-from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
-from pyomnilogic_local.models.mspconfig import MSPConfig
-from pyomnilogic_local.models.telemetry import Telemetry
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
+    from pyomnilogic_local.models.mspconfig import MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry
 
 
 async def get_omni(host: str) -> OmniLogicAPI:
@@ -45,7 +47,8 @@ async def fetch_startup_data(omni: OmniLogicAPI) -> tuple[MSPConfig, Telemetry]:
         mspconfig = await omni.async_get_mspconfig()
         telemetry = await omni.async_get_telemetry()
     except Exception as exc:
-        raise RuntimeError(f"[ERROR] Failed to fetch config or telemetry from controller: {exc}") from exc
+        msg = f"[ERROR] Failed to fetch config or telemetry from controller: {exc}"
+        raise RuntimeError(msg) from exc
     return mspconfig, telemetry
 
 
@@ -71,7 +74,7 @@ def ensure_connection(ctx: click.Context) -> None:
     try:
         omni = asyncio.run(get_omni(host))
         mspconfig, telemetry = asyncio.run(fetch_startup_data(omni))
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:
         click.secho(str(exc), fg="red", err=True)
         ctx.exit(1)
 
@@ -100,5 +103,4 @@ async def async_get_filter_diagnostics(omni: OmniLogicAPI, pool_id: int, filter_
     Returns:
         FilterDiagnostics object or raw XML string depending on raw parameter
     """
-    filter_diags = await omni.async_get_filter_diagnostics(pool_id, filter_id, raw=raw)
-    return filter_diags
+    return await omni.async_get_filter_diagnostics(pool_id, filter_id, raw=raw)

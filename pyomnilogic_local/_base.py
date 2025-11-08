@@ -1,25 +1,22 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, cast
 
-from pyomnilogic_local.api.api import OmniLogicAPI
-from pyomnilogic_local.models import MSPEquipmentType, Telemetry
+from pyomnilogic_local.models import MSPEquipmentType
 from pyomnilogic_local.models.telemetry import TelemetryType
 from pyomnilogic_local.omnitypes import BackyardState
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.api.api import OmniLogicAPI
+    from pyomnilogic_local.models import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
-
-# Define type variables for generic equipment types
-MSPConfigT = TypeVar("MSPConfigT", bound=MSPEquipmentType)
-TelemetryT = TypeVar("TelemetryT", bound=TelemetryType | None)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
+class OmniEquipment[MSPConfigT: MSPEquipmentType, TelemetryT: TelemetryType | None]:
     """Base class for all OmniLogic equipment.
 
     This is an abstract base class that provides common functionality for all equipment
@@ -77,7 +74,7 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
     @property
     def _api(self) -> OmniLogicAPI:
         """Access the OmniLogic API through the parent controller."""
-        return self._omni._api  # pylint: disable=protected-access
+        return self._omni._api
 
     @property
     def bow_id(self) -> int | None:
@@ -113,13 +110,11 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         """
         # Check if backyard state allows equipment operations
         backyard_state = self._omni.backyard.telemetry.state
-        if backyard_state in (
+        return backyard_state not in (
             BackyardState.SERVICE_MODE,
             BackyardState.CONFIG_MODE,
             BackyardState.TIMED_SERVICE_MODE,
-        ):
-            return False
-        return True
+        )
 
     def update(self, mspconfig: MSPConfigT, telemetry: Telemetry | None) -> None:
         """Update both the configuration and telemetry data for the equipment."""
@@ -130,14 +125,17 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         self._update_equipment(mspconfig, telemetry)
 
     def _update_equipment(self, mspconfig: MSPConfigT, telemetry: Telemetry | None) -> None:
-        """Hook to allow classes to trigger updates of sub-equipment."""
+        """Allow a class to trigger updates of sub-equipment.
+
+        This method can be overridden by subclasses to update any child equipment.
+        """
 
     def update_config(self, mspconfig: MSPConfigT) -> None:
         """Update the configuration data for the equipment."""
         try:
             # If the Equipment has subdevices, we don't store those as part of this device's config
             # They will get parsed and stored as their own equipment instances
-            self.mspconfig = cast(MSPConfigT, mspconfig.without_subdevices())
+            self.mspconfig = cast("MSPConfigT", mspconfig.without_subdevices())
         except AttributeError:
             self.mspconfig = mspconfig
 
@@ -148,9 +146,9 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         # Extract the specific telemetry for this equipment from the full telemetry object
         # Note: Some equipment (like sensors) don't have their own telemetry, so this may be None
         if (specific_telemetry := telemetry.get_telem_by_systemid(self.mspconfig.system_id)) is not None:
-            self.telemetry = cast(TelemetryT, specific_telemetry)
+            self.telemetry = cast("TelemetryT", specific_telemetry)
         else:
-            self.telemetry = cast(TelemetryT, None)
+            self.telemetry = cast("TelemetryT", None)
 
     def __repr__(self) -> str:
         """Return a string representation of the equipment for debugging.
@@ -162,8 +160,7 @@ class OmniEquipment(Generic[MSPConfigT, TelemetryT]):
         parts = [f"system_id={self.system_id!r}", f"name={self.name!r}"]
 
         # Include state if the equipment has telemetry with a state attribute
-        if hasattr(self, "telemetry") and self.telemetry is not None:
-            if (state := getattr(self.telemetry, "state", None)) is not None:
-                parts.append(f"state={state!r}")
+        if (hasattr(self, "telemetry") and self.telemetry is not None) and ((state := getattr(self.telemetry, "state", None)) is not None):
+            parts.append(f"state={state!r}")
 
         return f"{class_name}({', '.join(parts)})"

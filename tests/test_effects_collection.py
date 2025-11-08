@@ -1,13 +1,16 @@
 """Tests for the EffectsCollection class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from pyomnilogic_local.collections import EffectsCollection, LightEffectsCollection
-from pyomnilogic_local.omnitypes import (
-    ColorLogicShow25,
-    ColorLogicShow40,
-    ColorLogicShowUCL,
-)
+from pyomnilogic_local.collections import EffectsCollection
+from pyomnilogic_local.omnitypes import ColorLogicShow25, ColorLogicShow40, ColorLogicShowUCL
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.collections import LightEffectsCollection
 
 
 class TestEffectsCollection:
@@ -106,13 +109,13 @@ class TestEffectsCollection:
 
     def test_length(self) -> None:
         """Test that len() works correctly."""
-        effects25 = EffectsCollection(list(ColorLogicShow25))
-        effects40 = EffectsCollection(list(ColorLogicShow40))
-        effectsUCL = EffectsCollection(list(ColorLogicShowUCL))  # pylint: disable=invalid-name
+        effects_25 = EffectsCollection(list(ColorLogicShow25))
+        effects_40 = EffectsCollection(list(ColorLogicShow40))
+        effects_ucl = EffectsCollection(list(ColorLogicShowUCL))
 
-        assert len(effects25) == len(ColorLogicShow25)
-        assert len(effects40) == len(ColorLogicShow40)
-        assert len(effectsUCL) == len(ColorLogicShowUCL)
+        assert len(effects_25) == len(ColorLogicShow25)
+        assert len(effects_40) == len(ColorLogicShow40)
+        assert len(effects_ucl) == len(ColorLogicShowUCL)
 
     def test_repr(self) -> None:
         """Test string representation."""
@@ -142,17 +145,17 @@ class TestEffectsCollection:
 
     def test_different_show_types(self) -> None:
         """Test that different show types are correctly distinguished."""
-        effects25 = EffectsCollection(list(ColorLogicShow25))
-        effectsUCL = EffectsCollection(list(ColorLogicShowUCL))  # pylint: disable=invalid-name
+        effects_25 = EffectsCollection(list(ColorLogicShow25))
+        effects_ucl = EffectsCollection(list(ColorLogicShowUCL))
 
         # UCL has ROYAL_BLUE, 2.5 doesn't
-        assert "ROYAL_BLUE" not in effects25
-        assert "ROYAL_BLUE" in effectsUCL
+        assert "ROYAL_BLUE" not in effects_25
+        assert "ROYAL_BLUE" in effects_ucl
 
         # Both have VOODOO_LOUNGE and they're from different enums
-        assert effects25.VOODOO_LOUNGE is ColorLogicShow25.VOODOO_LOUNGE
-        assert effectsUCL.VOODOO_LOUNGE is ColorLogicShowUCL.VOODOO_LOUNGE
+        assert effects_25.VOODOO_LOUNGE is ColorLogicShow25.VOODOO_LOUNGE
+        assert effects_ucl.VOODOO_LOUNGE is ColorLogicShowUCL.VOODOO_LOUNGE
         # Even though they have the same value (0), they're different enum types
-        assert type(effects25.VOODOO_LOUNGE) is not type(effectsUCL.VOODOO_LOUNGE)  # type: ignore
-        assert isinstance(effects25.VOODOO_LOUNGE, ColorLogicShow25)
-        assert isinstance(effectsUCL.VOODOO_LOUNGE, ColorLogicShowUCL)
+        assert type(effects_25.VOODOO_LOUNGE) is not type(effects_ucl.VOODOO_LOUNGE)  # type: ignore
+        assert isinstance(effects_25.VOODOO_LOUNGE, ColorLogicShow25)
+        assert isinstance(effects_ucl.VOODOO_LOUNGE, ColorLogicShowUCL)

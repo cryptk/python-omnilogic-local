@@ -10,15 +10,17 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 import zlib
 from collections import defaultdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from scapy.layers.inet import UDP
-from scapy.packet import Packet
 from scapy.utils import rdpcap
 
 from pyomnilogic_local.api.protocol import OmniLogicMessage
 from pyomnilogic_local.models.leadmessage import LeadMessage
 from pyomnilogic_local.omnitypes import MessageType
+
+if TYPE_CHECKING:
+    from scapy.packet import Packet
 
 
 def parse_pcap_file(pcap_path: str) -> Any:
@@ -56,9 +58,10 @@ def extract_omnilogic_message(packet: Packet) -> tuple[OmniLogicMessage, str, st
     # Not an OmniLogic message
     try:
         omni_msg = OmniLogicMessage.from_bytes(bytes(udp.payload))
-        return omni_msg, src_ip, dst_ip
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         return None
+    else:
+        return omni_msg, src_ip, dst_ip
 
 
 def reassemble_message_blocks(messages: list[OmniLogicMessage]) -> str:
@@ -93,9 +96,7 @@ def reassemble_message_blocks(messages: list[OmniLogicMessage]) -> str:
         reassembled = zlib.decompress(reassembled)
 
     # Decode to string
-    decoded = reassembled.decode("utf-8").strip("\x00")
-
-    return decoded
+    return reassembled.decode("utf-8").strip("\x00")
 
 
 def process_pcap_messages(packets: Any) -> list[tuple[str, str, OmniLogicMessage, str | None]]:
@@ -137,10 +138,8 @@ def process_pcap_messages(packets: Any) -> list[tuple[str, str, OmniLogicMessage
             # Find the matching LeadMessage sequence
             matching_seq: tuple[str, str, int] | None = None
             for seq_key in message_sequences:
-                if seq_key[0] == src_ip and seq_key[1] == dst_ip:
-                    # Check if this is the right sequence
-                    if not matching_seq or seq_key[2] > matching_seq[2]:  # pylint: disable=unsubscriptable-object
-                        matching_seq = seq_key
+                if (seq_key[0] == src_ip and seq_key[1] == dst_ip) and (not matching_seq or seq_key[2] > matching_seq[2]):
+                    matching_seq = seq_key
 
             if matching_seq:
                 message_sequences[matching_seq].append(omni_msg)
@@ -156,7 +155,7 @@ def process_pcap_messages(packets: Any) -> list[tuple[str, str, OmniLogicMessage
                         decoded_msg = reassemble_message_blocks(message_sequences[matching_seq])
                         # Add the reassembled message result
                         results.append((src_ip, dst_ip, lead_msg, decoded_msg))
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:
                         pass
 
                     # Clean up this sequence

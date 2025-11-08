@@ -3,14 +3,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPConfig,
-    MSPSchedule,
-)
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPSchedule
 
 
 @click.command()
@@ -55,7 +53,6 @@ def _print_schedule_info(schedule: MSPSchedule) -> None:
             continue
         if attr_name == "event":
             value = value.pretty()
-        #     value = GroupState(value).pretty()
         if isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

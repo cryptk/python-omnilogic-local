@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.models.mspconfig import MSPBackyard
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryBackyard
+from pyomnilogic_local.models.telemetry import TelemetryBackyard
 from pyomnilogic_local.omnitypes import BackyardState
 
 from ._base import OmniEquipment
@@ -15,6 +15,7 @@ from .relay import Relay
 from .sensor import Sensor
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
 
 _LOGGER = logging.getLogger(__name__)

@@ -6,11 +6,13 @@ from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.csad_equip import CSADEquipment
 from pyomnilogic_local.models.mspconfig import MSPCSAD
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryCSAD
-from pyomnilogic_local.omnitypes import CSADMode, CSADStatus, CSADType
+from pyomnilogic_local.models.telemetry import TelemetryCSAD
+from pyomnilogic_local.omnitypes import CSADMode, CSADStatus
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import CSADType
 
 
 class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
@@ -83,12 +85,12 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
 
     @property
     def ph_low_alarm(self) -> float:
-        """pH level that triggers a low pH alarm."""
+        """Low pH threshold for triggering an alarm."""
         return self.mspconfig.ph_low_alarm_value
 
     @property
     def ph_high_alarm(self) -> float:
-        """pH level that triggers a high pH alarm."""
+        """High pH threshold for triggering an alarm."""
         return self.mspconfig.ph_high_alarm_value
 
     @property

@@ -1,33 +1,33 @@
 from __future__ import annotations
 
 
-class OmniLogicException(Exception):
+class OmniLogicError(Exception):
     """Base exception for all OmniLogic errors."""
 
 
-class OmniProtocolException(OmniLogicException):
+class OmniProtocolError(OmniLogicError):
     """Protocol-level errors during communication with the OmniLogic controller."""
 
 
-class OmniTimeoutException(OmniProtocolException):
+class OmniTimeoutError(OmniProtocolError):
     """Timeout occurred while waiting for a response from the controller."""
 
 
-class OmniMessageFormatException(OmniProtocolException):
+class OmniMessageFormatError(OmniProtocolError):
     """Received a malformed or invalid message from the controller."""
 
 
-class OmniFragmentationException(OmniProtocolException):
+class OmniFragmentationError(OmniProtocolError):
     """Error occurred during message fragmentation or reassembly."""
 
 
-class OmniConnectionException(OmniLogicException):
+class OmniConnectionError(OmniLogicError):
     """Network connection error occurred."""
 
 
-class OmniValidationException(OmniLogicException):
+class OmniValidationError(OmniLogicError):
     """Invalid parameter or configuration value provided."""
 
 
-class OmniCommandException(OmniLogicException):
+class OmniCommandError(OmniLogicError):
     """Error occurred while executing a command on the controller."""

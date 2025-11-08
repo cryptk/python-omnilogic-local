@@ -1,13 +1,9 @@
+# ruff: noqa: TC001  # pydantic relies on the omnitypes imports at runtime
 from __future__ import annotations
 
+import contextlib
 import logging
-import sys
-from typing import Any, ClassVar, Literal
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+from typing import Any, ClassVar, Literal, Self
 
 from pydantic import (
     BaseModel,
@@ -19,7 +15,7 @@ from pydantic import (
 )
 from xmltodict import parse as xml_parse
 
-from ..omnitypes import (
+from pyomnilogic_local.omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,
@@ -46,7 +42,8 @@ from ..omnitypes import (
     SensorUnits,
     ZodiacShow,
 )
-from .exceptions import OmniParsingException
+
+from .exceptions import OmniParsingError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +106,6 @@ class OmniBase(BaseModel):
 
 class MSPSystem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    # system_id: int = -1  # The System has no system-id, set it to -1 to signify this
 
     omni_type: OmniType = OmniType.SYSTEM
 
@@ -234,11 +230,8 @@ class MSPChlorinator(OmniBase):
             cell_type_str = data["Cell-Type"]
             if isinstance(cell_type_str, str):
                 # Parse by enum member name (e.g., "CELL_TYPE_T15" -> ChlorinatorCellType.CELL_TYPE_T15)
-                try:
+                with contextlib.suppress(KeyError):
                     data["Cell-Type"] = ChlorinatorCellType[cell_type_str]
-                except KeyError:
-                    # If not found, try to parse as int or leave as-is for Pydantic to handle
-                    pass
         return data
 
     def __init__(self, **data: Any) -> None:
@@ -392,11 +385,8 @@ class MSPSchedule(OmniBase):
             >>> schedule.days_active
             ['Monday', 'Wednesday', 'Friday']
         """
-
         flags = ScheduleDaysActive(self.days_active_raw)
-        final_flags = [flag.name for flag in ScheduleDaysActive if flags & flag and flag.name is not None]
-
-        return final_flags
+        return [flag.name for flag in ScheduleDaysActive if flags & flag and flag.name is not None]
 
 
 type MSPEquipmentType = (
@@ -430,20 +420,24 @@ class MSPConfig(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         # Extract groups from the Groups container if present
-        group_data: dict[Any, Any] | None = None
-        if (groups_data := data.get("Groups", None)) is not None:
-            group_data = groups_data.get("Group", None)
+        group_data: dict[str, Any] | None = None
+        with contextlib.suppress(KeyError):
+            group_data = data["Groups"]["Group"]
 
-        if group_data is not None:
+        if group_data:
             data["groups"] = [MSPGroup.model_validate(g) for g in group_data]
+        else:
+            data["groups"] = []
 
         # Extract schedules from the Schedules container if present
-        schedule_data: dict[Any, Any] | None = None
-        if (schedules_data := data.get("Schedules", None)) is not None:
-            schedule_data = schedules_data.get("sche", None)
+        schedule_data: dict[str, Any] | None = None
+        with contextlib.suppress(KeyError):
+            schedule_data = data["Schedules"]["sche"]
 
-        if schedule_data is not None:
+        if schedule_data:
             data["schedules"] = [MSPSchedule.model_validate(s) for s in schedule_data]
+        else:
+            data["schedules"] = []
 
         super().__init__(**data)
 
@@ -469,4 +463,5 @@ class MSPConfig(BaseModel):
         try:
             return MSPConfig.model_validate(data["MSPConfig"], from_attributes=True)
         except ValidationError as exc:
-            raise OmniParsingException(f"Failed to parse MSP Configuration: {exc}") from exc
+            msg = f"Failed to parse MSP Configuration: {exc}"
+            raise OmniParsingError(msg) from exc

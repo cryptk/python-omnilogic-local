@@ -3,22 +3,15 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPCSAD,
-    MSPConfig,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryCSAD,
-)
-from pyomnilogic_local.omnitypes import (
-    CSADMode,
-    CSADType,
-)
+from pyomnilogic_local.omnitypes import CSADMode, CSADType
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPCSAD, MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryCSAD
 
 
 @click.command()
@@ -43,7 +36,7 @@ def csads(ctx: click.Context) -> None:
             if bow.csad:
                 for csad in bow.csad:
                     csads_found = True
-                    _print_csad_info(csad, cast(TelemetryCSAD, telemetry.get_telem_by_systemid(csad.system_id)))
+                    _print_csad_info(csad, cast("TelemetryCSAD", telemetry.get_telem_by_systemid(csad.system_id)))
 
     if not csads_found:
         click.echo("No CSAD systems found in the system configuration.")

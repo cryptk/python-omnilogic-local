@@ -13,14 +13,18 @@ from __future__ import annotations
 
 import json
 import pathlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from pytest_subtests import SubTests
 
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
 from pyomnilogic_local.omnitypes import OmniType
+
+if TYPE_CHECKING:
+    from pytest_subtests import SubTests
+
+    from pyomnilogic_local._base import OmniEquipment
 
 # Path to fixtures directory
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
@@ -36,9 +40,8 @@ def load_fixture(filename: str) -> dict[str, str]:
         Dictionary with 'mspconfig' and 'telemetry' keys containing XML strings
     """
     fixture_path = FIXTURES_DIR / filename
-    with open(fixture_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data
+    with fixture_path.open(encoding="utf-8") as f:
+        return json.load(f)
 
 
 def get_equipment_by_type(msp: MSPConfig, omni_type: OmniType) -> list[Any]:
@@ -51,16 +54,14 @@ def get_equipment_by_type(msp: MSPConfig, omni_type: OmniType) -> list[Any]:
     Returns:
         List of equipment matching the type
     """
-    equipment = []
+    equipment: list[OmniEquipment[Any, Any]] = []
     # Check backyard-level equipment
     for attr_name in ("relay", "sensor", "colorlogic_light"):
         if items := getattr(msp.backyard, attr_name, None):
-            for item in items:
-                if item.omni_type == omni_type:
-                    equipment.append(item)
+            equipment.extend(item for item in items if item.omni_type == omni_type)
 
     # Check BoW-level equipment
-    if msp.backyard.bow:  # pylint: disable=too-many-nested-blocks
+    if msp.backyard.bow:
         for bow in msp.backyard.bow:
             for attr_name in ("filter", "heater", "pump", "relay", "sensor", "colorlogic_light", "chlorinator"):
                 if items := getattr(bow, attr_name, None):
@@ -71,9 +72,7 @@ def get_equipment_by_type(msp: MSPConfig, omni_type: OmniType) -> list[Any]:
                             equipment.append(item)
                         # Check child equipment (e.g., heater equipment within virtual heater)
                         if hasattr(item, "heater_equipment") and item.heater_equipment:
-                            for child in item.heater_equipment:
-                                if child.omni_type == omni_type:
-                                    equipment.append(child)
+                            equipment.extend(child for child in item.heater_equipment if child.omni_type == omni_type)
     return equipment
 
 
@@ -355,18 +354,18 @@ class TestIssue60:
             assert bow_ids == [1, 8]
 
         with subtests.test(msg="pool water temp"):
-            pool_bow = [bow for bow in telem.bow if bow.system_id == 1][0]
+            pool_bow = next(bow for bow in telem.bow if bow.system_id == 1)
             assert pool_bow.water_temp == 74
 
         with subtests.test(msg="spa water temp"):
-            spa_bow = [bow for bow in telem.bow if bow.system_id == 8][0]
+            spa_bow = next(bow for bow in telem.bow if bow.system_id == 8)
             assert spa_bow.water_temp == -1  # No valid reading
 
         with subtests.test(msg="filter telemetry"):
             assert telem.filter is not None
             assert len(telem.filter) == 2
             # Pool filter running
-            pool_filter = [f for f in telem.filter if f.system_id == 3][0]
+            pool_filter = next(f for f in telem.filter if f.system_id == 3)
             assert pool_filter.speed == 31
             assert pool_filter.power == 79
 
@@ -380,7 +379,7 @@ class TestIssue60:
             assert telem.relay is not None
             assert len(telem.relay) == 3
             # Check yard lights relay is on
-            yard_relay = [r for r in telem.relay if r.system_id == 27][0]
+            yard_relay = next(r for r in telem.relay if r.system_id == 27)
             assert yard_relay.state.value == 1  # ON
 
         with subtests.test(msg="pump telemetry"):
@@ -419,13 +418,13 @@ def test_fixture_parses_without_error(fixture_file: str) -> None:
     data = load_fixture(fixture_file)
 
     # Parse MSPConfig
-    if "mspconfig" in data and data["mspconfig"]:
+    if data.get("mspconfig"):
         msp = MSPConfig.load_xml(data["mspconfig"])
         assert msp is not None
         assert msp.backyard is not None
 
     # Parse Telemetry
-    if "telemetry" in data and data["telemetry"]:
+    if data.get("telemetry"):
         telem = Telemetry.load_xml(data["telemetry"])
         assert telem is not None
         assert telem.backyard is not None

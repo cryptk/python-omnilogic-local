@@ -1,3 +1,5 @@
+"""PyOmniLogic-Local: A Python library for interacting with Hayward OmniLogic Local API."""
+
 from __future__ import annotations
 
 from .collections import EffectsCollection, LightEffectsCollection
@@ -12,9 +14,9 @@ from .util import (
 __all__ = [
     "EffectsCollection",
     "LightEffectsCollection",
+    "OmniConnectionError",
+    "OmniEquipmentNotInitializedError",
+    "OmniEquipmentNotReadyError",
     "OmniLogic",
     "OmniLogicLocalError",
-    "OmniEquipmentNotReadyError",
-    "OmniEquipmentNotInitializedError",
-    "OmniConnectionError",
 ]

@@ -11,7 +11,7 @@
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "python.analysis.typeCheckingMode": "basic",
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true
   }
 }

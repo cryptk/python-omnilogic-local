@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.models.mspconfig import MSPSensor
-from pyomnilogic_local.models.telemetry import Telemetry
-from pyomnilogic_local.omnitypes import SensorType, SensorUnits
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import SensorType, SensorUnits
 
 
 class Sensor(OmniEquipment[MSPSensor, None]):
@@ -87,8 +87,7 @@ class Sensor(OmniEquipment[MSPSensor, None]):
 
     @property
     def sensor_type(self) -> SensorType | str:
-        """
-        Returns the type of sensor.
+        """Returns the type of sensor.
 
         Can be AIR_TEMP, SOLAR_TEMP, WATER_TEMP, FLOW, ORP, or EXT_INPUT.
         """
@@ -96,8 +95,7 @@ class Sensor(OmniEquipment[MSPSensor, None]):
 
     @property
     def units(self) -> SensorUnits | str:
-        """
-        Returns the units used by the sensor.
+        """Returns the units used by the sensor.
 
         Can be FAHRENHEIT, CELSIUS, PPM, GRAMS_PER_LITER, MILLIVOLTS,
         NO_UNITS, or ACTIVE_INACTIVE.

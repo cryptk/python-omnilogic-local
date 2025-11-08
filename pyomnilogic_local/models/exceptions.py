@@ -1,2 +1,2 @@
-class OmniParsingException(Exception):
+class OmniParsingError(Exception):
     pass

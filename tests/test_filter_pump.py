@@ -1,9 +1,7 @@
+# type: ignore
 """Tests for Filter and Pump equipment classes."""
 
-# pyright: basic
-# mypy: ignore-errors
-# type: ignore
-# pylint: skip-file
+from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
@@ -56,7 +54,7 @@ def sample_filter_telemetry():
         omni_type=OmniType.FILTER,
         **{
             "@systemId": 8,
-            "@filterState": 1,
+            "@filterState": FilterState.ON,
             "@filterSpeed": 60,
             "@valvePosition": 1,
             "@whyFilterIsOn": 14,
@@ -95,7 +93,7 @@ def sample_pump_telemetry():
         omni_type=OmniType.PUMP,
         **{
             "@systemId": 15,
-            "@pumpState": 1,
+            "@pumpState": PumpState.ON,
             "@pumpSpeed": 60,
             "@lastSpeed": 50,
             "@whyOn": 11,

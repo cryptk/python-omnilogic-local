@@ -334,6 +334,7 @@ class ColorLogicLightType(StrEnum, PrettyEnum):
     ZODIAC_COLOR = "CL_Z_COLOR"
 
     def __str__(self) -> str:
+        """Return the string representation of the ColorLogicLightType."""
         return ColorLogicLightType[self.name].value
 
 

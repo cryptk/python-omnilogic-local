@@ -1,8 +1,5 @@
-# pylint: skip-file
 # type: ignore
-
-"""
-Tests for equipment control method decorators.
+"""Tests for equipment control method decorators.
 
 Focuses on:
 - @control_method decorator behavior
@@ -10,6 +7,8 @@ Focuses on:
 - State dirtying
 - Error message generation
 """
+
+from __future__ import annotations
 
 from unittest.mock import MagicMock
 
@@ -173,6 +172,7 @@ async def test_control_method_preserves_function_metadata():
     assert equipment.turn_on.__name__ == "turn_on"
     assert equipment.turn_on.__doc__ == "Mock turn_on method."
     assert equipment.set_temperature.__name__ == "set_temperature"
+    assert equipment.set_temperature.__doc__ is not None
     assert "args" in equipment.set_temperature.__doc__
 
 

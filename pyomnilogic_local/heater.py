@@ -7,12 +7,13 @@ from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.heater_equip import HeaterEquipment
 from pyomnilogic_local.models.mspconfig import MSPVirtualHeater
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryVirtualHeater
-from pyomnilogic_local.omnitypes import HeaterMode
+from pyomnilogic_local.models.telemetry import TelemetryVirtualHeater
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
+    from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
+    from pyomnilogic_local.omnitypes import HeaterMode
 
 
 class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
@@ -86,7 +87,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         - Use system.units to determine display preference (not API units)
         - If your application uses Celsius, convert before calling these methods
 
-        Example:
+        Example conversion:
             >>> # If working in Celsius
             >>> celsius_target = 29
             >>> fahrenheit_target = (celsius_target * 9/5) + 32
@@ -122,8 +123,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @property
     def max_temp(self) -> int:
-        """
-        Returns the maximum settable temperature.
+        """Returns the maximum settable temperature.
 
         Note: Temperature is always in Fahrenheit internally.
         Use the system.units property to determine if conversion to Celsius is needed for display.
@@ -132,8 +132,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @property
     def min_temp(self) -> int:
-        """
-        Returns the minimum settable temperature.
+        """Returns the minimum settable temperature.
 
         Note: Temperature is always in Fahrenheit internally.
         Use the system.units property to determine if conversion to Celsius is needed for display.
@@ -147,8 +146,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @property
     def current_set_point(self) -> int:
-        """
-        Returns the current set point from telemetry.
+        """Returns the current set point from telemetry.
 
         Note: Temperature is always in Fahrenheit internally.
         Use the system.units property to determine if conversion to Celsius is needed for display.
@@ -157,8 +155,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @property
     def solar_set_point(self) -> int:
-        """
-        Returns the solar set point from telemetry.
+        """Returns the solar set point from telemetry.
 
         Note: Temperature is always in Fahrenheit internally.
         Use the system.units property to determine if conversion to Celsius is needed for display.
@@ -187,34 +184,33 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @control_method
     async def turn_on(self) -> None:
-        """
-        Turns the heater on (enables it).
+        """Turn the heater on (enables it).
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
             OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn on heater: bow_id or system_id is None")
+            msg = "Cannot turn on heater: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_heater_enable(self.bow_id, self.system_id, True)
 
     @control_method
     async def turn_off(self) -> None:
-        """
-        Turns the heater off (disables it).
+        """Turn the heater off (disables it).
 
         Raises:
             OmniEquipmentNotInitializedError: If bow_id or system_id is None.
             OmniEquipmentNotReadyError: If the equipment is not ready to accept commands.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot turn off heater: bow_id or system_id is None")
+            msg = "Cannot turn off heater: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
         await self._api.async_set_heater_enable(self.bow_id, self.system_id, False)
 
     @control_method
     async def set_temperature(self, temperature: int) -> None:
-        """
-        Sets the target temperature for the heater.
+        """Set the target temperature for the heater.
 
         Args:
             temperature: The target temperature to set in Fahrenheit.
@@ -232,18 +228,19 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
             Fahrenheit before calling this method.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot set heater temperature: bow_id or system_id is None")
+            msg = "Cannot set heater temperature: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         if temperature < self.min_temp or temperature > self.max_temp:
-            raise ValueError(f"Temperature {temperature}°F is outside valid range [{self.min_temp}°F, {self.max_temp}°F]")
+            msg = f"Temperature {temperature}°F is outside valid range [{self.min_temp}°F, {self.max_temp}°F]"
+            raise ValueError(msg)
 
         # Always use Fahrenheit as that's what the OmniLogic system uses internally
         await self._api.async_set_heater(self.bow_id, self.system_id, temperature)
 
     @control_method
     async def set_solar_temperature(self, temperature: int) -> None:
-        """
-        Sets the solar heater set point.
+        """Set the solar heater set point.
 
         Args:
             temperature: The target solar temperature to set in Fahrenheit.
@@ -261,10 +258,12 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
             Fahrenheit before calling this method.
         """
         if self.bow_id is None or self.system_id is None:
-            raise OmniEquipmentNotInitializedError("Cannot set solar heater temperature: bow_id or system_id is None")
+            msg = "Cannot set solar heater temperature: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
         if temperature < self.min_temp or temperature > self.max_temp:
-            raise ValueError(f"Temperature {temperature}°F is outside valid range [{self.min_temp}°F, {self.max_temp}°F]")
+            msg = f"Temperature {temperature}°F is outside valid range [{self.min_temp}°F, {self.max_temp}°F]"
+            raise ValueError(msg)
 
         # Always use Fahrenheit as that's what the OmniLogic system uses internally
         await self._api.async_set_solar_heater(self.bow_id, self.system_id, temperature)
