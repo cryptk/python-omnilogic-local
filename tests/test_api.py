@@ -1,5 +1,3 @@
-# type: ignore
-
 """Comprehensive tests for the OmniLogic API layer.
 
 Focuses on:
@@ -11,7 +9,7 @@ Focuses on:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
@@ -20,7 +18,7 @@ import pytest
 from pyomnilogic_local.api.api import OmniLogicAPI, _validate_id, _validate_speed, _validate_temperature
 from pyomnilogic_local.api.constants import MAX_SPEED_PERCENT, MAX_TEMPERATURE_F, MIN_SPEED_PERCENT, MIN_TEMPERATURE_F, XML_NAMESPACE
 from pyomnilogic_local.api.exceptions import OmniValidationError
-from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicShow40, ColorLogicSpeed, HeaterMode
+from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicShow40, ColorLogicSpeed, HeaterMode, MessageType
 
 if TYPE_CHECKING:
     from pytest_subtests import SubTests
@@ -60,7 +58,7 @@ def _find_param(root: ET.Element, name: str) -> ET.Element:
 
 def test_validate_temperature(subtests: SubTests) -> None:
     """Test temperature validation with various inputs using table-driven approach."""
-    test_cases = [
+    test_cases: list[tuple[Any, str, bool, str]] = [
         # (temperature, param_name, should_pass, description)  # noqa: ERA001
         (MIN_TEMPERATURE_F, "temp", True, "minimum valid temperature"),
         (MAX_TEMPERATURE_F, "temp", True, "maximum valid temperature"),
@@ -83,7 +81,7 @@ def test_validate_temperature(subtests: SubTests) -> None:
 
 def test_validate_speed(subtests: SubTests) -> None:
     """Test speed validation with various inputs using table-driven approach."""
-    test_cases = [
+    test_cases: list[tuple[Any, str, bool, str]] = [
         # (speed, param_name, should_pass, description)  # noqa: ERA001
         (MIN_SPEED_PERCENT, "speed", True, "minimum valid speed (0)"),
         (MAX_SPEED_PERCENT, "speed", True, "maximum valid speed (100)"),
@@ -106,7 +104,7 @@ def test_validate_speed(subtests: SubTests) -> None:
 
 def test_validate_id(subtests: SubTests) -> None:
     """Test ID validation with various inputs using table-driven approach."""
-    test_cases = [
+    test_cases: list[tuple[Any, str, bool, str]] = [
         # (id_value, param_name, should_pass, description)  # noqa: ERA001
         (0, "pool_id", True, "zero ID"),
         (1, "pool_id", True, "positive ID"),
@@ -149,7 +147,7 @@ def test_api_init_custom_params() -> None:
 
 def test_api_init_validation(subtests: SubTests) -> None:
     """Test OmniLogicAPI initialization validation using table-driven approach."""
-    test_cases = [
+    test_cases: list[tuple[Any, Any, Any, bool, str]] = [
         # (ip, port, timeout, should_pass, description)  # noqa: ERA001
         ("", 10444, 5.0, False, "empty IP address"),
         ("192.168.1.100", 0, 5.0, False, "zero port"),
@@ -489,7 +487,7 @@ async def test_async_send_message_creates_transport() -> None:
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        await api.async_send_message(0x01, "test", need_response=False)
+        await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)
 
         # Verify endpoint was created with correct parameters
         mock_loop.return_value.create_datagram_endpoint.assert_called_once()
@@ -512,7 +510,7 @@ async def test_async_send_message_with_response() -> None:
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        result = await api.async_send_message(0x01, "test", need_response=True)
+        result = await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=True)
 
         assert result == "test response"
         mock_protocol.send_and_receive.assert_called_once()
@@ -531,7 +529,7 @@ async def test_async_send_message_without_response() -> None:
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        result = await api.async_send_message(0x01, "test", need_response=False)
+        result = await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)  # type: ignore[func-returns-value]
 
         assert result is None
         mock_protocol.send_message.assert_called_once()
@@ -551,7 +549,7 @@ async def test_async_send_message_closes_transport_on_error() -> None:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
         with pytest.raises(Exception, match="Test error"):
-            await api.async_send_message(0x01, "test", need_response=False)
+            await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)
 
         # Verify transport was still closed despite the error
         mock_transport.close.assert_called_once()

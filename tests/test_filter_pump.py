@@ -1,4 +1,3 @@
-# type: ignore
 """Tests for Filter and Pump equipment classes."""
 
 from __future__ import annotations
@@ -13,14 +12,16 @@ from pyomnilogic_local.models.telemetry import Telemetry, TelemetryFilter, Telem
 from pyomnilogic_local.omnitypes import (
     FilterSpeedPresets,
     FilterState,
-    OmniType,
+    FilterType,
+    PumpFunction,
     PumpState,
+    PumpType,
 )
 from pyomnilogic_local.pump import Pump
 
 
 @pytest.fixture
-def mock_omni():
+def mock_omni() -> Mock:
     """Create a mock OmniLogic instance."""
     omni = Mock()
     omni._api = Mock()
@@ -28,30 +29,31 @@ def mock_omni():
 
 
 @pytest.fixture
-def sample_filter_config():
+def sample_filter_config() -> MSPFilter:
     """Create a sample filter configuration."""
-    return MSPFilter(
+    return MSPFilter.model_construct(
+        None,
         **{
             "System-Id": 8,
             "Name": "Test Filter",
-            "Filter-Type": "FMT_VARIABLE_SPEED_PUMP",
+            "Filter-Type": FilterType.VARIABLE_SPEED,
             "Max-Pump-Speed": 100,
             "Min-Pump-Speed": 30,
             "Max-Pump-RPM": 3450,
             "Min-Pump-RPM": 1000,
-            "Priming-Enabled": "yes",
+            "Priming-Enabled": True,
             "Vsp-Low-Pump-Speed": 40,
             "Vsp-Medium-Pump-Speed": 60,
             "Vsp-High-Pump-Speed": 80,
-        }
+        },
     )
 
 
 @pytest.fixture
-def sample_filter_telemetry():
+def sample_filter_telemetry() -> TelemetryFilter:
     """Create sample filter telemetry."""
-    return TelemetryFilter(
-        omni_type=OmniType.FILTER,
+    return TelemetryFilter.model_construct(
+        None,
         **{
             "@systemId": 8,
             "@filterState": FilterState.ON,
@@ -66,31 +68,32 @@ def sample_filter_telemetry():
 
 
 @pytest.fixture
-def sample_pump_config():
+def sample_pump_config() -> MSPPump:
     """Create a sample pump configuration."""
-    return MSPPump(
+    return MSPPump.model_construct(
+        None,
         **{
             "System-Id": 15,
             "Name": "Test Pump",
-            "Type": "PMP_VARIABLE_SPEED_PUMP",
-            "Function": "PMP_PUMP",
+            "Type": PumpType.VARIABLE_SPEED,
+            "Function": PumpFunction.PUMP,
             "Max-Pump-Speed": 100,
             "Min-Pump-Speed": 30,
             "Max-Pump-RPM": 3450,
             "Min-Pump-RPM": 1000,
-            "Priming-Enabled": "yes",
+            "Priming-Enabled": True,
             "Vsp-Low-Pump-Speed": 40,
             "Vsp-Medium-Pump-Speed": 60,
             "Vsp-High-Pump-Speed": 80,
-        }
+        },
     )
 
 
 @pytest.fixture
-def sample_pump_telemetry():
+def sample_pump_telemetry() -> TelemetryPump:
     """Create sample pump telemetry."""
-    return TelemetryPump(
-        omni_type=OmniType.PUMP,
+    return TelemetryPump.model_construct(
+        None,
         **{
             "@systemId": 15,
             "@pumpState": PumpState.ON,
@@ -102,7 +105,7 @@ def sample_pump_telemetry():
 
 
 @pytest.fixture
-def mock_telemetry(sample_filter_telemetry, sample_pump_telemetry):
+def mock_telemetry(sample_filter_telemetry: TelemetryFilter, sample_pump_telemetry: TelemetryPump) -> Mock:
     """Create a mock Telemetry object."""
     telemetry = Mock(spec=Telemetry)
     telemetry.get_telem_by_systemid = Mock(
@@ -114,7 +117,7 @@ def mock_telemetry(sample_filter_telemetry, sample_pump_telemetry):
 class TestFilter:
     """Tests for Filter class."""
 
-    def test_filter_properties_config(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_properties_config(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test that filter config properties are correctly exposed."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
@@ -129,7 +132,7 @@ class TestFilter:
         assert filter_obj.medium_speed == 60
         assert filter_obj.high_speed == 80
 
-    def test_filter_properties_telemetry(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_properties_telemetry(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test that filter telemetry properties are correctly exposed."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
@@ -142,14 +145,14 @@ class TestFilter:
         assert filter_obj.power == 500
         assert filter_obj.last_speed == 50
 
-    def test_filter_is_on_true(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_is_on_true(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test is_on returns True when filter is on."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
 
         assert filter_obj.is_on is True
 
-    def test_filter_is_on_false(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_is_on_false(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test is_on returns False when filter is off."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
@@ -157,7 +160,7 @@ class TestFilter:
 
         assert filter_obj.is_on is False
 
-    def test_filter_is_ready_true(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_is_ready_true(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test is_ready returns True for stable states."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
@@ -170,7 +173,7 @@ class TestFilter:
         filter_obj.telemetry.state = FilterState.OFF
         assert filter_obj.is_ready is True
 
-    def test_filter_is_ready_false(self, mock_omni, sample_filter_config, mock_telemetry):
+    def test_filter_is_ready_false(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test is_ready returns False for transitional states."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
@@ -184,11 +187,11 @@ class TestFilter:
         assert filter_obj.is_ready is False
 
     @pytest.mark.asyncio
-    async def test_filter_turn_on(self, mock_omni, sample_filter_config, mock_telemetry):
+    async def test_filter_turn_on(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test turn_on method calls API correctly."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await filter_obj.turn_on()
 
@@ -199,11 +202,11 @@ class TestFilter:
         )
 
     @pytest.mark.asyncio
-    async def test_filter_turn_off(self, mock_omni, sample_filter_config, mock_telemetry):
+    async def test_filter_turn_off(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test turn_off method calls API correctly."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await filter_obj.turn_off()
 
@@ -214,11 +217,11 @@ class TestFilter:
         )
 
     @pytest.mark.asyncio
-    async def test_filter_run_preset_speed_low(self, mock_omni, sample_filter_config, mock_telemetry):
+    async def test_filter_run_preset_speed_low(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test run_preset_speed with LOW preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.LOW)
 
@@ -229,11 +232,11 @@ class TestFilter:
         )
 
     @pytest.mark.asyncio
-    async def test_filter_run_preset_speed_medium(self, mock_omni, sample_filter_config, mock_telemetry):
+    async def test_filter_run_preset_speed_medium(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test run_preset_speed with MEDIUM preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.MEDIUM)
 
@@ -244,11 +247,11 @@ class TestFilter:
         )
 
     @pytest.mark.asyncio
-    async def test_filter_run_preset_speed_high(self, mock_omni, sample_filter_config, mock_telemetry):
+    async def test_filter_run_preset_speed_high(self, mock_omni: Mock, sample_filter_config: MSPFilter, mock_telemetry: Mock) -> None:
         """Test run_preset_speed with HIGH preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.HIGH)
 
@@ -262,7 +265,7 @@ class TestFilter:
 class TestPump:
     """Tests for Pump class."""
 
-    def test_pump_properties_config(self, mock_omni, sample_pump_config, mock_telemetry):
+    def test_pump_properties_config(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test that pump config properties are correctly exposed."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
@@ -278,7 +281,7 @@ class TestPump:
         assert pump_obj.medium_speed == 60
         assert pump_obj.high_speed == 80
 
-    def test_pump_properties_telemetry(self, mock_omni, sample_pump_config, mock_telemetry):
+    def test_pump_properties_telemetry(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test that pump telemetry properties are correctly exposed."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
@@ -288,14 +291,14 @@ class TestPump:
         assert pump_obj.last_speed == 50
         assert pump_obj.why_on == 11
 
-    def test_pump_is_on_true(self, mock_omni, sample_pump_config, mock_telemetry):
+    def test_pump_is_on_true(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test is_on returns True when pump is on."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
 
         assert pump_obj.is_on is True
 
-    def test_pump_is_on_false(self, mock_omni, sample_pump_config, mock_telemetry):
+    def test_pump_is_on_false(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test is_on returns False when pump is off."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
@@ -303,7 +306,7 @@ class TestPump:
 
         assert pump_obj.is_on is False
 
-    def test_pump_is_ready(self, mock_omni, sample_pump_config, mock_telemetry):
+    def test_pump_is_ready(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test is_ready returns True for stable states."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
@@ -317,11 +320,11 @@ class TestPump:
         assert pump_obj.is_ready is True
 
     @pytest.mark.asyncio
-    async def test_pump_turn_on(self, mock_omni, sample_pump_config, mock_telemetry):
+    async def test_pump_turn_on(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test turn_on method calls API correctly."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
-        pump_obj._api.async_set_equipment = AsyncMock()
+        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await pump_obj.turn_on()
 
@@ -332,11 +335,11 @@ class TestPump:
         )
 
     @pytest.mark.asyncio
-    async def test_pump_turn_off(self, mock_omni, sample_pump_config, mock_telemetry):
+    async def test_pump_turn_off(self, mock_omni: Mock, sample_pump_config: MSPPump, mock_telemetry: Mock) -> None:
         """Test turn_off method calls API correctly."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
-        pump_obj._api.async_set_equipment = AsyncMock()
+        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
 
         await pump_obj.turn_off()
 
