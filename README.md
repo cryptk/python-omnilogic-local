@@ -351,4 +351,5 @@ This library was made possible by the pioneering work of:
 
 ## Disclaimer
 
+
 This is an unofficial library and is not affiliated with, endorsed by, or connected to Hayward Industries, Inc. Use at your own risk. The developers are not responsible for any damage to equipment or property resulting from the use of this software.
