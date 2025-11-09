@@ -23,6 +23,9 @@ omnilogic = "pyomnilogic_local.cli.cli:entrypoint"
 cli = [
     "scapy>=2.6.1,<3.0.0",
 ]
+build = [
+    "uv ~= 0.9.8"
+]
 
 [build-system]
 requires = ["uv_build>=0.9.8,<0.10.0"]
@@ -102,8 +105,14 @@ convention = "google"
 [tool.semantic_release]
 branch = "main"
 version_toml = ["pyproject.toml:project.version"]
-build_command = "uv build"
 allow_zero_version = true
+build_command = """
+    python -m pip install -e '.[build]'
+    uv lock --upgrade-package "$PACKAGE_NAME"
+    git add uv.lock
+    uv build
+"""
+
 
 [tool.uv]
 package = true
