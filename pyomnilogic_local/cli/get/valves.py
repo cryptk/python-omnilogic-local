@@ -1,23 +1,17 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPConfig,
-    MSPRelay,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-)
-from pyomnilogic_local.omnitypes import (
-    RelayFunction,
-    RelayType,
-    RelayWhyOn,
-    ValveActuatorState,
-)
+from pyomnilogic_local.omnitypes import RelayFunction, RelayType, RelayWhyOn, ValveActuatorState
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPRelay
+    from pyomnilogic_local.models.telemetry import Telemetry
 
 
 @click.command()
@@ -30,6 +24,8 @@ def valves(ctx: click.Context) -> None:
 
     Valve actuators control physical valves for features like waterfalls, fountains,
     and other water features.
+
+    Valves will also show under the output of `get relays` as they are a type of relay.
 
     Example:
         omnilogic get valves

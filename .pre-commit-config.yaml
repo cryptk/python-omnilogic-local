@@ -17,41 +17,45 @@ repos:
             -   id: detect-private-key
             -   id: end-of-file-fixer
             -   id: trailing-whitespace
-    -   repo: https://github.com/python-poetry/poetry
-        rev: 2.2.1
+    -   repo: https://github.com/astral-sh/uv-pre-commit
+        # uv version.
+        rev: 0.9.8
         hooks:
-            -   id: poetry-check
-    -   repo: https://github.com/PyCQA/isort
-        rev: 7.0.0
-        hooks:
-            -   id: isort
-    -   repo: https://github.com/psf/black
-        rev: 25.9.0
-        hooks:
-            -   id: black
+        - id: uv-lock
     -   repo: https://github.com/codespell-project/codespell
         rev: v2.4.1
         hooks:
             -   id: codespell
-                exclude: poetry.lock
-    -   repo: https://github.com/charliermarsh/ruff-pre-commit
-        rev: v0.14.1
+                exclude: uv.lock
+    -   repo: https://github.com/astral-sh/ruff-pre-commit
+        # Ruff version
+        rev: v0.14.4
         hooks:
-            -   id: ruff
-                args:
-                    - --fix
-    -   repo: local
-        hooks:
-            -   id: pylint
-                name: pylint
-                entry: poetry run pylint
-                language: system
-                types: [python]
-                require_serial: true
+            # Run the linter
+            - id: ruff-check
+              args: [ --fix ]
+            #  Run the formatter
+            - id: ruff-format
+    # -   repo: https://github.com/PyCQA/isort  # Replacing isort with ruff
+    #     rev: 7.0.0
+    #     hooks:
+    #         -   id: isort
+    # -   repo: https://github.com/psf/black  # Replacing black with ruff
+    #     rev: 25.9.0
+    #     hooks:
+    #         -   id: black
+    # -   repo: local  # Replacing pylint with ruff
+    #     hooks:
+    #         -   id: pylint
+    #             name: pylint
+    #             entry: uv run pylint
+    #             language: system
+    #             types: [python]
+    #             require_serial: true
     -   repo: https://github.com/pre-commit/mirrors-mypy
         rev: v1.18.2
         hooks:
             -   id: mypy
                 exclude: cli.py
                 additional_dependencies: [ "pydantic>=2.0.0", "pytest>=8.0.0" ]
-                args: [ "--config-file=./pyproject.toml", "--follow-imports=silent", "--strict", "--ignore-missing-imports", "--disallow-subclassing-any", "--no-warn-return-any" ]
+                args: [ "--config-file=./pyproject.toml"]

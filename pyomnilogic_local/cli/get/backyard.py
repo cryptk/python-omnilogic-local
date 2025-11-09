@@ -1,21 +1,17 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPBackyard,
-    MSPConfig,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryType,
-)
-from pyomnilogic_local.omnitypes import (
-    BackyardState,
-)
+from pyomnilogic_local.omnitypes import BackyardState
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPBackyard, MSPConfig
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
 
 @click.command()
@@ -40,7 +36,7 @@ def _print_backyard_info(backyardconfig: MSPBackyard, telemetry: TelemetryType |
     """Format and print backyard information in a nice table format.
 
     Args:
-        backyard: Backyard object from MSPConfig with attributes to display
+        backyardconfig: Backyard object from MSPConfig with attributes to display
         telemetry: Telemetry object containing current state information
     """
     click.echo("\n" + "=" * 60)
@@ -75,8 +71,7 @@ def _print_backyard_info(backyardconfig: MSPBackyard, telemetry: TelemetryType |
 
     if backyardconfig.bow:
         equipment_counts.append(f"Bodies of Water: {len(backyardconfig.bow)}")
-        for bow in backyardconfig.bow:
-            equipment_counts.append(f"  - {bow.name} ({bow.type})")
+        equipment_counts.extend(f"  - {bow.name} ({bow.equip_type})" for bow in backyardconfig.bow)
 
     if backyardconfig.sensor:
         equipment_counts.append(f"Backyard Sensors: {len(backyardconfig.sensor)}")

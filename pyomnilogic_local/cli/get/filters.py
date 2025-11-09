@@ -1,24 +1,17 @@
 # Need to figure out how to resolve the 'Untyped decorator makes function "..." untyped' errors in mypy when using click decorators
 # mypy: disable-error-code="misc"
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from pyomnilogic_local.models.mspconfig import (
-    MSPConfig,
-    MSPFilter,
-)
-from pyomnilogic_local.models.telemetry import (
-    Telemetry,
-    TelemetryType,
-)
-from pyomnilogic_local.omnitypes import (
-    FilterState,
-    FilterType,
-    FilterValvePosition,
-    FilterWhyOn,
-)
+from pyomnilogic_local.omnitypes import FilterState, FilterType, FilterValvePosition, FilterWhyOn
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPFilter
+    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
 
 @click.command()

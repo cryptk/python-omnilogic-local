@@ -1,5 +1,7 @@
 """Tests for chlorinator multi-bit field special case handling."""
 
+from __future__ import annotations
+
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 

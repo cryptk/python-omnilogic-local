@@ -1,8 +1,8 @@
 {
   "recommendations": [
       "ms-python.python",
-      "ms-python.black-formatter",
       "ms-python.mypy-type-checker",
-      "njpwerner.autodocstring"
+      "njpwerner.autodocstring",
+      "charliermarsh.ruff"
   ]
 }

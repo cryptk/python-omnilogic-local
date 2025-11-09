@@ -7,6 +7,19 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .const import XML_NS
 
+# Example Lead Message XML:
+#
+# <?xml.version="1.0" encoding="UTF-8"?>
+# <Response xmlns="http://nextgen.hayward.com/api">
+#     <Name>LeadMessage</Name>
+#     <Parameters>
+#         <Parameter name="SourceOpId" dataType="int">1003</Parameter>
+#         <Parameter name="MsgSize" dataType="int">3709</Parameter>
+#         <Parameter name="MsgBlockCount" dataType="int">4</Parameter>
+#         <Parameter name="Type" dataType="int">0</Parameter>
+#     </Parameters>
+# </Response>
+
 
 class LeadMessage(BaseModel):
     model_config = ConfigDict(from_attributes=True)

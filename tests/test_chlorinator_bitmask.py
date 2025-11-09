@@ -1,5 +1,7 @@
 """Tests for chlorinator bitmask decoding."""
 
+from __future__ import annotations
+
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 
@@ -9,7 +11,7 @@ def test_chlorinator_status_decoding() -> None:
     # Bit 1: ALERT_PRESENT (2)
     # Bit 2: GENERATING (4)
     # Bit 7: K2_ACTIVE (128)
-    # Total: 2 + 4 + 128 = 134
+    # Total: 2 + 4 + 128 = 134  # noqa: ERA001
     data = {
         "@systemId": 5,
         "@status": 134,
@@ -73,7 +75,7 @@ def test_chlorinator_error_decoding() -> None:
     # Create a chlorinator with chlrError = 257 (0b100000001)
     # Bit 0: CURRENT_SENSOR_SHORT (1)
     # Bit 8: K1_RELAY_SHORT (256)
-    # Total: 1 + 256 = 257
+    # Total: 1 + 256 = 257  # noqa: ERA001
     data = {
         "@systemId": 5,
         "@status": 1,  # ERROR_PRESENT
@@ -125,11 +127,11 @@ def test_chlorinator_no_flags() -> None:
 
 def test_chlorinator_complex_alerts() -> None:
     """Test complex multi-bit alert combinations."""
-    # chlrAlert = 67 (0b01000011)
+    # chlrAlert = 67 (0b01000011)  # noqa: ERA001
     # Bit 0: SALT_LOW (1)
     # Bit 1: SALT_VERY_LOW (2)
     # Bit 6: BOARD_TEMP_HIGH (64)
-    # Total: 1 + 2 + 64 = 67
+    # Total: 1 + 2 + 64 = 67  # noqa: ERA001
     data = {
         "@systemId": 5,
         "@status": 2,
