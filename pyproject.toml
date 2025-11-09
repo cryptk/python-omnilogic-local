@@ -9,7 +9,7 @@ authors = [
     {name = "djtimca"},
     {name = "garionphx"}
 ]
-license = {text = "Apache-2.0"}
+license-files = ["LICENSE"]
 dependencies = [
     "pydantic >=2.0.0,<3.0.0",
     "click >=8.0.0,<8.4.0",
@@ -24,6 +24,10 @@ cli = [
     "scapy>=2.6.1,<3.0.0",
 ]
 
+[build-system]
+requires = ["uv_build>=0.9.8,<0.10.0"]
+build-backend = "uv_build"
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.0,<5.0.0",
@@ -37,19 +41,14 @@ dev = [
 
 [tool.mypy]
 python_version = "3.13"
-# plugins = [
-#     "pydantic.mypy"
-# ]
+plugins = [
+    "pydantic.mypy"
+]
 follow_imports = "silent"
 strict = true
 ignore_missing_imports = true
 disallow_subclassing_any = false
 warn_return_any = false
-
-[tool.pylint."FORMAT"]
-expected-line-ending-format = "LF"
-# Maximum number of characters on a single line.
-max-line-length=140
 
 [tool.ruff]
 line-length = 140
@@ -99,3 +98,20 @@ future-annotations = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.semantic_release]
+branch = "main"
+version_toml = ["pyproject.toml:project.version"]
+build_command = "uv build"
+
+[tool.semantic_release.branches.refactor_abstracted_interface]
+match = "refactor_abstracted_interface"
+# prerelease = true
+# prerelease_token = "alpha"
+
+[tool.uv]
+package = true
+
+[tool.uv.build-backend]
+module-name = "pyomnilogic_local"
+module-root = ""

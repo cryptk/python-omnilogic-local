@@ -31,9 +31,8 @@ def mock_omni() -> Mock:
 @pytest.fixture
 def sample_filter_config() -> MSPFilter:
     """Create a sample filter configuration."""
-    return MSPFilter.model_construct(
-        None,
-        **{
+    return MSPFilter.model_validate(
+        {
             "System-Id": 8,
             "Name": "Test Filter",
             "Filter-Type": FilterType.VARIABLE_SPEED,
@@ -52,9 +51,8 @@ def sample_filter_config() -> MSPFilter:
 @pytest.fixture
 def sample_filter_telemetry() -> TelemetryFilter:
     """Create sample filter telemetry."""
-    return TelemetryFilter.model_construct(
-        None,
-        **{
+    return TelemetryFilter.model_validate(
+        {
             "@systemId": 8,
             "@filterState": FilterState.ON,
             "@filterSpeed": 60,
@@ -70,9 +68,8 @@ def sample_filter_telemetry() -> TelemetryFilter:
 @pytest.fixture
 def sample_pump_config() -> MSPPump:
     """Create a sample pump configuration."""
-    return MSPPump.model_construct(
-        None,
-        **{
+    return MSPPump.model_validate(
+        {
             "System-Id": 15,
             "Name": "Test Pump",
             "Type": PumpType.VARIABLE_SPEED,
@@ -92,9 +89,8 @@ def sample_pump_config() -> MSPPump:
 @pytest.fixture
 def sample_pump_telemetry() -> TelemetryPump:
     """Create sample pump telemetry."""
-    return TelemetryPump.model_construct(
-        None,
-        **{
+    return TelemetryPump.model_validate(
+        {
             "@systemId": 15,
             "@pumpState": PumpState.ON,
             "@pumpSpeed": 60,
