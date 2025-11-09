@@ -103,11 +103,7 @@ convention = "google"
 branch = "main"
 version_toml = ["pyproject.toml:project.version"]
 build_command = "uv build"
-
-[tool.semantic_release.branches.refactor_abstracted_interface]
-match = "refactor_abstracted_interface"
-# prerelease = true
-# prerelease_token = "alpha"
+allow_zero_version = true
 
 [tool.uv]
 package = true
