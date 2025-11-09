@@ -32,6 +32,9 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+
     steps:
       # Note: We checkout the repository at the branch that triggered the workflow
       # with the entire history to ensure to match PSR's release branch detection
