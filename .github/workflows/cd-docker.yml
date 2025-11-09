@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows:
-      - Continuous Delivery
+      - CD Release and Publish
     types:
       - completed
     branches:

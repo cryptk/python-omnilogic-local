@@ -3,7 +3,7 @@ name: CD Release and Publish
 on:
   workflow_run:
     workflows:
-      - Continuous Integration
+      - CI Testing Workflow
     types:
       - completed
     branches:
