@@ -5,13 +5,9 @@ name: CD Build and publish multi arch Docker Image
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - CD Release and Publish
-    types:
-      - completed
-    branches:
-      - main
+  push:
+    tags:
+      - 'v*.*.*'
 
 env:
   # The name of the Docker image to be built and pushed to GHCR
