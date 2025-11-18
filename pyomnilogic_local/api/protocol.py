@@ -229,7 +229,12 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             # Wait for either a message or an error
             data_task = asyncio.create_task(self.data_queue.get())
             error_task = asyncio.create_task(self.error_queue.get())
-            done, _ = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
+
+            # Cancel any pending tasks to avoid "Task was destroyed but it is pending" warnings
+            for task in pending:
+                task.cancel()
+
             if error_task in done:
                 exc = error_task.result()
                 if isinstance(exc, Exception):

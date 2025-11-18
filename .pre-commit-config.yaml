@@ -57,5 +57,7 @@ repos:
         hooks:
             -   id: mypy
                 exclude: cli.py
-                additional_dependencies: [ "pydantic>=2.0.0", "pytest>=8.0.0" ]
+                additional_dependencies:
+                  - "pydantic>=2.0.0"
+                  - "pytest>=8.0.0"
                 args: [ "--config-file=./pyproject.toml"]
