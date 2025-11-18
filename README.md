@@ -3,9 +3,10 @@
 # Python OmniLogic Local
 
 [![PyPI Version](https://img.shields.io/pypi/v/python-omnilogic-local.svg?logo=python&logoColor=fff&style=flat-square)](https://pypi.org/project/python-omnilogic-local/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/python-omnilogic-local.svg?style=flat-square&logo=python&logoColor=fff)](https://pypi.org/project/python-omnilogic-local/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/cryptk/python-omnilogic-local/build-test.yml?style=flat-square&label=Build)](https://github.com/cryptk/python-omnilogic-local/actions)
-[![License](https://img.shields.io/pypi/l/python-omnilogic-local.svg?style=flat-square)](LICENSE)
+![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcryptk%2Fpython-omnilogic-local%2Frefs%2Fheads%2Fmain%2Fpyproject.toml?style=flat-square)
+[![Tests](https://img.shields.io/github/actions/workflow/status/cryptk/python-omnilogic-local/ci-testing.yml?style=flat-square&label=Tests)](https://github.com/cryptk/python-omnilogic-local/actions)
+[![License](https://img.shields.io/github/license/cryptk/python-omnilogic-local
+?style=flat-square)](LICENSE)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=flat-square&logo=buy-me-a-coffee&logoColor=000)](https://www.buymeacoffee.com/cryptk)
 
 **A modern Python library for local control of Hayward OmniLogic and OmniHub pool controllers**
