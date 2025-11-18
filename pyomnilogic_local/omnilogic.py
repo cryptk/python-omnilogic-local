@@ -15,6 +15,7 @@ from pyomnilogic_local.system import System
 
 if TYPE_CHECKING:
     from pyomnilogic_local._base import OmniEquipment
+    from pyomnilogic_local.bow import Bow
     from pyomnilogic_local.chlorinator import Chlorinator
     from pyomnilogic_local.chlorinator_equip import ChlorinatorEquipment
     from pyomnilogic_local.colorlogiclight import ColorLogicLight
@@ -260,6 +261,12 @@ class OmniLogic:
             csads.extend(bow.csads.values())
         return EquipmentDict(csads)
 
+    @property
+    def all_bows(self) -> EquipmentDict[Bow]:
+        """Returns all Bow instances across all bows in the backyard."""
+        # Bows are stored directly in backyard as EquipmentDict already
+        return self.backyard.bow
+
     # Equipment search methods
     def get_equipment_by_name(self, name: str) -> OmniEquipment[Any, Any] | None:
         """Find equipment by name across all equipment types.
@@ -272,6 +279,7 @@ class OmniLogic:
         """
         # Search all equipment types
         all_equipment: list[OmniEquipment[Any, Any]] = []
+        all_equipment.extend([self.backyard])
         all_equipment.extend(self.all_lights.values())
         all_equipment.extend(self.all_relays.values())
         all_equipment.extend(self.all_pumps.values())
@@ -283,6 +291,7 @@ class OmniLogic:
         all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
         all_equipment.extend(self.all_csad_equipment.values())
+        all_equipment.extend(self.all_bows.values())
         all_equipment.extend(self.groups.values())
 
         for equipment in all_equipment:
@@ -302,6 +311,7 @@ class OmniLogic:
         """
         # Search all equipment types
         all_equipment: list[OmniEquipment[Any, Any]] = []
+        all_equipment.extend([self.backyard])
         all_equipment.extend(self.all_lights.values())
         all_equipment.extend(self.all_relays.values())
         all_equipment.extend(self.all_pumps.values())
@@ -313,6 +323,7 @@ class OmniLogic:
         all_equipment.extend(self.all_chlorinator_equipment.values())
         all_equipment.extend(self.all_csads.values())
         all_equipment.extend(self.all_csad_equipment.values())
+        all_equipment.extend(self.all_bows.values())
         all_equipment.extend(self.groups.values())
         all_equipment.extend(self.schedules.values())
 

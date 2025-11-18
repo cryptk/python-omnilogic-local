@@ -47,7 +47,7 @@ python_version = "3.13"
 plugins = [
     "pydantic.mypy"
 ]
-follow_imports = "silent"
+# follow_imports = "silent"
 strict = true
 ignore_missing_imports = true
 disallow_subclassing_any = false

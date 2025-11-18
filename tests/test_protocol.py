@@ -14,7 +14,7 @@ import asyncio
 import struct
 import time
 import zlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
@@ -787,3 +787,41 @@ async def test_receive_file_fragmented_ignores_non_block_messages(caplog: pytest
 
     assert any("other than a blockmessage" in r.message for r in caplog.records)
     assert result == "data"
+
+
+@pytest.mark.asyncio
+async def test_wait_for_ack_cancels_pending_tasks() -> None:
+    """Test that pending tasks are properly cancelled in _wait_for_ack to avoid warnings."""
+    protocol = OmniLogicProtocol()
+    protocol.transport = MagicMock()
+
+    # Track tasks created during _wait_for_ack
+    created_tasks: list[asyncio.Task[Any]] = []
+    original_create_task = asyncio.create_task
+
+    def track_create_task(coro: Any) -> asyncio.Task[Any]:
+        task: asyncio.Task[Any] = original_create_task(coro)
+        created_tasks.append(task)
+        return task
+
+    # Queue up an ACK message
+    ack_msg = OmniLogicMessage(42, MessageType.ACK)
+    await protocol.data_queue.put(ack_msg)
+
+    # Patch create_task to track tasks
+    with patch("asyncio.create_task", side_effect=track_create_task):
+        await protocol._wait_for_ack(42)
+
+    # Give the event loop a chance to process cancellation
+    await asyncio.sleep(0)
+
+    # Should have created 2 tasks (data_task and error_task)
+    assert len(created_tasks) == 2
+
+    # One should be done (the data_task that got the ACK)
+    # One should be cancelled (the error_task that was waiting)
+    done_tasks = [t for t in created_tasks if t.done() and not t.cancelled()]
+    cancelled_tasks = [t for t in created_tasks if t.cancelled()]
+
+    assert len(done_tasks) == 1, "Expected exactly one task to complete normally"
+    assert len(cancelled_tasks) == 1, "Expected exactly one task to be cancelled"

@@ -9,7 +9,7 @@
     "tests"
   ],
   "mypy-type-checker.importStrategy": "fromEnvironment",
-  "python.analysis.typeCheckingMode": "basic",
+  // "python.analysis.typeCheckingMode": "basic",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true
