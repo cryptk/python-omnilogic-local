@@ -59,9 +59,5 @@ repos:
                 exclude: cli.py
                 additional_dependencies:
                   - "pydantic>=2.0.0"
-                  - "types-xmltodict >=1.0.1,<2.0.0"
                   - "pytest>=8.0.0"
-                  - "pytest-cov>=7.0.0,<8.0.0"
-                  - "pytest-asyncio>=1.2.0,<2.0.0"
-                  - "pytest-subtests>=0.15.0,<1.0.0"
                 args: [ "--config-file=./pyproject.toml"]
