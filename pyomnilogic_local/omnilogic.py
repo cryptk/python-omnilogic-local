@@ -50,11 +50,11 @@ class OmniLogic:
     _min_mspversion: str = "R05"
     _warned_mspversion: bool = False
 
-    def __init__(self, host: str, port: int = 10444) -> None:
+    def __init__(self, host: str, port: int = 10444, timeout: float = 5.0) -> None:
         self.host = host
         self.port = port
 
-        self._api = OmniLogicAPI(host, port)
+        self._api = OmniLogicAPI(host, port, timeout)
         self._refresh_lock = asyncio.Lock()
 
     def __repr__(self) -> str:
