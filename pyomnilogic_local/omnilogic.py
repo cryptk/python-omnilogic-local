@@ -6,7 +6,6 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from pyomnilogic_local.api import OmniLogicAPI
-from pyomnilogic_local.api.constants import DEFAULT_RESPONSE_TIMEOUT
 from pyomnilogic_local.backyard import Backyard
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.groups import Group
@@ -51,11 +50,11 @@ class OmniLogic:
     _min_mspversion: str = "R05"
     _warned_mspversion: bool = False
 
-    def __init__(self, host: str, port: int = 10444, timeout: float = DEFAULT_RESPONSE_TIMEOUT) -> None:
+    def __init__(self, host: str, port: int = 10444) -> None:
         self.host = host
         self.port = port
 
-        self._api = OmniLogicAPI(host, port, timeout)
+        self._api = OmniLogicAPI(host, port)
         self._refresh_lock = asyncio.Lock()
 
     def __repr__(self) -> str:
