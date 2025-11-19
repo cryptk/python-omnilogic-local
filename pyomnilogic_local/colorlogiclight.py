@@ -168,7 +168,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     @property
     def show(self) -> LightShows:
         """Returns the current light show."""
-        return self.telemetry.show
+        return self.telemetry.show_name(self.model, self.v2_active)
 
     @property
     def speed(self) -> ColorLogicSpeed:
@@ -282,7 +282,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         await self._api.async_set_light_show(
             self.bow_id,
             self.system_id,
-            show or self.show,  # use current value if None
-            speed or self.speed,  # use current value if None
-            brightness or self.brightness,  # use current value if None
+            show if show is not None else self.show,  # use current value if None
+            speed if speed is not None else self.speed,  # use current value if None
+            brightness if brightness is not None else self.brightness,  # use current value if None
         )

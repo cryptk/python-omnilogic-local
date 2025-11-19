@@ -289,14 +289,13 @@ class MSPColorLogicLight(OmniBase):
 
     omni_type: OmniType = OmniType.CL_LIGHT
 
-    equip_type: ColorLogicLightType = Field(alias="Type")
     v2_active: bool = Field(alias="V2-Active", default=False)
+    equip_type: ColorLogicLightType = Field(alias="Type")
     effects: list[LightShows] | None = None
 
-    def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
-
-        # Get the available light shows depending on the light type.
+    @model_validator(mode="after")
+    def set_effects(self) -> Any:
+        """Set the available light shows based on the light type."""
         match self.equip_type:
             case ColorLogicLightType.TWO_FIVE:
                 self.effects = list(ColorLogicShow25)
@@ -311,6 +310,7 @@ class MSPColorLogicLight(OmniBase):
                 self.effects = list(PentairShow)
             case ColorLogicLightType.ZODIAC_COLOR:
                 self.effects = list(ZodiacShow)
+        return self
 
 
 class MSPGroup(OmniBase):
