@@ -267,7 +267,7 @@ class TelemetryColorLogicLight(BaseModel):
 
     def show_name(
         self, model: ColorLogicLightType, v2: bool
-    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow | int:
+    ) -> ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow:
         """Get the current light show depending on the light type.
 
         Returns:
@@ -287,7 +287,8 @@ class TelemetryColorLogicLight(BaseModel):
                 return PentairShow(self.show)
             case ColorLogicLightType.ZODIAC_COLOR:
                 return ZodiacShow(self.show)
-        return self.show  # Return raw int if type is unknown
+        msg = f"Unknown ColorLogicLightType {model} for show name parsing"
+        raise OmniParsingError(msg)
 
 
 class TelemetryFilter(BaseModel):
