@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import click
 
@@ -15,6 +15,7 @@ from pyomnilogic_local.cli.utils import async_get_filter_diagnostics
 
 if TYPE_CHECKING:
     from pyomnilogic_local.api.api import OmniLogicAPI
+    from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 
 @click.group()
@@ -208,4 +209,123 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
             click.echo(f"Successfully set equipment {equip_id} in BOW {bow_id} to {is_on_value}%")
     except Exception as e:
         click.echo(f"Error setting equipment: {e}", err=True)
+        raise click.Abort from e
+
+
+@debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("equip_id", type=int)
+@click.argument("timed_percent", type=int)
+@click.argument("op_mode", type=int)
+@click.pass_context
+def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_percent: int, op_mode: int) -> None:
+    """Set chlorinator parameters with explicit control over configuration.
+
+    This command sets chlorinator parameters using the current chlorinator's
+    configuration for cell_type, sc_timeout, bow_type, and orp_timeout, while
+    allowing you to specify timed_percent and op_mode. The cfg_state is derived
+    from the chlorinator's current on/off state.
+
+    BOW_ID: The Body of Water (pool/spa) system ID
+    EQUIP_ID: The chlorinator equipment system ID
+    TIMED_PERCENT: Chlorine generation percentage (0-100)
+    OP_MODE: Operating mode (0=DISABLED, 1=TIMED, 2=ORP_AUTO, 3=ORP_TIMED_RW)
+
+    Examples:
+        # Set chlorinator to 75% in TIMED mode
+        omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 75 1
+
+        # Disable chlorinator
+        omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 0 0
+
+        # Set to ORP AUTO mode with 50% generation
+        omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 50 2
+
+    """
+    ensure_connection(ctx)
+    omni: OmniLogicAPI = ctx.obj["OMNI"]
+
+    # Validate timed_percent
+    if not 0 <= timed_percent <= 100:
+        click.echo(f"Error: timed_percent must be between 0-100, got {timed_percent}", err=True)
+        raise click.Abort
+
+    # Validate op_mode
+    if not 0 <= op_mode <= 2:
+        click.echo(f"Error: op_mode must be between 0-3, got {op_mode}", err=True)
+        raise click.Abort
+
+    # Get MSPConfig and Telemetry to find the chlorinator
+    try:
+        mspconfig_raw = asyncio.run(omni.async_get_mspconfig(raw=False))
+        telemetry_raw = asyncio.run(omni.async_get_telemetry(raw=False))
+    except Exception as e:
+        click.echo(f"Error retrieving configuration: {e}", err=True)
+        raise click.Abort from e
+
+    # Find the BOW
+    bow = None
+    if mspconfig_raw.backyard.bow:
+        for candidate_bow in mspconfig_raw.backyard.bow:
+            if candidate_bow.system_id == bow_id:
+                bow = candidate_bow
+                break
+
+    if bow is None:
+        click.echo(f"Error: Body of Water with ID {bow_id} not found", err=True)
+        raise click.Abort
+
+    # Find the chlorinator
+    if bow.chlorinator is None or bow.chlorinator.system_id != equip_id:
+        click.echo(f"Error: Chlorinator with ID {equip_id} not found in BOW {bow_id}", err=True)
+        raise click.Abort
+
+    chlorinator = bow.chlorinator
+
+    # Get telemetry for the chlorinator to determine is_on state
+    chlorinator_telemetry = telemetry_raw.get_telem_by_systemid(equip_id)
+    if chlorinator_telemetry is None:
+        click.echo(f"Warning: No telemetry found for chlorinator {equip_id}, defaulting cfg_state to 3 (on)", err=True)
+        cfg_state = 3
+    else:
+        # Cast to TelemetryChlorinator to access enable attribute
+        chlorinator_telem = cast("TelemetryChlorinator", chlorinator_telemetry)
+        # Determine cfg_state from enable flag in telemetry
+        cfg_state = 3 if chlorinator_telem.enable else 2
+
+    # Determine bow_type from equipment type (0=pool, 1=spa)
+    bow_type = 0 if bow.equip_type == "BOW_POOL" else 1
+
+    # Get parameters from chlorinator config
+    cell_type = chlorinator.cell_type.value
+    sc_timeout = chlorinator.superchlor_timeout
+    orp_timeout = chlorinator.orp_timeout
+
+    # Execute the command
+    try:
+        asyncio.run(
+            omni.async_set_chlorinator_params(
+                pool_id=bow_id,
+                equipment_id=equip_id,
+                timed_percent=timed_percent,
+                cell_type=cell_type,
+                op_mode=op_mode,
+                sc_timeout=sc_timeout,
+                bow_type=bow_type,
+                orp_timeout=orp_timeout,
+                cfg_state=cfg_state,
+            )
+        )
+        click.echo(
+            f"Sent command to chlorinator {equip_id} in BOW {bow_id}:\n"
+            f"  Timed Percent: {timed_percent}%\n"
+            f"  Operating Mode: {op_mode}\n"
+            f"  Config State: {cfg_state} ({'on' if cfg_state == 3 else 'off'})\n"
+            f"  Cell Type: {cell_type}\n"
+            f"  SC Timeout: {sc_timeout}\n"
+            f"  BOW Type: {bow_type}\n"
+            f"  ORP Timeout: {orp_timeout}"
+        )
+    except Exception as e:
+        click.echo(f"Error setting chlorinator parameters: {e}", err=True)
         raise click.Abort from e
