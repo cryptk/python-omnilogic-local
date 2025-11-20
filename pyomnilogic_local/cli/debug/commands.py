@@ -243,7 +243,7 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
     omni: OmniLogicAPI = ctx.obj["OMNI"]
 
     # Validate timed_percent
-    if not 0 <= timed_percent <= 100:
+    if not 0 <= timed_percent <= 1000:  # Temporarily allow up to 1000 to test ORP behavior
         click.echo(f"Error: timed_percent must be between 0-100, got {timed_percent}", err=True)
         raise click.Abort
 
