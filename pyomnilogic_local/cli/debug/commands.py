@@ -229,14 +229,11 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
     BOW_ID: The Body of Water (pool/spa) system ID
     EQUIP_ID: The chlorinator equipment system ID
     TIMED_PERCENT: Chlorine generation percentage (0-100)
-    OP_MODE: Operating mode (0=DISABLED, 1=TIMED, 2=ORP_AUTO, 3=ORP_TIMED_RW)
+    OP_MODE: Operating mode (0=DISABLED, 1=TIMED, 2=ORP_AUTO)
 
     Examples:
         # Set chlorinator to 75% in TIMED mode
         omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 75 1
-
-        # Disable chlorinator
-        omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 0 0
 
         # Set to ORP AUTO mode with 50% generation
         omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 50 2
