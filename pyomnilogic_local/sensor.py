@@ -86,7 +86,7 @@ class Sensor(OmniEquipment[MSPSensor, None]):
         super().__init__(omni, mspconfig, telemetry)
 
     @property
-    def sensor_type(self) -> SensorType | str:
+    def equip_type(self) -> SensorType | str:
         """Returns the type of sensor.
 
         Can be AIR_TEMP, SOLAR_TEMP, WATER_TEMP, FLOW, ORP, or EXT_INPUT.
