@@ -550,7 +550,7 @@ class OmniLogicAPI:
         sc_timeout: int,
         bow_type: int,
         orp_timeout: int,
-        cfg_state: int = 3,
+        cfg_state: int = 3,  # 3 == on, 2 == off
     ) -> None:
         body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
 

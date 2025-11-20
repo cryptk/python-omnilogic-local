@@ -14,7 +14,7 @@ from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 if TYPE_CHECKING:
     from pyomnilogic_local.models.telemetry import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
-    from pyomnilogic_local.omnitypes import ChlorinatorCellType, ChlorinatorOperatingMode
+    from pyomnilogic_local.omnitypes import ChlorinatorCellType, ChlorinatorDispenserType, ChlorinatorOperatingMode
 
 
 class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
@@ -83,7 +83,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         return self.mspconfig.orp_timeout
 
     @property
-    def dispenser_type(self) -> str:
+    def dispenser_type(self) -> ChlorinatorDispenserType:
         """Type of chlorine dispenser (SALT, LIQUID, or TABLET)."""
         return self.mspconfig.dispenser_type
 
@@ -99,7 +99,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         return self.telemetry.operating_state
 
     @property
-    def operating_mode(self) -> ChlorinatorOperatingMode | int:
+    def operating_mode(self) -> ChlorinatorOperatingMode:
         """Current operating mode (DISABLED, TIMED, ORP_AUTO, or ORP_TIMED_RW).
 
         Returns:
