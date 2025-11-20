@@ -117,7 +117,7 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
         super().__init__(omni, mspconfig, telemetry)
 
     @property
-    def model(self) -> ColorLogicLightType:
+    def equip_type(self) -> ColorLogicLightType:
         """Returns the model of the light."""
         return self.mspconfig.equip_type
 
@@ -168,12 +168,17 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     @property
     def show(self) -> LightShows:
         """Returns the current light show."""
-        return self.telemetry.show_name(self.model, self.v2_active)
+        return self.telemetry.show_name(self.equip_type, self.v2_active)
 
     @property
     def speed(self) -> ColorLogicSpeed:
         """Returns the current speed."""
-        if self.model in [ColorLogicLightType.SAM, ColorLogicLightType.TWO_FIVE, ColorLogicLightType.FOUR_ZERO, ColorLogicLightType.UCL]:
+        if self.equip_type in [
+            ColorLogicLightType.SAM,
+            ColorLogicLightType.TWO_FIVE,
+            ColorLogicLightType.FOUR_ZERO,
+            ColorLogicLightType.UCL,
+        ]:
             return self.telemetry.speed
         # Non color-logic lights only support 1x speed
         return ColorLogicSpeed.ONE_TIMES
@@ -181,7 +186,12 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
     @property
     def brightness(self) -> ColorLogicBrightness:
         """Returns the current brightness."""
-        if self.model in [ColorLogicLightType.SAM, ColorLogicLightType.TWO_FIVE, ColorLogicLightType.FOUR_ZERO, ColorLogicLightType.UCL]:
+        if self.equip_type in [
+            ColorLogicLightType.SAM,
+            ColorLogicLightType.TWO_FIVE,
+            ColorLogicLightType.FOUR_ZERO,
+            ColorLogicLightType.UCL,
+        ]:
             return self.telemetry.brightness
         # Non color-logic lights only support 100% brightness
         return ColorLogicBrightness.ONE_HUNDRED_PERCENT
@@ -262,17 +272,17 @@ class ColorLogicLight(OmniEquipment[MSPColorLogicLight, TelemetryColorLogicLight
             and a warning will be logged.
         """
         # Non color-logic lights do not support speed or brightness control
-        if self.model not in [
+        if self.equip_type not in [
             ColorLogicLightType.SAM,
             ColorLogicLightType.TWO_FIVE,
             ColorLogicLightType.FOUR_ZERO,
             ColorLogicLightType.UCL,
         ]:
             if speed is not None:
-                _LOGGER.warning("Non colorlogic lights do not support speed control %s", self.model.name)
+                _LOGGER.warning("Non colorlogic lights do not support speed control %s", self.equip_type.name)
                 speed = ColorLogicSpeed.ONE_TIMES
             if brightness is not None:
-                _LOGGER.warning("Non colorlogic lights do not support brightness control %s", self.model.name)
+                _LOGGER.warning("Non colorlogic lights do not support brightness control %s", self.equip_type.name)
                 brightness = ColorLogicBrightness.ONE_HUNDRED_PERCENT
 
         if self.bow_id is None or self.system_id is None:
