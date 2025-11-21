@@ -373,7 +373,7 @@ class OmniLogicAPI:
         self,
         pool_id: int,
         equipment_id: int,
-        is_on: int | bool,
+        is_on: int | bool | str,
         is_countdown_timer: bool = False,
         start_time_hours: int = 0,
         start_time_minutes: int = 0,

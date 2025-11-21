@@ -182,22 +182,15 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
     ensure_connection(ctx)
     omni: OmniLogicAPI = ctx.obj["OMNI"]
 
+    is_on_value: int | bool | str
     # Parse is_on parameter - can be bool-like string or integer
     is_on_lower = is_on.lower()
     if is_on_lower in ("true", "on", "yes", "1"):
-        is_on_value: int | bool = True
+        is_on_value = True
     elif is_on_lower in ("false", "off", "no", "0"):
         is_on_value = False
     else:
-        # Try to parse as integer for variable speed equipment
-        try:
-            is_on_value = int(is_on)
-            if not 0 <= is_on_value <= 100:
-                click.echo(f"Error: Integer value must be between 0-100, got {is_on_value}", err=True)
-                raise click.Abort
-        except ValueError as exc:
-            click.echo(f"Error: Invalid value '{is_on}'. Use true/false, on/off, or 0-100 for speed.", err=True)
-            raise click.Abort from exc
+        is_on_value = is_on
 
     # Execute the command
     try:
