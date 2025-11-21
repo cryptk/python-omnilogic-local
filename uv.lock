@@ -373,7 +373,7 @@ wheels = [
 
 [[package]]
 name = "python-omnilogic-local"
-version = "0.20.12"
+version = "0.20.13"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
