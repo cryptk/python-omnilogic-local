@@ -319,3 +319,82 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
     except Exception as e:
         click.echo(f"Error setting chlorinator parameters: {e}", err=True)
         raise click.Abort from e
+
+
+@debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("csad_id", type=int)
+@click.argument("target", type=float)
+@click.pass_context
+def set_csad_ph(ctx: click.Context, bow_id: int, csad_id: int, target: float) -> None:
+    """Set the pH target value for a CSAD (Chemical Sense and Dispense).
+
+    This command sets the target pH level that the CSAD will attempt to maintain.
+
+    BOW_ID: The Body of Water (pool/spa) system ID
+    CSAD_ID: The CSAD equipment system ID
+    TARGET: Target pH value (typically 7.0-8.0)
+
+    Examples:
+        # Set pH target to 7.4
+        omnilogic --host 192.168.1.100 debug set-csad-ph 7 20 7.4
+
+        # Set pH target to 7.2
+        omnilogic --host 192.168.1.100 debug set-csad-ph 7 20 7.2
+
+    """
+    ensure_connection(ctx)
+    omni: OmniLogicAPI = ctx.obj["OMNI"]
+
+    # Validate target pH (typical range is 6.8-8.2, but allow wider range)
+    if not 0.0 <= target <= 14.0:
+        click.echo(f"Error: pH target must be between 0.0-14.0, got {target}", err=True)
+        raise click.Abort
+
+    # Execute the command
+    try:
+        asyncio.run(omni.async_set_csad_target_value(pool_id=bow_id, csad_id=csad_id, ph_target=target))
+        click.echo(f"Successfully set CSAD {csad_id} in BOW {bow_id} pH target to {target}")
+    except Exception as e:
+        click.echo(f"Error setting CSAD pH target: {e}", err=True)
+        raise click.Abort from e
+
+
+@debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("csad_id", type=int)
+@click.argument("target", type=int)
+@click.pass_context
+def set_csad_orp(ctx: click.Context, bow_id: int, csad_id: int, target: int) -> None:
+    """Set the ORP target level for a CSAD (Chemical Sense and Dispense).
+
+    This command sets the target ORP (Oxidation-Reduction Potential) level in
+    millivolts that the CSAD will attempt to maintain.
+
+    BOW_ID: The Body of Water (pool/spa) system ID
+    CSAD_ID: The CSAD equipment system ID
+    TARGET: Target ORP value in millivolts (typically 600-800 mV)
+
+    Examples:
+        # Set ORP target to 700 mV
+        omnilogic --host 192.168.1.100 debug set-csad-orp 7 20 700
+
+        # Set ORP target to 650 mV
+        omnilogic --host 192.168.1.100 debug set-csad-orp 7 20 650
+
+    """
+    ensure_connection(ctx)
+    omni: OmniLogicAPI = ctx.obj["OMNI"]
+
+    # Validate target ORP (typical range is 400-900 mV, but allow 0-1000)
+    if not 0 <= target <= 1000:
+        click.echo(f"Error: ORP target must be between 0-1000 mV, got {target}", err=True)
+        raise click.Abort
+
+    # Execute the command
+    try:
+        asyncio.run(omni.async_set_csad_orp_target_level(pool_id=bow_id, csad_id=csad_id, orp_target=target))
+        click.echo(f"Successfully set CSAD {csad_id} in BOW {bow_id} ORP target to {target} mV")
+    except Exception as e:
+        click.echo(f"Error setting CSAD ORP target: {e}", err=True)
+        raise click.Abort from e

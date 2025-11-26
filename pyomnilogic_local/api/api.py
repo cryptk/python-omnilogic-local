@@ -540,6 +540,54 @@ class OmniLogicAPI:
 
         return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
 
+    # This is used to set the ORP target value on a CSAD
+    async def async_set_csad_orp_target_level(
+        self,
+        pool_id: int,
+        csad_id: int,
+        orp_target: int,
+    ) -> None:
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "SetUICSADORPTargetLevel"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="PoolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CSADID", dataType="int", alias="EquipmentID")
+        parameter.text = str(csad_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ORPTargetValue", dataType="byte", alias="Data1")
+        parameter.text = str(orp_target)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        return await self.async_send_message(MessageType.SET_CSAD_ORP_TARGET, req_body, False)
+
+    # This is used to set the pH target value on a CSAD
+    async def async_set_csad_target_value(
+        self,
+        pool_id: int,
+        csad_id: int,
+        ph_target: float,
+    ) -> None:
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
+
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = "UISetCSADTargetValue"
+
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="PoolId", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="CSADID", dataType="int", alias="EquipmentID")
+        parameter.text = str(csad_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="TargetValue", dataType="float", alias="Data1")
+        parameter.text = str(ph_target)
+
+        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        return await self.async_send_message(MessageType.SET_CSAD_TARGET_VALUE, req_body, False)
+
     async def async_set_chlorinator_params(
         self,
         pool_id: int,
