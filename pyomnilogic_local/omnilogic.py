@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -56,7 +57,13 @@ class OmniLogic:
         self.host = host
         self.port = port
 
-        self._api = OmniLogicAPI(host, port, timeout)
+        sim_data_path = os.environ.get("PYOMNILOGIC_SIMULATION_DATA")
+        if sim_data_path:
+            from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
+
+            self._api = OmniLogicMockAPI(sim_data_path)  # type: ignore[assignment]
+        else:
+            self._api = OmniLogicAPI(host, port, timeout)
         self._refresh_lock = asyncio.Lock()
 
     def __repr__(self) -> str:

@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
+
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPSchedule
 
 
@@ -22,17 +25,12 @@ def schedules(ctx: click.Context) -> None:
     Example:
         omnilogic get schedules
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_schedules = omnilogic.schedules
+    for schedule in all_schedules:
+        echo_properties(schedule)
 
-    schedules_found = False
-
-    # Check for schedules at the top level
-    if mspconfig.schedules:
-        for schedule in mspconfig.schedules:
-            schedules_found = True
-            _print_schedule_info(schedule)
-
-    if not schedules_found:
+    if len(all_schedules) == 0:
         click.echo("No schedules found in the system configuration.")
 
 

@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import SensorType, SensorUnits
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPSensor
 
 
@@ -24,25 +26,12 @@ def sensors(ctx: click.Context) -> None:
     Example:
         omnilogic get sensors
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_sensors = omnilogic.all_sensors
+    for sensor in all_sensors:
+        echo_properties(sensor)
 
-    sensors_found = False
-
-    # Check for sensors in the backyard
-    if mspconfig.backyard.sensor:
-        for sensor in mspconfig.backyard.sensor:
-            sensors_found = True
-            _print_sensor_info(sensor)
-
-    # Check for sensors in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.sensor:
-                for sensor in bow.sensor:
-                    sensors_found = True
-                    _print_sensor_info(sensor)
-
-    if not sensors_found:
+    if len(all_sensors) == 0:
         click.echo("No sensors found in the system configuration.")
 
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import click
 
-from pyomnilogic_local.cli import ensure_connection
 from pyomnilogic_local.cli.get.backyard import backyard
 from pyomnilogic_local.cli.get.bows import bows
 from pyomnilogic_local.cli.get.chlorinators import chlorinators
@@ -30,8 +29,6 @@ def get(ctx: click.Context) -> None:
     such as lights, filters, heaters, and other devices.
     """
     ctx.ensure_object(dict)
-    # Ensure we're connected to the controller before running any get commands
-    ensure_connection(ctx)
 
 
 # Register subcommands

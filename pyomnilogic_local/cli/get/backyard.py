@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import BackyardState
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPBackyard, MSPConfig
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
@@ -26,10 +28,8 @@ def backyard(ctx: click.Context) -> None:
     Example:
         omnilogic get backyard
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
-
-    _print_backyard_info(mspconfig.backyard, telemetry.get_telem_by_systemid(mspconfig.backyard.system_id))
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    echo_properties(omnilogic.backyard)
 
 
 def _print_backyard_info(backyardconfig: MSPBackyard, telemetry: TelemetryType | None) -> None:

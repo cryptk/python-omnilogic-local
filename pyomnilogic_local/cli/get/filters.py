@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import FilterState, FilterType, FilterValvePosition, FilterWhyOn
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPFilter
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
@@ -25,20 +27,12 @@ def filters(ctx: click.Context) -> None:
     Example:
         omnilogic get filters
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_filters = omnilogic.all_filters
+    for filt in all_filters:
+        echo_properties(filt)
 
-    filters_found = False
-
-    # Check for filters in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.filter:
-                for filt in bow.filter:
-                    filters_found = True
-                    _print_filter_info(filt, telemetry.get_telem_by_systemid(filt.system_id))
-
-    if not filters_found:
+    if len(all_filters) == 0:
         click.echo("No filters found in the system configuration.")
 
 

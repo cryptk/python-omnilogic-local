@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import HeaterMode, HeaterState, HeaterType
 
 if TYPE_CHECKING:
-    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPHeaterEquip, MSPVirtualHeater
+    from pyomnilogic_local import OmniLogic
+    from pyomnilogic_local.models.mspconfig import MSPHeaterEquip, MSPVirtualHeater
     from pyomnilogic_local.models.telemetry import Telemetry
 
 
@@ -29,19 +31,17 @@ def heaters(ctx: click.Context) -> None:
     Example:
         omnilogic get heaters
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
-    heaters_found = False
+    all_heaters = omnilogic.all_heaters
+    for heater in all_heaters:
+        echo_properties(heater)
 
-    # Check for heaters in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.heater:
-                heaters_found = True
-                _print_virtual_heater_info(bow.heater, telemetry)
+    all_heater_equipment = omnilogic.all_heater_equipment
+    for heater_equip in all_heater_equipment:
+        echo_properties(heater_equip)
 
-    if not heaters_found:
+    if len(all_heaters) == 0:
         click.echo("No heaters found in the system configuration.")
 
 

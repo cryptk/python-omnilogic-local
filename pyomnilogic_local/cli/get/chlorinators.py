@@ -3,15 +3,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 import click
 
-from pyomnilogic_local.omnitypes import ChlorinatorCellType, ChlorinatorDispenserType, ChlorinatorOperatingMode
+from pyomnilogic_local.cli.utils import echo_properties
 
 if TYPE_CHECKING:
-    from pyomnilogic_local.models.mspconfig import MSPChlorinator, MSPConfig
-    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryChlorinator
+    from pyomnilogic_local import OmniLogic
 
 
 @click.command()
@@ -25,51 +24,11 @@ def chlorinators(ctx: click.Context) -> None:
     Example:
         omnilogic get chlorinators
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
-    chlorinators_found = False
+    chlorinators = omnilogic.all_chlorinators
+    for chlor in chlorinators:
+        echo_properties(chlor)
 
-    # Check for chlorinators in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.chlorinator:
-                chlorinators_found = True
-                _print_chlorinator_info(
-                    bow.chlorinator, cast("TelemetryChlorinator", telemetry.get_telem_by_systemid(bow.chlorinator.system_id))
-                )
-
-    if not chlorinators_found:
+    if len(chlorinators) == 0:
         click.echo("No chlorinators found in the system configuration.")
-
-
-def _print_chlorinator_info(chlorinator: MSPChlorinator, telemetry: TelemetryChlorinator | None) -> None:
-    """Format and print chlorinator information in a nice table format.
-
-    Args:
-        chlorinator: Chlorinator object from MSPConfig with attributes to display
-        telemetry: Telemetry object containing current state information
-    """
-    click.echo("\n" + "=" * 60)
-    click.echo("CHLORINATOR")
-    click.echo("=" * 60)
-
-    chlor_data: dict[Any, Any] = {**dict(chlorinator), **dict(telemetry)} if telemetry else dict(chlorinator)
-    for attr_name, value in chlor_data.items():
-        if attr_name == "cell_type":
-            value = ChlorinatorCellType(value).pretty()
-        elif attr_name == "dispenser_type":
-            value = ChlorinatorDispenserType(value).pretty()
-        elif attr_name == "operating_mode":
-            value = ChlorinatorOperatingMode(value).pretty()
-        elif attr_name in ("status", "alerts", "errors") and isinstance(value, list):
-            # These are computed properties that return lists of flag names
-            value = ", ".join(value) if value else "None"
-        elif isinstance(value, list):
-            # Format other lists nicely
-            value = ", ".join(str(v) for v in value) if value else "None"
-
-        # Format the attribute name to be more readable
-        display_name = attr_name.replace("_", " ").title()
-        click.echo(f"{display_name:20} : {value}")
-    click.echo("=" * 60)

@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import GroupState
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPGroup
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryGroup
 
@@ -25,18 +27,12 @@ def groups(ctx: click.Context) -> None:
     Example:
         omnilogic get groups
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_groups = omnilogic.groups
+    for group in all_groups:
+        echo_properties(group)
 
-    groups_found = False
-
-    # Check for groups at the top level
-    if mspconfig.groups:
-        for group in mspconfig.groups:
-            groups_found = True
-            _print_group_info(group, cast("TelemetryGroup", telemetry.get_telem_by_systemid(group.system_id)))
-
-    if not groups_found:
+    if len(all_groups) == 0:
         click.echo("No groups found in the system configuration.")
 
 

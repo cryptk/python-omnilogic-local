@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import RelayFunction, RelayType, RelayWhyOn, ValveActuatorState
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPRelay
     from pyomnilogic_local.models.telemetry import Telemetry
 
@@ -30,28 +32,12 @@ def valves(ctx: click.Context) -> None:
     Example:
         omnilogic get valves
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    valve_relays = [relay for relay in omnilogic.all_relays if relay.relay_type == RelayType.VALVE_ACTUATOR]
+    for valve in valve_relays:
+        echo_properties(valve)
 
-    valves_found = False
-
-    # Check for valve actuators in the backyard
-    if mspconfig.backyard.relay:
-        for relay in mspconfig.backyard.relay:
-            if relay.type == RelayType.VALVE_ACTUATOR:
-                valves_found = True
-                _print_valve_info(relay, telemetry)
-
-    # Check for valve actuators in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.relay:
-                for relay in bow.relay:
-                    if relay.type == RelayType.VALVE_ACTUATOR:
-                        valves_found = True
-                        _print_valve_info(relay, telemetry)
-
-    if not valves_found:
+    if len(valve_relays) == 0:
         click.echo("No valve actuators found in the system configuration.")
 
 
