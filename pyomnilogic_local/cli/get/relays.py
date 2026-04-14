@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import RelayFunction, RelayState, RelayType, RelayWhyOn
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPRelay
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
@@ -25,26 +27,12 @@ def relays(ctx: click.Context) -> None:
     Example:
         omnilogic get relays
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_relays = omnilogic.all_relays
+    for relay in all_relays:
+        echo_properties(relay)
 
-    relays_found = False
-
-    # Check for relays in the backyard
-    if mspconfig.backyard.relay:
-        for relay in mspconfig.backyard.relay:
-            relays_found = True
-            _print_relay_info(relay, telemetry.get_telem_by_systemid(relay.system_id))
-
-    # Check for relays in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.relay:
-                for relay in bow.relay:
-                    relays_found = True
-                    _print_relay_info(relay, telemetry.get_telem_by_systemid(relay.system_id))
-
-    if not relays_found:
+    if len(all_relays) == 0:
         click.echo("No relays found in the system configuration.")
 
 

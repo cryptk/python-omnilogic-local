@@ -9,12 +9,11 @@ from typing import TYPE_CHECKING, cast
 
 import click
 
-from pyomnilogic_local.cli import ensure_connection
 from pyomnilogic_local.cli.pcap_utils import parse_pcap_file, process_pcap_messages
 from pyomnilogic_local.cli.utils import async_get_filter_diagnostics
 
 if TYPE_CHECKING:
-    from pyomnilogic_local.api.api import OmniLogicAPI
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.telemetry import TelemetryChlorinator
 
 
@@ -45,9 +44,8 @@ def get_mspconfig(ctx: click.Context) -> None:
         omnilogic debug --raw get-mspconfig
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
-    mspconfig = asyncio.run(omni.async_get_mspconfig(raw=ctx.obj["RAW"]))
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    mspconfig = asyncio.run(omnilogic._api.async_get_mspconfig(raw=ctx.obj["RAW"]))
     click.echo(mspconfig)
 
 
@@ -64,9 +62,8 @@ def get_telemetry(ctx: click.Context) -> None:
         omnilogic debug --raw get-telemetry
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
-    telemetry = asyncio.run(omni.async_get_telemetry(raw=ctx.obj["RAW"]))
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    telemetry = asyncio.run(omnilogic._api.async_get_telemetry(raw=ctx.obj["RAW"]))
     click.echo(telemetry)
 
 
@@ -86,8 +83,8 @@ def get_filter_diagnostics(ctx: click.Context, pool_id: int, filter_id: int) -> 
         omnilogic debug get-filter-diagnostics --pool-id 1 --filter-id 5
 
     """
-    ensure_connection(ctx)
-    filter_diags = asyncio.run(async_get_filter_diagnostics(ctx.obj["OMNI"], pool_id, filter_id, ctx.obj["RAW"]))
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    filter_diags = asyncio.run(async_get_filter_diagnostics(omnilogic._api, pool_id, filter_id, ctx.obj["RAW"]))
     if ctx.obj["RAW"]:
         click.echo(filter_diags)
     else:
@@ -179,8 +176,7 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
         omnilogic --host 192.168.1.100 debug set-equipment 7 8 0
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
     is_on_value: int | bool | str
     # Parse is_on parameter - can be bool-like string or integer
@@ -194,7 +190,7 @@ def set_equipment(ctx: click.Context, bow_id: int, equip_id: int, is_on: str) ->
 
     # Execute the command
     try:
-        asyncio.run(omni.async_set_equipment(bow_id, equip_id, is_on_value))
+        asyncio.run(omnilogic._api.async_set_equipment(bow_id, equip_id, is_on_value))
         if isinstance(is_on_value, bool):
             state = "ON" if is_on_value else "OFF"
             click.echo(f"Successfully set equipment {equip_id} in BOW {bow_id} to {state}")
@@ -232,8 +228,7 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
         omnilogic --host 192.168.1.100 debug set-chlor-params 7 12 50 2
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
     # Validate timed_percent
     if not 0 <= timed_percent <= 1000:  # Temporarily allow up to 1000 to test ORP behavior
@@ -247,8 +242,8 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
 
     # Get MSPConfig and Telemetry to find the chlorinator
     try:
-        mspconfig_raw = asyncio.run(omni.async_get_mspconfig(raw=False))
-        telemetry_raw = asyncio.run(omni.async_get_telemetry(raw=False))
+        mspconfig_raw = asyncio.run(omnilogic._api.async_get_mspconfig(raw=False))
+        telemetry_raw = asyncio.run(omnilogic._api.async_get_telemetry(raw=False))
     except Exception as e:
         click.echo(f"Error retrieving configuration: {e}", err=True)
         raise click.Abort from e
@@ -294,7 +289,7 @@ def set_chlor_params(ctx: click.Context, bow_id: int, equip_id: int, timed_perce
     # Execute the command
     try:
         asyncio.run(
-            omni.async_set_chlorinator_params(
+            omnilogic._api.async_set_chlorinator_params(
                 pool_id=bow_id,
                 equipment_id=equip_id,
                 timed_percent=timed_percent,
@@ -343,8 +338,7 @@ def set_csad_ph(ctx: click.Context, bow_id: int, csad_id: int, target: float) ->
         omnilogic --host 192.168.1.100 debug set-csad-ph 7 20 7.2
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
     # Validate target pH (typical range is 6.8-8.2, but allow wider range)
     if not 0.0 <= target <= 14.0:
@@ -353,7 +347,7 @@ def set_csad_ph(ctx: click.Context, bow_id: int, csad_id: int, target: float) ->
 
     # Execute the command
     try:
-        asyncio.run(omni.async_set_csad_target_value(pool_id=bow_id, csad_id=csad_id, ph_target=target))
+        asyncio.run(omnilogic._api.async_set_csad_target_value(pool_id=bow_id, csad_id=csad_id, ph_target=target))
         click.echo(f"Successfully set CSAD {csad_id} in BOW {bow_id} pH target to {target}")
     except Exception as e:
         click.echo(f"Error setting CSAD pH target: {e}", err=True)
@@ -383,8 +377,7 @@ def set_csad_orp(ctx: click.Context, bow_id: int, csad_id: int, target: int) -> 
         omnilogic --host 192.168.1.100 debug set-csad-orp 7 20 650
 
     """
-    ensure_connection(ctx)
-    omni: OmniLogicAPI = ctx.obj["OMNI"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
 
     # Validate target ORP (typical range is 400-900 mV, but allow 0-1000)
     if not 0 <= target <= 1000:
@@ -393,7 +386,7 @@ def set_csad_orp(ctx: click.Context, bow_id: int, csad_id: int, target: int) -> 
 
     # Execute the command
     try:
-        asyncio.run(omni.async_set_csad_orp_target_level(pool_id=bow_id, csad_id=csad_id, orp_target=target))
+        asyncio.run(omnilogic._api.async_set_csad_orp_target_level(pool_id=bow_id, csad_id=csad_id, orp_target=target))
         click.echo(f"Successfully set CSAD {csad_id} in BOW {bow_id} ORP target to {target} mV")
     except Exception as e:
         click.echo(f"Error setting CSAD ORP target: {e}", err=True)

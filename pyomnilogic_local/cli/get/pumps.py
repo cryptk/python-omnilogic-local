@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import PumpFunction, PumpState, PumpType
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPConfig, MSPPump
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
@@ -25,20 +27,12 @@ def pumps(ctx: click.Context) -> None:
     Example:
         omnilogic get pumps
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_pumps = omnilogic.all_pumps
+    for pump in all_pumps:
+        echo_properties(pump)
 
-    pumps_found = False
-
-    # Check for pumps in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.pump:
-                for pump in bow.pump:
-                    pumps_found = True
-                    _print_pump_info(pump, telemetry.get_telem_by_systemid(pump.system_id))
-
-    if not pumps_found:
+    if len(all_pumps) == 0:
         click.echo("No pumps found in the system configuration.")
 
 

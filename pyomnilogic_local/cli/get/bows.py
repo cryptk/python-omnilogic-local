@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import BodyOfWaterType
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPBoW, MSPConfig
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
 
@@ -25,18 +27,12 @@ def bows(ctx: click.Context) -> None:
     Example:
         omnilogic get bows
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_bows = omnilogic.all_bows
+    for bow in all_bows:
+        echo_properties(bow)
 
-    bows_found = False
-
-    # Check for BOWs in the backyard
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            bows_found = True
-            _print_bow_info(bow, telemetry.get_telem_by_systemid(bow.system_id))
-
-    if not bows_found:
+    if len(all_bows) == 0:
         click.echo("No Bodies of Water found in the system configuration.")
 
 

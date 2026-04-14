@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicPowerState, ColorLogicSpeed
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPColorLogicLight, MSPConfig
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryColorLogicLight
 
@@ -25,26 +27,12 @@ def lights(ctx: click.Context) -> None:
     Example:
         omnilogic get lights
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_lights = omnilogic.all_lights
+    for light in all_lights:
+        echo_properties(light)
 
-    lights_found = False
-
-    # Check for lights in the backyard
-    if mspconfig.backyard.colorlogic_light:
-        for light in mspconfig.backyard.colorlogic_light:
-            lights_found = True
-            _print_light_info(light, cast("TelemetryColorLogicLight", telemetry.get_telem_by_systemid(light.system_id)))
-
-    # Check for lights in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.colorlogic_light:
-                for cl_light in bow.colorlogic_light:
-                    lights_found = True
-                    _print_light_info(cl_light, cast("TelemetryColorLogicLight", telemetry.get_telem_by_systemid(cl_light.system_id)))
-
-    if not lights_found:
+    if len(all_lights) == 0:
         click.echo("No ColorLogic lights found in the system configuration.")
 
 

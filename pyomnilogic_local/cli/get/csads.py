@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import click
 
+from pyomnilogic_local.cli.utils import echo_properties
 from pyomnilogic_local.omnitypes import CSADMode, CSADType
 
 if TYPE_CHECKING:
+    from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.mspconfig import MSPCSAD, MSPConfig
     from pyomnilogic_local.models.telemetry import Telemetry, TelemetryCSAD
 
@@ -25,20 +27,12 @@ def csads(ctx: click.Context) -> None:
     Example:
         omnilogic get csads
     """
-    mspconfig: MSPConfig = ctx.obj["MSPCONFIG"]
-    telemetry: Telemetry = ctx.obj["TELEMETRY"]
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    all_csads = omnilogic.all_csads
+    for csad in all_csads:
+        echo_properties(csad)
 
-    csads_found = False
-
-    # Check for CSADs in Bodies of Water
-    if mspconfig.backyard.bow:
-        for bow in mspconfig.backyard.bow:
-            if bow.csad:
-                for csad in bow.csad:
-                    csads_found = True
-                    _print_csad_info(csad, cast("TelemetryCSAD", telemetry.get_telem_by_systemid(csad.system_id)))
-
-    if not csads_found:
+    if len(all_csads) == 0:
         click.echo("No CSAD systems found in the system configuration.")
 
 
