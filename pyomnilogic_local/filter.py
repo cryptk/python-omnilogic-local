@@ -193,7 +193,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         if not super().is_ready:
             return False
 
-        # Then check filter-specific readiness
+        # Then check filter-specific readiness to make sure it's in a state that can accept commands
         return self.state in (FilterState.OFF, FilterState.ON)
 
     # Control methods

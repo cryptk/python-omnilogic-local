@@ -175,7 +175,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
         if not super().is_ready:
             return False
 
-        # Then check pump-specific readiness
+        # Then check pump-specific readiness to make sure it's in a state that can accept commands
         return self.state in (PumpState.OFF, PumpState.ON)
 
     # Control methods
