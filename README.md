@@ -18,7 +18,7 @@
 
 ## Overview
 
-Python OmniLogic Local provides complete local control over Hayward OmniLogic and OmniHub pool automation systems using their UDP-based XML protocol. Built with modern Python 3.12+, comprehensive type hints, and Pydantic validation, this library offers a async, type-safe interface for pool automation.
+Python OmniLogic Local provides complete local control over Hayward OmniLogic and OmniHub pool automation systems using their UDP-based XML protocol. Built with modern Python 3.14+, comprehensive type hints, and Pydantic validation, this library offers a async, type-safe interface for pool automation.
 
 ## Features
 
@@ -48,7 +48,7 @@ Python OmniLogic Local provides complete local control over Hayward OmniLogic an
 
 ## Installation
 
-**Requirements**: Python 3.12 or higher
+**Requirements**: Python 3.14 or higher
 
 ```bash
 pip install python-omnilogic-local
@@ -312,7 +312,7 @@ pip install python-omnilogic-local[cli]
 
 This project uses modern Python tooling:
 
-- **Python**: 3.12+ with type hints
+- **Python**: 3.14+ with type hints
 - **Type Checking**: mypy strict mode
 - **Validation**: Pydantic v2
 - **Testing**: pytest with async support

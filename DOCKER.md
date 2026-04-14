@@ -147,7 +147,7 @@ The multi-stage build keeps the image size minimal:
 
 ### Included Dependencies
 
-- Python 3.12
+- Python 3.14
 - Core dependencies: pydantic, click, xmltodict
 - CLI dependencies: scapy (for PCAP parsing)
 - Runtime tools: tcpdump (for potential traffic capture outside container)
