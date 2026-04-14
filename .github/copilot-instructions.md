@@ -104,7 +104,7 @@ When generating code for this repository:
 
 ### Python Version
 - **Required**: Python 3.12+
-- **Type Checking**: mypy with strict mode enabled (python_version = "3.13" in config)
+- **Type Checking**: mypy with strict mode enabled (python_version = "3.14" in config)
 - **Use modern Python features**: Pattern matching, typing improvements, exception groups
 
 ### Core Dependencies
@@ -316,7 +316,7 @@ if TYPE_CHECKING:
 ```
 
 ### Pylint Configuration
-- Py-version: 3.13
+- Py-version: 3.14
 - Many rules disabled for pragmatic development (see pyproject.toml)
 - Focus on: type safety, useless suppressions, symbolic messages
 - Docstrings currently disabled until codebase stabilizes

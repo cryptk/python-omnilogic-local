@@ -3,7 +3,7 @@ name = "python-omnilogic-local"
 version = "0.21.0"
 description = "A library for local control of Hayward OmniHub/OmniLogic pool controllers using their local API"
 readme = "README.md"
-requires-python = ">=3.13,<4.0.0"
+requires-python = ">=3.14.2"
 authors = [
     {name = "Chris Jowett",email = "421501+cryptk@users.noreply.github.com"},
     {name = "djtimca"},
@@ -43,7 +43,7 @@ dev = [
 ]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 plugins = [
     "pydantic.mypy"
 ]
