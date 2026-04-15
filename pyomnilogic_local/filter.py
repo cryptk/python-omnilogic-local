@@ -199,7 +199,11 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             return False
 
         # Then check filter-specific readiness to make sure it's in a state that can accept commands
-        return self.state in (FilterState.OFF, FilterState.ON)
+        # SUSPEND indicates that the physical filter is being used for a different BoW (e.g.: spillover)
+        # We need to consider the filter as ready in this state, otherwise we cannot control the
+        # virtual filter to switch the physical filter back BoW
+        # ref: https://github.com/cryptk/python-omnilogic-local/issues/100
+        return self.state in (FilterState.OFF, FilterState.ON, FilterState.SUSPEND)
 
     # Control methods
     @control_method
