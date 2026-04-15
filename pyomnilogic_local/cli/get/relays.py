@@ -50,13 +50,13 @@ def _print_relay_info(relay: MSPRelay, telemetry: TelemetryType | None) -> None:
     relay_data: dict[Any, Any] = {**dict(relay), **dict(telemetry)} if telemetry else dict(relay)
     for attr_name, value in relay_data.items():
         if attr_name == "state":
-            value = RelayState(value).pretty()
+            value = str(RelayState(value))
         elif attr_name == "type":
-            value = RelayType(value).pretty()
+            value = str(RelayType(value))
         elif attr_name == "function":
-            value = RelayFunction(value).pretty()
+            value = str(RelayFunction(value))
         elif attr_name == "why_on":
-            value = RelayWhyOn(value).pretty()
+            value = str(RelayWhyOn(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

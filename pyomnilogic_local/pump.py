@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPPump
 from pyomnilogic_local.models.telemetry import TelemetryPump
 from pyomnilogic_local.omnitypes import PumpSpeedPresets, PumpState
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnitypes import PumpFunction, PumpType
 
 
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
@@ -80,12 +85,12 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
 
     # Expose MSPConfig attributes
     @property
-    def equip_type(self) -> str:
+    def equip_type(self) -> PumpType:
         """The pump type (e.g., PMP_VARIABLE_SPEED_PUMP)."""
         return self.mspconfig.equip_type
 
     @property
-    def function(self) -> str:
+    def function(self) -> PumpFunction:
         """The pump function (e.g., PMP_PUMP, PMP_WATER_FEATURE)."""
         return self.mspconfig.function
 
@@ -131,7 +136,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
 
     # Expose Telemetry attributes
     @property
-    def state(self) -> PumpState | int:
+    def state(self) -> PumpState:
         """Current pump state."""
         return self.telemetry.state
 
@@ -147,7 +152,10 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
 
     @property
     def why_on(self) -> int:
-        """Reason why the pump is on."""
+        """Reason why the pump is on.
+
+        We don't have a confirmation that these are the same as the FilterWhyOn states yet.
+        """
         return self.telemetry.why_on
 
     # Computed properties

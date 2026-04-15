@@ -50,9 +50,9 @@ def _print_csad_info(csad: MSPCSAD, telemetry: TelemetryCSAD | None) -> None:
     csad_data: dict[Any, Any] = {**dict(csad), **dict(telemetry)} if telemetry else dict(csad)
     for attr_name, value in csad_data.items():
         if attr_name == "equip_type":
-            value = CSADType(value).pretty()
+            value = str(CSADType(value))
         elif attr_name == "mode":
-            value = CSADMode(value).pretty()
+            value = str(CSADMode(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

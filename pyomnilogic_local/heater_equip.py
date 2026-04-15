@@ -110,7 +110,7 @@ class HeaterEquipment(OmniEquipment[MSPHeaterEquip, TelemetryHeater]):
         return self.mspconfig.supports_cooling
 
     @property
-    def state(self) -> HeaterState | int:
+    def state(self) -> HeaterState:
         """Returns the current state of the heater equipment (OFF, ON, or PAUSE)."""
         return self.telemetry.state
 

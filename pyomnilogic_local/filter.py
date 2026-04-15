@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPFilter
 from pyomnilogic_local.models.telemetry import TelemetryFilter
 from pyomnilogic_local.omnitypes import FilterSpeedPresets, FilterState
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
+
+if TYPE_CHECKING:
+    from pyomnilogic_local.omnitypes import FilterType, FilterValvePosition, FilterWhyOn
 
 
 class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
@@ -81,7 +86,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
 
     # Expose MSPConfig attributes
     @property
-    def equip_type(self) -> str:
+    def equip_type(self) -> FilterType:
         """The filter type (e.g., FMT_VARIABLE_SPEED_PUMP)."""
         return self.mspconfig.equip_type
 
@@ -127,7 +132,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
 
     # Expose Telemetry attributes
     @property
-    def state(self) -> FilterState | int:
+    def state(self) -> FilterState:
         """Current filter state."""
         return self.telemetry.state
 
@@ -137,12 +142,12 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         return self.telemetry.speed
 
     @property
-    def valve_position(self) -> int:
+    def valve_position(self) -> FilterValvePosition:
         """Current valve position."""
         return self.telemetry.valve_position
 
     @property
-    def why_on(self) -> int:
+    def why_on(self) -> FilterWhyOn:
         """Reason why the filter is on."""
         return self.telemetry.why_on
 

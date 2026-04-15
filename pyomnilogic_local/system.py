@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from pyomnilogic_local.models.mspconfig import MSPSystem
@@ -15,12 +15,12 @@ class System:
         self.update_config(mspconfig)
 
     @property
-    def vsp_speed_format(self) -> str | None:
+    def vsp_speed_format(self) -> Literal["RPM", "Percent"]:
         """The VSP speed format of the system."""
         return self.mspconfig.vsp_speed_format
 
     @property
-    def units(self) -> str | None:
+    def units(self) -> Literal["Standard", "Metric"]:
         """The units of the system."""
         return self.mspconfig.units
 

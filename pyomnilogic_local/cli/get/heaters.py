@@ -67,9 +67,9 @@ def _print_virtual_heater_info(virt_heater: MSPVirtualHeater, telemetry: Telemet
 
     for attr_name, value in display_data.items():
         if attr_name == "state":
-            value = HeaterState(value).pretty()
+            value = str(HeaterState(value))
         elif attr_name == "mode":
-            value = HeaterMode(value).pretty()
+            value = str(HeaterMode(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"
@@ -105,9 +105,9 @@ def _print_heater_equipment_info(equip: MSPHeaterEquip, telemetry: Telemetry) ->
 
     for attr_name, value in equip_data.items():
         if attr_name == "heater_type":
-            value = HeaterType(value).pretty()
+            value = str(HeaterType(value))
         elif attr_name == "state":
-            value = HeaterState(value).pretty()
+            value = str(HeaterState(value))
         elif isinstance(value, list):
             value = ", ".join(str(v) for v in value) if value else "None"
 

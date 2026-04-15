@@ -53,7 +53,7 @@ def _print_group_info(group: MSPGroup, telemetry: TelemetryGroup | None) -> None
             # Skip bow_id as it's not relevant for groups
             continue
         if attr_name == "state":
-            value = GroupState(value).pretty()
+            value = str(GroupState(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

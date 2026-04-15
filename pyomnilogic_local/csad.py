@@ -69,7 +69,7 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
         return self.mspconfig.enabled
 
     @property
-    def equip_type(self) -> CSADType | str:
+    def equip_type(self) -> CSADType:
         """Type of CSAD system (ACID or CO2)."""
         return self.mspconfig.equip_type
 
@@ -160,7 +160,7 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
         return self.telemetry.orp
 
     @property
-    def mode(self) -> CSADMode | int:
+    def mode(self) -> CSADMode:
         """Current operating mode of the CSAD.
 
         Returns:

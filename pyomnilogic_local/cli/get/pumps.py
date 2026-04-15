@@ -50,11 +50,11 @@ def _print_pump_info(pump: MSPPump, telemetry: TelemetryType | None) -> None:
     pump_data: dict[Any, Any] = {**dict(pump), **dict(telemetry)} if telemetry else dict(pump)
     for attr_name, value in pump_data.items():
         if attr_name == "state":
-            value = PumpState(value).pretty()
+            value = str(PumpState(value))
         elif attr_name == "equip_type":
-            value = PumpType(value).pretty()
+            value = str(PumpType(value))
         elif attr_name == "function":
-            value = PumpFunction(value).pretty()
+            value = str(PumpFunction(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"
