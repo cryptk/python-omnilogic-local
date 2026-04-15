@@ -417,6 +417,8 @@ class FilterWhyOn(PrettyEnum, IntEnum):
     GROUP_COMMAND = 18
     SPILLOVER_INTERLOCK = 19
     MAX_VALUE = 20
+    UNKNOWN_1 = 21
+    UNKNOWN_2 = 22
 
 
 class FilterSpeedPresets(PrettyEnum, StrEnum):
