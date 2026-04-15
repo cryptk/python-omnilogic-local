@@ -12,8 +12,8 @@ from pyomnilogic_local.omnitypes import BodyOfWaterType
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPBoW, MSPConfig
-    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
+    from pyomnilogic_local.models.mspconfig import MSPBoW
+    from pyomnilogic_local.models.telemetry import TelemetryType
 
 
 @click.command()

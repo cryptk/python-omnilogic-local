@@ -12,7 +12,7 @@ from pyomnilogic_local.omnitypes import RelayFunction, RelayType, RelayWhyOn, Va
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPRelay
+    from pyomnilogic_local.models.mspconfig import MSPRelay
     from pyomnilogic_local.models.telemetry import Telemetry
 
 

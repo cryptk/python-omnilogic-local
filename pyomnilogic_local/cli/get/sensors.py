@@ -12,7 +12,7 @@ from pyomnilogic_local.omnitypes import SensorType, SensorUnits
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPSensor
+    from pyomnilogic_local.models.mspconfig import MSPSensor
 
 
 @click.command()

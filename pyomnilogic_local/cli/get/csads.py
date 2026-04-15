@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import click
 
@@ -12,8 +12,8 @@ from pyomnilogic_local.omnitypes import CSADMode, CSADType
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPCSAD, MSPConfig
-    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryCSAD
+    from pyomnilogic_local.models.mspconfig import MSPCSAD
+    from pyomnilogic_local.models.telemetry import TelemetryCSAD
 
 
 @click.command()
