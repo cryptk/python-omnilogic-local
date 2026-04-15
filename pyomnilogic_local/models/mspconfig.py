@@ -59,9 +59,7 @@ class OmniBase(BaseModel):
 
     def without_subdevices(self) -> Self:
         data = self.model_dump(exclude=self._sub_devices, round_trip=True, by_alias=True)
-        copied = self.model_validate(data)
-        _LOGGER.debug("without_subdevices: original=%s, copied=%s", self, copied)
-        return copied
+        return self.model_validate(data)
 
     def propagate_bow_id(self, bow_id: int) -> None:
         # First we set our own bow_id

@@ -168,7 +168,11 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending RequestConfiguration with body: %s", req_body)
+
         resp = await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
+
+        _LOGGER.debug("Received response for RequestConfiguration: %s", resp)
 
         if raw:
             return resp
@@ -206,7 +210,11 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending GetUIFilterDiagnosticInfo with body: %s", req_body)
+
         resp = await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
+
+        _LOGGER.debug("Received response for GetUIFilterDiagnosticInfo: %s", resp)
 
         if raw:
             return resp
@@ -231,7 +239,11 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending RequestTelemetryData with body: %s", req_body)
+
         resp = await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
+
+        _LOGGER.debug("Received response for RequestTelemetryData: %s", resp)
 
         if raw:
             return resp
@@ -268,6 +280,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUIHeaterCmd with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
 
     async def async_set_solar_heater(
@@ -300,6 +314,8 @@ class OmniLogicAPI:
         parameter.text = str(temperature)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending SetUISolarSetPointCmd with body: %s", req_body)
 
         return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
 
@@ -334,6 +350,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUIHeaterModeCmd with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
 
     async def async_set_heater_enable(
@@ -366,6 +384,8 @@ class OmniLogicAPI:
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending SetHeaterEnable with body: %s", req_body)
 
         return await self.async_send_message(MessageType.SET_HEATER_ENABLED, req_body, False)
 
@@ -427,6 +447,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUIEquipmentCmd with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
 
     async def async_set_filter_speed(self, pool_id: int, equipment_id: int, speed: int) -> None:
@@ -452,6 +474,8 @@ class OmniLogicAPI:
         parameter.text = str(speed)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending SetUIFilterSpeedCmd with body: %s", req_body)
 
         return await self.async_send_message(MessageType.SET_FILTER_SPEED, req_body, False)
 
@@ -522,6 +546,9 @@ class OmniLogicAPI:
         parameter.text = str(int(recurring))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending SetStandAloneLightShow with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
 
     async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
@@ -537,6 +564,8 @@ class OmniLogicAPI:
         parameter.text = str(int(enabled))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending SetCHLOREnable with body: %s", req_body)
 
         return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
 
@@ -562,6 +591,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUICSADORPTargetLevel with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_CSAD_ORP_TARGET, req_body, False)
 
     # This is used to set the pH target value on a CSAD
@@ -585,6 +616,8 @@ class OmniLogicAPI:
         parameter.text = str(ph_target)
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending UISetCSADTargetValue with body: %s", req_body)
 
         return await self.async_send_message(MessageType.SET_CSAD_TARGET_VALUE, req_body, False)
 
@@ -627,6 +660,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetCHLORParams with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
 
     async def async_set_chlorinator_superchlorinate(
@@ -650,6 +685,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUISuperCHLORCmd with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)
 
     async def async_restore_idle_state(self) -> None:
@@ -661,6 +698,8 @@ class OmniLogicAPI:
         ET.SubElement(body_element, "Parameters")
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending RestoreIdleState with body: %s", req_body)
 
         return await self.async_send_message(MessageType.RESTORE_IDLE_STATE, req_body, False)
 
@@ -703,6 +742,8 @@ class OmniLogicAPI:
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
 
+        _LOGGER.debug("Sending SetUISpilloverCmd with body: %s", req_body)
+
         return await self.async_send_message(MessageType.SET_SPILLOVER, req_body, False)
 
     async def async_set_group_enable(
@@ -743,6 +784,8 @@ class OmniLogicAPI:
         parameter.text = str(int(recurring))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending RunGroupCmd with body: %s", req_body)
 
         return await self.async_send_message(MessageType.RUN_GROUP_CMD, req_body, False)
 
@@ -814,5 +857,7 @@ class OmniLogicAPI:
         parameter.text = str(int(recurring))
 
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+        _LOGGER.debug("Sending EditUIScheduleCmd with body: %s", req_body)
 
         return await self.async_send_message(MessageType.EDIT_SCHEDULE, req_body, False)
