@@ -170,7 +170,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
         return f"Bow({', '.join(parts)})"
 
     @property
-    def equip_type(self) -> BodyOfWaterType | str:
+    def equip_type(self) -> BodyOfWaterType:
         """The equipment type of the bow (POOL or SPA)."""
         return self.mspconfig.equip_type
 

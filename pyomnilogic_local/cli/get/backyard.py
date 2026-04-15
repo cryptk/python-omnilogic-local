@@ -54,7 +54,7 @@ def _print_backyard_info(backyardconfig: MSPBackyard, telemetry: TelemetryType |
             continue
 
         if attr_name == "state":
-            value = BackyardState(value).pretty()
+            value = str(BackyardState(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

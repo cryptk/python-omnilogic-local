@@ -58,7 +58,7 @@ def _print_bow_info(bow: MSPBoW, telemetry: TelemetryType | None) -> None:
             continue
 
         if attr_name == "type":
-            value = BodyOfWaterType(value).pretty()
+            value = str(BodyOfWaterType(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

@@ -48,9 +48,9 @@ def _print_sensor_info(sensor: MSPSensor) -> None:
     sensor_data: dict[Any, Any] = dict(sensor)
     for attr_name, value in sensor_data.items():
         if attr_name == "equip_type":
-            value = SensorType(value).pretty()
+            value = str(SensorType(value))
         elif attr_name == "units":
-            value = SensorUnits(value).pretty()
+            value = str(SensorUnits(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

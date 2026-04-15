@@ -40,9 +40,15 @@ class OmniConnectionError(OmniLogicLocalError):
 
 
 class PrettyEnum(Enum):
-    def pretty(self) -> str:
+    def __str__(self) -> str:
+        """Return a human-friendly string representation of the enum member."""
         return self.name.replace("_", " ").title()
 
     @classmethod
-    def from_pretty(cls, name: str) -> Self:
-        return cls[name.upper().replace(" ", "_")]
+    def from_str(cls, name: str) -> Self:
+        lookup_key = name.upper().replace(" ", "_")
+        try:
+            return cls[lookup_key]
+        except KeyError as err:
+            msg = f"'{name}' is not a valid {cls.__name__}"
+            raise ValueError(msg) from err

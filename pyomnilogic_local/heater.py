@@ -140,7 +140,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         return self.mspconfig.min_temp
 
     @property
-    def mode(self) -> HeaterMode | int:
+    def mode(self) -> HeaterMode:
         """Returns the current heater mode from telemetry."""
         return self.telemetry.mode
 
@@ -174,7 +174,10 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
     @property
     def why_on(self) -> int:
-        """Returns the reason why the heater is on from telemetry."""
+        """Returns the reason why the heater is on from telemetry.
+
+        We don't have a good understanding of what these values mean yet
+        """
         return self.telemetry.why_on
 
     @property

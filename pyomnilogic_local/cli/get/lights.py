@@ -51,16 +51,16 @@ def _print_light_info(light: MSPColorLogicLight, telemetry: TelemetryColorLogicL
 
     for attr_name, value in light_data.items():
         if attr_name == "brightness":
-            value = ColorLogicBrightness(value).pretty()
+            value = str(ColorLogicBrightness(value))
         elif attr_name == "effects" and isinstance(value, list):
-            show_names = [show.pretty() if hasattr(show, "pretty") else str(show) for show in value]
+            show_names = [str(show) for show in value]
             value = ", ".join(show_names) if show_names else "None"
         elif attr_name == "show" and value is not None:
             value = telemetry.show_name(light.equip_type, light.v2_active) if telemetry else str(value)
         elif attr_name == "speed":
-            value = ColorLogicSpeed(value).pretty()
+            value = str(ColorLogicSpeed(value))
         elif attr_name == "state":
-            value = ColorLogicPowerState(value).pretty()
+            value = str(ColorLogicPowerState(value))
         elif isinstance(value, list):
             # Format other lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

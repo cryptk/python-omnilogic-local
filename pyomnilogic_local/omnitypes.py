@@ -6,7 +6,7 @@ from .util import PrettyEnum
 
 
 # OmniAPI Enums
-class MessageType(IntEnum, PrettyEnum):
+class MessageType(PrettyEnum, IntEnum):
     XML_ACK = 0000
     REQUEST_CONFIGURATION = 1
     SET_FILTER_SPEED = 9
@@ -39,7 +39,7 @@ class MessageType(IntEnum, PrettyEnum):
     MSP_BLOCKMESSAGE = 1999
 
 
-class ClientType(IntEnum, PrettyEnum):
+class ClientType(PrettyEnum, IntEnum):
     XML = 0
     SIMPLE = 1
     OMNI = 3
@@ -71,7 +71,7 @@ class OmniType(StrEnum):
 
 
 # Backyard/BoW
-class BackyardState(IntEnum, PrettyEnum):
+class BackyardState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     SERVICE_MODE = 2
@@ -79,12 +79,12 @@ class BackyardState(IntEnum, PrettyEnum):
     TIMED_SERVICE_MODE = 4
 
 
-class BodyOfWaterState(IntEnum, PrettyEnum):
+class BodyOfWaterState(PrettyEnum, IntEnum):
     NO_FLOW = 0
     FLOW = 1
 
 
-class BodyOfWaterType(StrEnum, PrettyEnum):
+class BodyOfWaterType(PrettyEnum, StrEnum):
     POOL = "BOW_POOL"
     SPA = "BOW_SPA"
 
@@ -150,26 +150,26 @@ class ChlorinatorError(Flag):
     AQUARITE_PCB_ERROR = 1 << 14
 
 
-class ChlorinatorOperatingMode(IntEnum, PrettyEnum):
+class ChlorinatorOperatingMode(PrettyEnum, IntEnum):
     DISABLED = 0
     TIMED = 1
     ORP_AUTO = 2
     ORP_TIMED_RW = 3  # Chlorinator in ORP mode experienced CSAD condition that prevents ORP operation
 
 
-class ChlorinatorType(StrEnum, PrettyEnum):
+class ChlorinatorType(PrettyEnum, StrEnum):
     MAIN_PANEL = "CHLOR_TYPE_MAIN_PANEL"
     DISPENSER = "CHLOR_TYPE_DISPENSER"
     AQUA_RITE = "CHLOR_TYPE_AQUA_RITE"
 
 
-class ChlorinatorDispenserType(StrEnum, PrettyEnum):
+class ChlorinatorDispenserType(PrettyEnum, StrEnum):
     SALT = "SALT_DISPENSING"
     LIQUID = "LIQUID_DISPENSING"
     TABLET = "TABLET_DISPENSING"
 
 
-class ChlorinatorCellType(IntEnum, PrettyEnum):
+class ChlorinatorCellType(PrettyEnum, IntEnum):
     CELL_TYPE_UNKNOWN = 0
     CELL_TYPE_T3 = 1
     CELL_TYPE_T5 = 2
@@ -184,7 +184,7 @@ class ChlorinatorCellType(IntEnum, PrettyEnum):
 
 
 # Lights
-class ColorLogicSpeed(IntEnum, PrettyEnum):
+class ColorLogicSpeed(PrettyEnum, IntEnum):
     ONE_SIXTEENTH = 0
     ONE_EIGHTH = 1
     ONE_QUARTER = 2
@@ -196,7 +196,7 @@ class ColorLogicSpeed(IntEnum, PrettyEnum):
     SIXTEEN_TIMES = 8
 
 
-class ColorLogicBrightness(IntEnum, PrettyEnum):
+class ColorLogicBrightness(PrettyEnum, IntEnum):
     TWENTY_PERCENT = 0
     FOURTY_PERCENT = 1
     SIXTY_PERCENT = 2
@@ -207,7 +207,7 @@ class ColorLogicBrightness(IntEnum, PrettyEnum):
 type LightShows = ColorLogicShow25 | ColorLogicShow40 | ColorLogicShowUCL | ColorLogicShowUCLV2 | PentairShow | ZodiacShow
 
 
-class ColorLogicShow25(IntEnum, PrettyEnum):
+class ColorLogicShow25(PrettyEnum, IntEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     AFTERNOON_SKY = 2
@@ -222,7 +222,7 @@ class ColorLogicShow25(IntEnum, PrettyEnum):
     COOL_CABARET = 11
 
 
-class ColorLogicShow40(IntEnum, PrettyEnum):
+class ColorLogicShow40(PrettyEnum, IntEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     AFTERNOON_SKY = 2
@@ -237,7 +237,7 @@ class ColorLogicShow40(IntEnum, PrettyEnum):
     COOL_CABARET = 11
 
 
-class ColorLogicShowUCL(IntEnum, PrettyEnum):
+class ColorLogicShowUCL(PrettyEnum, IntEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     ROYAL_BLUE = 2
@@ -257,7 +257,7 @@ class ColorLogicShowUCL(IntEnum, PrettyEnum):
     COOL_CABARET = 16
 
 
-class ColorLogicShowUCLV2(IntEnum, PrettyEnum):
+class ColorLogicShowUCLV2(PrettyEnum, IntEnum):
     VOODOO_LOUNGE = 0
     DEEP_BLUE_SEA = 1
     ROYAL_BLUE = 2
@@ -288,7 +288,7 @@ class ColorLogicShowUCLV2(IntEnum, PrettyEnum):
     BRIGHT_YELLOW = 26
 
 
-class PentairShow(IntEnum, PrettyEnum):
+class PentairShow(PrettyEnum, IntEnum):
     SAM = 0
     PARTY = 1
     ROMANCE = 2
@@ -303,7 +303,7 @@ class PentairShow(IntEnum, PrettyEnum):
     MAGENTA = 11
 
 
-class ZodiacShow(IntEnum, PrettyEnum):
+class ZodiacShow(PrettyEnum, IntEnum):
     ALPINE_WHITE = 0
     SKY_BLUE = 1
     COBALT_BLUE = 2
@@ -320,7 +320,7 @@ class ZodiacShow(IntEnum, PrettyEnum):
     DISCO_TECH = 13
 
 
-class ColorLogicPowerState(IntEnum, PrettyEnum):
+class ColorLogicPowerState(PrettyEnum, IntEnum):
     OFF = 0
     POWERING_OFF = 1
     CHANGING_SHOW = 3
@@ -329,7 +329,7 @@ class ColorLogicPowerState(IntEnum, PrettyEnum):
     COOLDOWN = 7
 
 
-class ColorLogicLightType(StrEnum, PrettyEnum):
+class ColorLogicLightType(PrettyEnum, StrEnum):
     UCL = "COLOR_LOGIC_UCL"
     FOUR_ZERO = "COLOR_LOGIC_4_0"
     TWO_FIVE = "COLOR_LOGIC_2_5"
@@ -342,22 +342,22 @@ class ColorLogicLightType(StrEnum, PrettyEnum):
         return ColorLogicLightType[self.name].value
 
 
-class CSADType(StrEnum, PrettyEnum):
+class CSADType(PrettyEnum, StrEnum):
     ACID = "ACID"
     CO2 = "CO2"
 
 
-class CSADEquipmentType(StrEnum, PrettyEnum):
+class CSADEquipmentType(PrettyEnum, StrEnum):
     AQL_CHEM = "AQL-CHEM"
 
 
 # Chemistry Sense and Dispense
-class CSADStatus(IntEnum, PrettyEnum):
+class CSADStatus(PrettyEnum, IntEnum):
     NOT_DISPENSING = 0
     DISPENSING = 1
 
 
-class CSADMode(IntEnum, PrettyEnum):
+class CSADMode(PrettyEnum, IntEnum):
     OFF = 0
     AUTO = 1
     FORCE_ON = 2
@@ -366,7 +366,7 @@ class CSADMode(IntEnum, PrettyEnum):
 
 
 # Filters
-class FilterState(IntEnum, PrettyEnum):
+class FilterState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     PRIMING = 2
@@ -381,13 +381,13 @@ class FilterState(IntEnum, PrettyEnum):
     FILTER_WAITING_TURN_OFF = 11
 
 
-class FilterType(StrEnum, PrettyEnum):
+class FilterType(PrettyEnum, StrEnum):
     VARIABLE_SPEED = "FMT_VARIABLE_SPEED_PUMP"
     DUAL_SPEED = "FMT_DUAL_SPEED"
     SINGLE_SPEED = "FMT_SINGLE_SPEED"
 
 
-class FilterValvePosition(IntEnum, PrettyEnum):
+class FilterValvePosition(PrettyEnum, IntEnum):
     POOL_ONLY = 1
     SPA_ONLY = 2
     SPILLOVER = 3
@@ -395,7 +395,7 @@ class FilterValvePosition(IntEnum, PrettyEnum):
     HIGH_PRIO_HEAT = 5
 
 
-class FilterWhyOn(IntEnum, PrettyEnum):
+class FilterWhyOn(PrettyEnum, IntEnum):
     OFF = 0
     NO_WATER_FLOW = 1
     COOLDOWN = 2
@@ -419,26 +419,26 @@ class FilterWhyOn(IntEnum, PrettyEnum):
     MAX_VALUE = 20
 
 
-class FilterSpeedPresets(StrEnum, PrettyEnum):
+class FilterSpeedPresets(PrettyEnum, StrEnum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()
 
 
 # Groups
-class GroupState(IntEnum, PrettyEnum):
+class GroupState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
 
 
 # Heaters
-class HeaterState(IntEnum, PrettyEnum):
+class HeaterState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     PAUSE = 2
 
 
-class HeaterType(StrEnum, PrettyEnum):
+class HeaterType(PrettyEnum, StrEnum):
     GAS = "HTR_GAS"
     HEAT_PUMP = "HTR_HEAT_PUMP"
     SOLAR = "HTR_SOLAR"
@@ -449,26 +449,26 @@ class HeaterType(StrEnum, PrettyEnum):
     SMART_HEAT_PUMP = "HTR_SMART_HEAT_PUMP"
 
 
-class HeaterMode(IntEnum, PrettyEnum):
+class HeaterMode(PrettyEnum, IntEnum):
     HEAT = 0
     COOL = 1
     AUTO = 2
 
 
 # Pumps
-class PumpState(IntEnum, PrettyEnum):
+class PumpState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     FREEZE_PROTECT = 2  # This is an assumption that 2 means freeze protect, ref: https://github.com/cryptk/haomnilogic-local/issues/147
 
 
-class PumpType(StrEnum, PrettyEnum):
+class PumpType(PrettyEnum, StrEnum):
     SINGLE_SPEED = "PMP_SINGLE_SPEED"
     DUAL_SPEED = "PMP_DUAL_SPEED"
     VARIABLE_SPEED = "PMP_VARIABLE_SPEED_PUMP"
 
 
-class PumpFunction(StrEnum, PrettyEnum):
+class PumpFunction(PrettyEnum, StrEnum):
     PUMP = "PMP_PUMP"
     WATER_FEATURE = "PMP_WATER_FEATURE"
     CLEANER = "PMP_CLEANER"
@@ -485,14 +485,14 @@ class PumpFunction(StrEnum, PrettyEnum):
     CLEANER_IN_FLOOR = "PMP_CLEANER_IN_FLOOR"
 
 
-class PumpSpeedPresets(StrEnum, PrettyEnum):
+class PumpSpeedPresets(PrettyEnum, StrEnum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()
 
 
 # Relays
-class RelayFunction(StrEnum, PrettyEnum):
+class RelayFunction(PrettyEnum, StrEnum):
     WATER_FEATURE = "RLY_WATER_FEATURE"
     LIGHT = "RLY_LIGHT"
     BACKYARD_LIGHT = "RLY_BACKYARD_LIGHT"
@@ -512,18 +512,18 @@ class RelayFunction(StrEnum, PrettyEnum):
     CLEANER_IN_FLOOR = "RLY_CLEANER_IN_FLOOR"
 
 
-class RelayState(IntEnum, PrettyEnum):
+class RelayState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
 
 
-class RelayType(StrEnum, PrettyEnum):
+class RelayType(PrettyEnum, StrEnum):
     VALVE_ACTUATOR = "RLY_VALVE_ACTUATOR"
     HIGH_VOLTAGE = "RLY_HIGH_VOLTAGE_RELAY"
     LOW_VOLTAGE = "RLY_LOW_VOLTAGE_RELAY"
 
 
-class RelayWhyOn(IntEnum, PrettyEnum):
+class RelayWhyOn(PrettyEnum, IntEnum):
     NO_MESSAGE = 0
     MANUAL_OFF = 1
     COUNTDOWN_DONE = 2
@@ -539,7 +539,7 @@ class RelayWhyOn(IntEnum, PrettyEnum):
 
 
 # Sensors
-class SensorType(StrEnum, PrettyEnum):
+class SensorType(PrettyEnum, StrEnum):
     AIR_TEMP = "SENSOR_AIR_TEMP"
     SOLAR_TEMP = "SENSOR_SOLAR_TEMP"
     WATER_TEMP = "SENSOR_WATER_TEMP"
@@ -548,7 +548,7 @@ class SensorType(StrEnum, PrettyEnum):
     EXT_INPUT = "SENSOR_EXT_INPUT"
 
 
-class SensorUnits(StrEnum, PrettyEnum):
+class SensorUnits(PrettyEnum, StrEnum):
     FAHRENHEIT = "UNITS_FAHRENHEIT"
     CELSIUS = "UNITS_CELSIUS"
     PPM = "UNITS_PPM"
@@ -559,13 +559,13 @@ class SensorUnits(StrEnum, PrettyEnum):
 
 
 # Valve Actuators
-class ValveActuatorState(IntEnum, PrettyEnum):
+class ValveActuatorState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
 
 
 # Schedules
-class ScheduleDaysActive(Flag, PrettyEnum):
+class ScheduleDaysActive(PrettyEnum, Flag):
     MONDAY = 1 << 0
     TUESDAY = 1 << 1
     WEDNESDAY = 1 << 2

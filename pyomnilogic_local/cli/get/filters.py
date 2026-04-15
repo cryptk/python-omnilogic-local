@@ -50,13 +50,13 @@ def _print_filter_info(filt: MSPFilter, telemetry: TelemetryType | None) -> None
     filter_data: dict[Any, Any] = {**dict(filt), **dict(telemetry)} if telemetry else dict(filt)
     for attr_name, value in filter_data.items():
         if attr_name == "state":
-            value = FilterState(value).pretty()
+            value = str(FilterState(value))
         elif attr_name == "type":
-            value = FilterType(value).pretty()
+            value = str(FilterType(value))
         elif attr_name == "valve_position":
-            value = FilterValvePosition(value).pretty()
+            value = str(FilterValvePosition(value))
         elif attr_name == "why_on":
-            value = FilterWhyOn(value).pretty()
+            value = str(FilterWhyOn(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"

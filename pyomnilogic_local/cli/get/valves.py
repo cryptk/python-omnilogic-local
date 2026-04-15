@@ -60,13 +60,13 @@ def _print_valve_info(relay: MSPRelay, telemetry: Telemetry) -> None:
 
     for attr_name, value in valve_data.items():
         if attr_name == "type":
-            value = RelayType(value).pretty()
+            value = str(RelayType(value))
         elif attr_name == "function":
-            value = RelayFunction(value).pretty()
+            value = str(RelayFunction(value))
         elif attr_name == "state":
-            value = ValveActuatorState(value).pretty()
+            value = str(ValveActuatorState(value))
         elif attr_name == "why_on":
-            value = RelayWhyOn(value).pretty()
+            value = str(RelayWhyOn(value))
         elif isinstance(value, list):
             # Format lists nicely
             value = ", ".join(str(v) for v in value) if value else "None"
