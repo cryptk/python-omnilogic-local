@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyomnilogic_local.api import OmniLogicAPI
 from pyomnilogic_local.api.constants import DEFAULT_RESPONSE_TIMEOUT
+from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
 from pyomnilogic_local.backyard import Backyard
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.groups import Group
@@ -43,6 +44,7 @@ class OmniLogic:
     groups: EquipmentDict[Group]
     schedules: EquipmentDict[Schedule]
 
+    _api: OmniLogicAPI | OmniLogicMockAPI
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
     _mspconfig_checksum: int = 0
@@ -59,9 +61,7 @@ class OmniLogic:
 
         sim_data_path = os.environ.get("PYOMNILOGIC_SIMULATION_DATA")
         if sim_data_path:
-            from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
-
-            self._api = OmniLogicMockAPI(sim_data_path)  # type: ignore[assignment]
+            self._api = OmniLogicMockAPI(sim_data_path)
         else:
             self._api = OmniLogicAPI(host, port, timeout)
         self._refresh_lock = asyncio.Lock()

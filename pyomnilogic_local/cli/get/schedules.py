@@ -11,7 +11,7 @@ from pyomnilogic_local.cli.utils import echo_properties
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPSchedule
+    from pyomnilogic_local.models.mspconfig import MSPSchedule
 
 
 @click.command()

@@ -12,8 +12,8 @@ from pyomnilogic_local.omnitypes import PumpFunction, PumpState, PumpType
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPConfig, MSPPump
-    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
+    from pyomnilogic_local.models.mspconfig import MSPPump
+    from pyomnilogic_local.models.telemetry import TelemetryType
 
 
 @click.command()

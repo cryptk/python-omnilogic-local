@@ -12,8 +12,8 @@ from pyomnilogic_local.omnitypes import BackyardState
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPBackyard, MSPConfig
-    from pyomnilogic_local.models.telemetry import Telemetry, TelemetryType
+    from pyomnilogic_local.models.mspconfig import MSPBackyard
+    from pyomnilogic_local.models.telemetry import TelemetryType
 
 
 @click.command()

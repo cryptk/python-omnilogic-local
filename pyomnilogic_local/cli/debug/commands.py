@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, cast
 import click
 
 from pyomnilogic_local.cli.pcap_utils import parse_pcap_file, process_pcap_messages
-from pyomnilogic_local.cli.utils import async_get_filter_diagnostics
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
@@ -65,46 +64,6 @@ def get_telemetry(ctx: click.Context) -> None:
     omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
     telemetry = asyncio.run(omnilogic._api.async_get_telemetry(raw=ctx.obj["RAW"]))
     click.echo(telemetry)
-
-
-@debug.command()
-@click.option(
-    "--pool-id", required=True, type=int, help="System ID of the Body Of Water the filter is associated with. Example: --pool-id 1"
-)
-@click.option("--filter-id", required=True, type=int, help="System ID of the filter to request diagnostics for. Example: --filter-id 5")
-@click.pass_context
-def get_filter_diagnostics(ctx: click.Context, pool_id: int, filter_id: int) -> None:
-    """Get diagnostic information for a specific filter/pump.
-
-    This command retrieves detailed diagnostic data including firmware versions,
-    power consumption, and error status for a filter or pump.
-
-    Example:
-        omnilogic debug get-filter-diagnostics --pool-id 1 --filter-id 5
-
-    """
-    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
-    filter_diags = asyncio.run(async_get_filter_diagnostics(omnilogic._api, pool_id, filter_id, ctx.obj["RAW"]))
-    if ctx.obj["RAW"]:
-        click.echo(filter_diags)
-    else:
-        drv1 = chr(filter_diags.get_param_by_name("DriveFWRevisionB1"))
-        drv2 = chr(filter_diags.get_param_by_name("DriveFWRevisionB2"))
-        drv3 = chr(filter_diags.get_param_by_name("DriveFWRevisionB3"))
-        drv4 = chr(filter_diags.get_param_by_name("DriveFWRevisionB4"))
-        dfw1 = chr(filter_diags.get_param_by_name("DisplayFWRevisionB1"))
-        dfw2 = chr(filter_diags.get_param_by_name("DisplayFWRevisionB2"))
-        dfw3 = chr(filter_diags.get_param_by_name("DisplayFWRevisionB3"))
-        dfw4 = chr(filter_diags.get_param_by_name("DisplayFWRevisionB4"))
-        pow1 = filter_diags.get_param_by_name("PowerMSB")
-        pow2 = filter_diags.get_param_by_name("PowerLSB")
-        errs = filter_diags.get_param_by_name("ErrorStatus")
-        click.echo(
-            f"DRIVE FW REV: {drv1}{drv2}.{drv3}{drv4}\n"
-            f"DISPLAY FW REV: {dfw1}{dfw2}.{dfw3}.{dfw4}\n"
-            f"POWER: {pow1:x}{pow2:x}W\n"
-            f"ERROR STATUS: {errs}"
-        )
 
 
 @debug.command()

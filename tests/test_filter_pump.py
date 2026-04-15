@@ -187,7 +187,7 @@ class TestFilter:
         """Test turn_on method calls API correctly."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await filter_obj.turn_on()
 
@@ -202,7 +202,7 @@ class TestFilter:
         """Test turn_off method calls API correctly."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await filter_obj.turn_off()
 
@@ -217,7 +217,7 @@ class TestFilter:
         """Test run_preset_speed with LOW preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.LOW)
 
@@ -232,7 +232,7 @@ class TestFilter:
         """Test run_preset_speed with MEDIUM preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.MEDIUM)
 
@@ -247,7 +247,7 @@ class TestFilter:
         """Test run_preset_speed with HIGH preset."""
         sample_filter_config.bow_id = 7
         filter_obj = Filter(mock_omni, sample_filter_config, mock_telemetry)
-        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        filter_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await filter_obj.run_preset_speed(FilterSpeedPresets.HIGH)
 
@@ -320,7 +320,7 @@ class TestPump:
         """Test turn_on method calls API correctly."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
-        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await pump_obj.turn_on()
 
@@ -335,7 +335,7 @@ class TestPump:
         """Test turn_off method calls API correctly."""
         sample_pump_config.bow_id = 7
         pump_obj = Pump(mock_omni, sample_pump_config, mock_telemetry)
-        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign]
+        pump_obj._api.async_set_equipment = AsyncMock()  # type: ignore[method-assign,union-attr]
 
         await pump_obj.turn_off()
 

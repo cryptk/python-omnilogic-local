@@ -9,6 +9,7 @@ from pyomnilogic_local.omnitypes import BackyardState
 
 if TYPE_CHECKING:
     from pyomnilogic_local.api.api import OmniLogicAPI
+    from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
     from pyomnilogic_local.models import Telemetry
     from pyomnilogic_local.omnilogic import OmniLogic
 
@@ -72,7 +73,7 @@ class OmniEquipment[MSPConfigT: MSPEquipmentType, TelemetryT: TelemetryType | No
         self.update(mspconfig, telemetry)
 
     @property
-    def _api(self) -> OmniLogicAPI:
+    def _api(self) -> OmniLogicAPI | OmniLogicMockAPI:
         """Access the OmniLogic API through the parent controller."""
         return self._omni._api
 

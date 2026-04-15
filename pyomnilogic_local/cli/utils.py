@@ -8,14 +8,12 @@ from __future__ import annotations
 
 import inspect
 import os
-from typing import TYPE_CHECKING, Literal, overload
+from typing import Any
 
 import click
 
 from pyomnilogic_local.api.api import OmniLogicAPI
-
-if TYPE_CHECKING:
-    from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
+from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
 
 
 async def get_omni(host: str) -> OmniLogicAPI:
@@ -29,32 +27,11 @@ async def get_omni(host: str) -> OmniLogicAPI:
     """
     sim_data_path = os.environ.get("PYOMNILOGIC_SIMULATION_DATA")
     if sim_data_path:
-        from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
-
         return OmniLogicMockAPI(sim_data_path)  # type: ignore[return-value]
     return OmniLogicAPI(host, 10444, 5.0)
 
 
-@overload
-async def async_get_filter_diagnostics(omni: OmniLogicAPI, pool_id: int, filter_id: int, raw: Literal[True]) -> str: ...
-@overload
-async def async_get_filter_diagnostics(omni: OmniLogicAPI, pool_id: int, filter_id: int, raw: Literal[False]) -> FilterDiagnostics: ...
-async def async_get_filter_diagnostics(omni: OmniLogicAPI, pool_id: int, filter_id: int, raw: bool) -> FilterDiagnostics | str:
-    """Retrieve filter diagnostics from the controller.
-
-    Args:
-        omni: OmniLogicAPI instance for controller communication
-        pool_id: System ID of the Body Of Water
-        filter_id: System ID of the filter/pump
-        raw: If True, return raw XML string; if False, return parsed FilterDiagnostics object
-
-    Returns:
-        FilterDiagnostics object or raw XML string depending on raw parameter
-    """
-    return await omni.async_get_filter_diagnostics(pool_id, filter_id, raw=raw)
-
-
-def echo_properties(obj):
+def echo_properties(obj: Any) -> None:
     """Echo all properties of an object in a formatted way."""
     # 1. Identify the properties from the class
     prop_names = [name for name, value in inspect.getmembers(type(obj), lambda x: isinstance(x, property))]
