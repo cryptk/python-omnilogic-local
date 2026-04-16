@@ -455,6 +455,7 @@ class HeaterMode(PrettyEnum, IntEnum):
     HEAT = 0
     COOL = 1
     AUTO = 2
+    UNKNOWN_1 = 3
 
 
 # Pumps
