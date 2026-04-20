@@ -5,12 +5,18 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Literal, overload
+from typing import Any, Literal, TypedDict, overload
 
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SimData(TypedDict):
+    telemetry: str
+    msp_config: str
+    filepath: str
 
 
 class OmniLogicMockAPI:
@@ -43,7 +49,7 @@ class OmniLogicMockAPI:
         """
         paths = filepath.split(",")
 
-        self._sim_data: list[dict[str, Any]] = []
+        self._sim_data: list[SimData] = []
         for fp in paths:
             path = Path(fp)
             if not path.exists():

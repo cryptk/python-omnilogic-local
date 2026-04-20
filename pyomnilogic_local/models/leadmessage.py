@@ -40,4 +40,4 @@ class LeadMessage(BaseModel):
                 if name := param.get("name"):
                     result[name] = int(param.text) if param.text else 0
             return result
-        return data
+        return data  # type: ignore[no-any-return]
