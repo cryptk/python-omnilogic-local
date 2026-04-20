@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, SupportsInt, cast, overload
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, computed_field
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError, computed_field
 from xmltodict import parse as xml_parse
 
 from pyomnilogic_local.omnitypes import (
@@ -492,6 +492,7 @@ class Telemetry(BaseModel):
     """
 
     model_config = ConfigDict(from_attributes=True)
+    _raw: str = PrivateAttr(default="")
 
     version: str = Field(alias="@version")
     backyard: TelemetryBackyard = Field(alias="Backyard")
@@ -525,7 +526,7 @@ class Telemetry(BaseModel):
 
             try:
                 newvalue = int(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 newvalue = value
 
             return key, newvalue
@@ -552,10 +553,13 @@ class Telemetry(BaseModel):
             ),
         )
         try:
-            return Telemetry.model_validate(data["STATUS"])
+            instance = Telemetry.model_validate(data["STATUS"])
+            instance._raw = xml
         except ValidationError as exc:
             msg = f"Failed to parse Telemetry: {exc}"
             raise OmniParsingError(msg) from exc
+        else:
+            return instance
 
     def get_telem_by_systemid(self, system_id: int) -> TelemetryType | None:
         for field_name, value in self:

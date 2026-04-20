@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError
 from xmltodict import parse as xml_parse
+
+from pyomnilogic_local.models.exceptions import OmniParsingError
 
 # Example Filter Diagnostics XML:
 #
@@ -46,6 +48,7 @@ class FilterDiagnosticsParameters(BaseModel):
 
 class FilterDiagnostics(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    _raw: str = PrivateAttr(default="")
 
     name: str = Field(alias="Name")
     parameters: list[FilterDiagnosticsParameter] = Field(alias="Parameters")
@@ -64,4 +67,11 @@ class FilterDiagnostics(BaseModel):
         # The XML nests the Parameter entries under a Parameters entry, this is annoying to work with.  Here we are adjusting the data to
         # remove that extra level in the data
         data["Response"]["Parameters"] = data["Response"]["Parameters"]["Parameter"]
-        return FilterDiagnostics.model_validate(data["Response"])
+        try:
+            instance = FilterDiagnostics.model_validate(data["Response"])
+            instance._raw = xml
+        except ValidationError as exc:
+            msg = f"Failed to parse Filter Diagnostics: {exc}"
+            raise OmniParsingError(msg) from exc
+        else:
+            return instance

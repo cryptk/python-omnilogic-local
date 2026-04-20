@@ -9,6 +9,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    PrivateAttr,
     ValidationError,
     computed_field,
     model_validator,
@@ -410,6 +411,7 @@ type MSPConfigType = MSPSystem | MSPEquipmentType
 
 class MSPConfig(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    _raw: str = PrivateAttr(default="")
 
     system: MSPSystem = Field(alias="System")
     backyard: MSPBackyard = Field(alias="Backyard")
@@ -459,7 +461,10 @@ class MSPConfig(BaseModel):
             ),
         )
         try:
-            return MSPConfig.model_validate(data["MSPConfig"], from_attributes=True)
+            instance = MSPConfig.model_validate(data["MSPConfig"], from_attributes=True)
+            instance._raw = xml
         except ValidationError as exc:
             msg = f"Failed to parse MSP Configuration: {exc}"
             raise OmniParsingError(msg) from exc
+        else:
+            return instance

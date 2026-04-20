@@ -43,14 +43,9 @@ dev = [
 
 [tool.mypy]
 python_version = "3.14"
-plugins = [
-    "pydantic.mypy"
-]
-# follow_imports = "silent"
+plugins = ["pydantic.mypy"]
+follow_imports = "normal"
 strict = true
-ignore_missing_imports = true
-disallow_subclassing_any = false
-warn_return_any = false
 
 [tool.ruff]
 line-length = 140
