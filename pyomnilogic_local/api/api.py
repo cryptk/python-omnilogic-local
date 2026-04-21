@@ -8,11 +8,7 @@ from typing import TYPE_CHECKING, Literal, overload
 from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
-from pyomnilogic_local.omnitypes import (
-    ColorLogicBrightness,
-    ColorLogicSpeed,
-    MessageType,
-)
+from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicSpeed, MessageType
 
 from .constants import (
     DEFAULT_CONTROLLER_PORT,
@@ -117,10 +113,8 @@ class OmniLogicAPI:
 
     @overload
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
-
     @overload
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None: ...
-
     async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
         """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
 
@@ -138,7 +132,7 @@ class OmniLogicAPI:
         resp: str | None = None
         try:
             if need_response:
-                resp = await protocol.send_and_receive(message_type, message)
+                resp = await protocol.send_and_receive(message_type, message, response_timeout=self.response_timeout)
             else:
                 await protocol.send_message(message_type, message)
         finally:
