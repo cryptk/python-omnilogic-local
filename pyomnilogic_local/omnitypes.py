@@ -120,7 +120,7 @@ class ChlorinatorAlert(Flag):
     LOW_VOLTAGE = 1 << 3  # Low voltage alert
     CELL_TEMP_LOW = 1 << 4  # Cell water temperature low
     CELL_TEMP_SCALEBACK = 1 << 5  # Cell water temperature scaleback
-    # CELL_TEMP_LOW and CELL_TEMP_SCALEBACK = CELL_TEMP_HIGH
+    # NOTE: if both CELL_TEMP_LOW and CELL_TEMP_SCALEBACK are set, it indicates CELL_TEMP_HIGH
     BOARD_TEMP_HIGH = 1 << 6  # Board temperature high
     BOARD_TEMP_CLEARING = 1 << 7  # Board temperature clearing
     CELL_CLEAN = 1 << 11  # Cell cleaning runtime alert
