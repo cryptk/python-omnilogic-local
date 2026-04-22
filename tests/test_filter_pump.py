@@ -103,10 +103,16 @@ def sample_pump_telemetry() -> TelemetryPump:
 @pytest.fixture
 def mock_telemetry(sample_filter_telemetry: TelemetryFilter, sample_pump_telemetry: TelemetryPump) -> Mock:
     """Create a mock Telemetry object."""
+
+    def get_telem(system_id: int) -> TelemetryFilter | TelemetryPump | None:
+        if system_id == 8:
+            return sample_filter_telemetry
+        if system_id == 15:
+            return sample_pump_telemetry
+        return None
+
     telemetry = Mock(spec=Telemetry)
-    telemetry.get_telem_by_systemid = Mock(
-        side_effect=lambda sid: sample_filter_telemetry if sid == 8 else sample_pump_telemetry if sid == 15 else None
-    )
+    telemetry.get_telem_by_systemid = Mock(side_effect=get_telem)
     return telemetry
 
 

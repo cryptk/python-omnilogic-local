@@ -43,7 +43,7 @@ class OmniLogicMessage:
     payload: bytes
     client_type: ClientType = ClientType.SIMPLE
     version: str = PROTOCOL_VERSION
-    timestamp: int | None = int(time.time())
+    timestamp: int
     reserved_1: int = 0
     compressed: bool = False
     reserved_2: int = 0
@@ -54,6 +54,7 @@ class OmniLogicMessage:
         msg_type: MessageType,
         payload: str | None = None,
         version: str = PROTOCOL_VERSION,
+        timestamp: int | None = None,
     ) -> None:
         """Initialize a new OmniLogicMessage.
 
@@ -62,6 +63,7 @@ class OmniLogicMessage:
             msg_type: Type of message being sent.
             payload: Optional string payload (XML or command body).
             version: Protocol version string.
+            timestamp: Optional timestamp for the message.
         """
         self.id = msg_id
         self.type = msg_type
@@ -72,6 +74,7 @@ class OmniLogicMessage:
         self.payload = bytes(payload, "utf-8")
 
         self.version = version
+        self.timestamp = timestamp if timestamp is not None else int(time.time())
 
     def __bytes__(self) -> bytes:
         """Serialize the message to bytes for UDP transmission.

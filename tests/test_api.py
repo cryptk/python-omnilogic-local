@@ -9,6 +9,7 @@ Focuses on:
 
 from __future__ import annotations
 
+import math
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
@@ -146,7 +147,7 @@ def test_api_init_custom_params() -> None:
     api = OmniLogicAPI("10.0.0.50", controller_port=12345, response_timeout=10.0)
     assert api.controller_ip == "10.0.0.50"
     assert api.controller_port == 12345
-    assert api.response_timeout == 10.0
+    assert math.isclose(api.response_timeout, 10.0, rel_tol=1e-9, abs_tol=1e-9)
 
 
 def test_api_init_validation(subtests: pytest.Subtests) -> None:
@@ -167,7 +168,9 @@ def test_api_init_validation(subtests: pytest.Subtests) -> None:
         with subtests.test(msg=description):
             if should_pass:
                 api = OmniLogicAPI(ip, port, timeout)
-                assert api is not None
+                assert api.controller_ip == ip
+                assert api.controller_port == port
+                assert math.isclose(api.response_timeout, timeout, rel_tol=1e-9, abs_tol=1e-9)
             else:
                 with pytest.raises(OmniValidationError):
                     OmniLogicAPI(ip, port, timeout)

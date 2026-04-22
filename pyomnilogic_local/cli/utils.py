@@ -7,28 +7,9 @@ accessing controller data within the Click context.
 from __future__ import annotations
 
 import inspect
-import os
 from typing import Any
 
 import click
-
-from pyomnilogic_local.api.api import OmniLogicAPI
-from pyomnilogic_local.api.mock_api import OmniLogicMockAPI
-
-
-async def get_omni(host: str) -> OmniLogicAPI:
-    """Create an OmniLogicAPI instance for the specified controller.
-
-    Args:
-        host: Hostname or IP address of the OmniLogic controller
-
-    Returns:
-        Configured OmniLogicAPI instance ready for communication
-    """
-    sim_data_path = os.environ.get("PYOMNILOGIC_SIMULATION_DATA")
-    if sim_data_path:
-        return OmniLogicMockAPI(sim_data_path)  # type: ignore[return-value]
-    return OmniLogicAPI(host, 10444, 5.0)
 
 
 def echo_properties(obj: Any) -> None:
