@@ -312,7 +312,7 @@ wheels = [
 
 [[package]]
 name = "python-omnilogic-local"
-version = "0.28.1"
+version = "0.28.2"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
