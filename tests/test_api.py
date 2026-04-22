@@ -9,19 +9,23 @@ Focuses on:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
 import pytest
 
 from pyomnilogic_local.api.api import OmniLogicAPI, _validate_id, _validate_speed, _validate_temperature
-from pyomnilogic_local.api.constants import MAX_SPEED_PERCENT, MAX_TEMPERATURE_F, MIN_SPEED_PERCENT, MIN_TEMPERATURE_F, XML_NAMESPACE
+from pyomnilogic_local.api.constants import (
+    DEFAULT_RESPONSE_TIMEOUT,
+    MAX_SPEED_PERCENT,
+    MAX_TEMPERATURE_F,
+    MIN_SPEED_PERCENT,
+    MIN_TEMPERATURE_F,
+    XML_NAMESPACE,
+)
 from pyomnilogic_local.api.exceptions import OmniValidationError
 from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicShow40, ColorLogicSpeed, HeaterMode, MessageType
-
-if TYPE_CHECKING:
-    from pytest_subtests import SubTests
 
 # ============================================================================
 # Helper Functions
@@ -56,7 +60,7 @@ def _find_param(root: ET.Element, name: str) -> ET.Element:
 # ============================================================================
 
 
-def test_validate_temperature(subtests: SubTests) -> None:
+def test_validate_temperature(subtests: pytest.Subtests) -> None:
     """Test temperature validation with various inputs using table-driven approach."""
     test_cases: list[tuple[Any, str, bool, str]] = [
         # (temperature, param_name, should_pass, description)  # noqa: ERA001
@@ -79,7 +83,7 @@ def test_validate_temperature(subtests: SubTests) -> None:
                     _validate_temperature(temperature, param_name)
 
 
-def test_validate_speed(subtests: SubTests) -> None:
+def test_validate_speed(subtests: pytest.Subtests) -> None:
     """Test speed validation with various inputs using table-driven approach."""
     test_cases: list[tuple[Any, str, bool, str]] = [
         # (speed, param_name, should_pass, description)  # noqa: ERA001
@@ -102,7 +106,7 @@ def test_validate_speed(subtests: SubTests) -> None:
                     _validate_speed(speed, param_name)
 
 
-def test_validate_id(subtests: SubTests) -> None:
+def test_validate_id(subtests: pytest.Subtests) -> None:
     """Test ID validation with various inputs using table-driven approach."""
     test_cases: list[tuple[Any, str, bool, str]] = [
         # (id_value, param_name, should_pass, description)  # noqa: ERA001
@@ -134,7 +138,7 @@ def test_api_init_valid() -> None:
     api = OmniLogicAPI("192.168.1.100")
     assert api.controller_ip == "192.168.1.100"
     assert api.controller_port == 10444
-    assert api.response_timeout == 5.0
+    assert api.response_timeout == DEFAULT_RESPONSE_TIMEOUT
 
 
 def test_api_init_custom_params() -> None:
@@ -145,7 +149,7 @@ def test_api_init_custom_params() -> None:
     assert api.response_timeout == 10.0
 
 
-def test_api_init_validation(subtests: SubTests) -> None:
+def test_api_init_validation(subtests: pytest.Subtests) -> None:
     """Test OmniLogicAPI initialization validation using table-driven approach."""
     test_cases: list[tuple[Any, Any, Any, bool, str]] = [
         # (ip, port, timeout, should_pass, description)  # noqa: ERA001
@@ -380,7 +384,7 @@ async def test_async_set_light_show_generates_valid_xml() -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_set_chlorinator_enable_boolean_conversion(subtests: SubTests) -> None:
+async def test_async_set_chlorinator_enable_boolean_conversion(subtests: pytest.Subtests) -> None:
     """Test that async_set_chlorinator_enable properly converts boolean to int."""
     api = OmniLogicAPI("192.168.1.100")
 
@@ -405,7 +409,7 @@ async def test_async_set_chlorinator_enable_boolean_conversion(subtests: SubTest
 
 
 @pytest.mark.asyncio
-async def test_async_set_heater_enable_boolean_conversion(subtests: SubTests) -> None:
+async def test_async_set_heater_enable_boolean_conversion(subtests: pytest.Subtests) -> None:
     """Test that async_set_heater_enable properly converts boolean to int."""
     api = OmniLogicAPI("192.168.1.100")
 
