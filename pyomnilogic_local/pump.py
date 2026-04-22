@@ -6,11 +6,11 @@ from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPPump
 from pyomnilogic_local.models.telemetry import TelemetryPump
-from pyomnilogic_local.omnitypes import PumpSpeedPresets, PumpState
+from pyomnilogic_local.omnitypes import PumpSpeedPresets, PumpState, PumpType
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
-    from pyomnilogic_local.omnitypes import PumpFunction, PumpType
+    from pyomnilogic_local.omnitypes import PumpFunction
 
 
 class Pump(OmniEquipment[MSPPump, TelemetryPump]):
@@ -200,10 +200,20 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             msg = "Pump bow_id and system_id must be set"
             raise OmniEquipmentNotInitializedError(msg)
 
+        # If we are a Variable Speed pump, we want to try to turn on at the last speed setting
+        # This matches the behavior of the OmniLogic phone app
+        target_speed: int = 100
+        match self.equip_type:
+            case PumpType.VARIABLE_SPEED:
+                if self.last_speed >= self.min_percent and self.last_speed <= self.max_percent:
+                    target_speed = self.last_speed
+            case PumpType.SINGLE_SPEED:
+                target_speed = self.max_percent
+
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
             equipment_id=self.system_id,
-            is_on=True,
+            is_on=target_speed,
         )
 
     @control_method

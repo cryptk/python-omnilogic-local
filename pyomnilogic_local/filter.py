@@ -6,11 +6,11 @@ from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPFilter
 from pyomnilogic_local.models.telemetry import TelemetryFilter
-from pyomnilogic_local.omnitypes import FilterSpeedPresets, FilterState
+from pyomnilogic_local.omnitypes import FilterSpeedPresets, FilterState, FilterType
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
-    from pyomnilogic_local.omnitypes import FilterType, FilterValvePosition, FilterWhyOn
+    from pyomnilogic_local.omnitypes import FilterValvePosition, FilterWhyOn
 
 
 class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
@@ -219,10 +219,20 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             msg = "Filter bow_id and system_id must be set"
             raise OmniEquipmentNotInitializedError(msg)
 
+        # If we are a Variable Speed filter, we want to try to turn on at the last speed setting
+        # This matches the behavior of the OmniLogic phone app
+        target_speed: int = 100
+        match self.equip_type:
+            case FilterType.VARIABLE_SPEED:
+                if self.last_speed >= self.min_percent and self.last_speed <= self.max_percent:
+                    target_speed = self.last_speed
+            case FilterType.SINGLE_SPEED:
+                target_speed = self.max_percent
+
         await self._api.async_set_equipment(
             pool_id=self.bow_id,
             equipment_id=self.system_id,
-            is_on=self.last_speed,
+            is_on=target_speed,
         )
 
     @control_method
