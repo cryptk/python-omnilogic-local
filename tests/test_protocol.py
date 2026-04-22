@@ -14,23 +14,15 @@ import asyncio
 import struct
 import time
 import zlib
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
 import pytest
 
-from pyomnilogic_local.api.exceptions import (
-    OmniFragmentationError,
-    OmniMessageFormatError,
-    OmniTimeoutError,
-)
+from pyomnilogic_local.api.exceptions import OmniFragmentationError, OmniMessageFormatError, OmniTimeoutError
 from pyomnilogic_local.api.protocol import OmniLogicMessage, OmniLogicProtocol
 from pyomnilogic_local.omnitypes import ClientType, MessageType
-
-if TYPE_CHECKING:
-    from pytest_subtests import SubTests
-
 
 # ============================================================================
 # OmniLogicMessage Tests
@@ -95,7 +87,7 @@ def test_create_leadmessage() -> None:
     assert bytes(message) == bytes_leadmessage
 
 
-def test_message_from_bytes_errors(subtests: SubTests) -> None:
+def test_message_from_bytes_errors(subtests: pytest.Subtests) -> None:
     """Test OmniLogicMessage.from_bytes with various error conditions using table-driven approach."""
     test_cases = [
         # (data, expected_error, description)  # noqa: ERA001

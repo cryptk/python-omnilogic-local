@@ -15,6 +15,7 @@ from pyomnilogic_local.omnitypes import ClientType, MessageType
 from .constants import (
     ACK_WAIT_TIMEOUT,
     BLOCK_MESSAGE_HEADER_OFFSET,
+    DEFAULT_RESPONSE_TIMEOUT,
     MAX_FRAGMENT_WAIT_TIME,
     MAX_QUEUE_SIZE,
     OMNI_RETRANSMIT_COUNT,
@@ -25,11 +26,7 @@ from .constants import (
     XML_ENCODING,
     XML_NAMESPACE,
 )
-from .exceptions import (
-    OmniFragmentationError,
-    OmniMessageFormatError,
-    OmniTimeoutError,
-)
+from .exceptions import OmniFragmentationError, OmniMessageFormatError, OmniTimeoutError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,21 +222,34 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             Exception: If a protocol error occurs.
         """
         # Wait for either an ACK message or an error
-        while True:
+        # Race condition: datagram_received() calls put_nowait() synchronously, so data_task may
+        # already be done when wait_for fires its timeout CancelledError. In that case we catch
+        # the cancellation, skip re-looping, and fall through to check the result below. If the
+        # result is our ACK we return normally, suppressing the CancelledError so wait_for treats
+        # the call as successful. If it isn't, we re-raise after the loop.
+        cancelled: asyncio.CancelledError | None = None
+        retry = True
+        while retry:
             # Wait for either a message or an error
             data_task = asyncio.create_task(self.data_queue.get())
             error_task = asyncio.create_task(self.error_queue.get())
-            done, pending = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
+            try:
+                done, pending = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
+            except asyncio.CancelledError as exc:
+                retry = False
+                cancelled = exc
+                done = {t for t in (data_task, error_task) if t.done()}
+                pending = {t for t in (data_task, error_task) if not t.done()}
 
             # Cancel any pending tasks to avoid "Task was destroyed but it is pending" warnings
             for task in pending:
                 task.cancel()
 
             if error_task in done:
-                exc = error_task.result()
-                if isinstance(exc, Exception):
-                    raise exc
-                _LOGGER.error("Unknown error occurred during communication with OmniLogic: %s", exc)
+                err = error_task.result()
+                if isinstance(err, Exception):
+                    raise err
+                _LOGGER.error("Unknown error occurred during communication with OmniLogic: %s", err)
             if data_task in done:
                 message = data_task.result()
                 if message.id == ack_id:
@@ -250,6 +260,9 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
                     _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
                     await self.data_queue.put(message)
                     return
+
+        if cancelled is not None:
+            raise cancelled
 
     async def _ensure_sent(
         self,
@@ -299,6 +312,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         msg_type: MessageType,
         payload: str | None,
         msg_id: int | None = None,
+        response_timeout: float = DEFAULT_RESPONSE_TIMEOUT,
     ) -> str:
         """Send a message and wait for a response, returning the response payload as a string.
 
@@ -306,12 +320,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             msg_type: Type of message to send.
             payload: Optional payload string.
             msg_id: Optional message ID.
+            response_timeout: Timeout in seconds to wait for the response.
 
         Returns:
             Response payload as a string.
         """
         await self.send_message(msg_type, payload, msg_id)
-        return await self._receive_file()
+        return await self._receive_file(response_timeout=response_timeout)
 
     # Send a message that you do NOT need a response to
     async def send_message(
@@ -346,10 +361,13 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
         req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
         await self.send_message(MessageType.XML_ACK, req_body, msg_id)
 
-    async def _receive_file(self) -> str:
+    async def _receive_file(self, response_timeout: float = DEFAULT_RESPONSE_TIMEOUT) -> str:
         """Wait for and reassemble a full response from the controller.
 
         Handles single and multi-block (LeadMessage/BlockMessage) responses.
+
+        Args:
+            response_timeout: Timeout in seconds to wait for the initial response.
 
         Returns:
             Response payload as a string.
@@ -359,13 +377,21 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
             OmniFragmentationException: If fragment reassembly fails.
         """
         # wait for the initial packet.
-        message = await self.data_queue.get()
+        try:
+            message = await asyncio.wait_for(self.data_queue.get(), response_timeout)
+        except TimeoutError as exc:
+            msg = f"Timeout waiting for response from controller: {exc}"
+            raise OmniTimeoutError(msg) from exc
 
         # If messages have to be re-transmitted, we can sometimes receive multiple ACKs.  The first one would be handled by
         # self._ensure_sent, but if any subsequent ACKs are sent to us, we need to dump them and wait for a "real" message.
         while message.type in [MessageType.ACK, MessageType.XML_ACK]:
             _LOGGER.debug("Skipping duplicate ACK message")
-            message = await self.data_queue.get()
+            try:
+                message = await asyncio.wait_for(self.data_queue.get(), response_timeout)
+            except TimeoutError as exc:
+                msg = f"Timeout waiting for response from controller: {exc}"
+                raise OmniTimeoutError(msg) from exc
 
         await self._send_ack(message.id)
 
@@ -403,7 +429,7 @@ class OmniLogicProtocol(asyncio.DatagramProtocol):
 
                 # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
                 try:
-                    resp = await asyncio.wait_for(self.data_queue.get(), self._omni_retransmit_time * self._omni_retransmit_count)
+                    resp = await asyncio.wait_for(self.data_queue.get(), response_timeout)
                 except TimeoutError as exc:
                     msg = f"Timeout receiving fragment: got {len(data_fragments)}/{leadmsg.msg_block_count} fragments: {exc}"
                     raise OmniFragmentationError(msg) from exc

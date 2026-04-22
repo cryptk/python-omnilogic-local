@@ -22,8 +22,6 @@ from pyomnilogic_local.models.telemetry import Telemetry
 from pyomnilogic_local.omnitypes import OmniType
 
 if TYPE_CHECKING:
-    from pytest_subtests import SubTests
-
     from pyomnilogic_local._base import OmniEquipment
 
 # Path to fixtures directory
@@ -41,7 +39,7 @@ def load_fixture(filename: str) -> dict[str, str]:
     """
     fixture_path = FIXTURES_DIR / filename
     with fixture_path.open(encoding="utf-8") as f:
-        return json.load(f)
+        return json.load(f)  # type: ignore[no-any-return]
 
 
 def get_equipment_by_type(msp: MSPConfig, omni_type: OmniType) -> list[Any]:
@@ -91,7 +89,7 @@ class TestIssue144:
         """Load issue-144 fixture data."""
         return load_fixture("issue-144.json")
 
-    def test_mspconfig(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_mspconfig(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test MSPConfig parsing for issue-144."""
         msp = MSPConfig.load_xml(fixture_data["mspconfig"])
 
@@ -128,7 +126,7 @@ class TestIssue144:
             assert lights[0].system_id == 9
             assert lights[0].name == "UCL"
 
-    def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_telemetry(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test Telemetry parsing for issue-144."""
         telem = Telemetry.load_xml(fixture_data["telemetry"])
 
@@ -184,7 +182,7 @@ class TestIssue163:
         """Load issue-163 fixture data."""
         return load_fixture("issue-163.json")
 
-    def test_mspconfig(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_mspconfig(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test MSPConfig parsing for issue-163."""
         msp = MSPConfig.load_xml(fixture_data["mspconfig"])
 
@@ -226,7 +224,7 @@ class TestIssue163:
             assert len(msp.backyard.sensor) == 1
             assert msp.backyard.sensor[0].system_id == 16
 
-    def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_telemetry(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test Telemetry parsing for issue-163."""
         telem = Telemetry.load_xml(fixture_data["telemetry"])
 
@@ -281,7 +279,7 @@ class TestIssue60:
         """Load issue-60 fixture data."""
         return load_fixture("issue-60.json")
 
-    def test_mspconfig(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_mspconfig(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test MSPConfig parsing for issue-60."""
         msp = MSPConfig.load_xml(fixture_data["mspconfig"])
 
@@ -339,7 +337,7 @@ class TestIssue60:
             assert heater_names.count("Gas") == 2
             assert heater_names.count("Solar") == 2
 
-    def test_telemetry(self, fixture_data: dict[str, str], subtests: SubTests) -> None:
+    def test_telemetry(self, fixture_data: dict[str, str], subtests: pytest.Subtests) -> None:
         """Test Telemetry parsing for issue-60."""
         telem = Telemetry.load_xml(fixture_data["telemetry"])
 
