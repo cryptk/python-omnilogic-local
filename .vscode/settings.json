@@ -17,5 +17,9 @@
       "source.organizeImports": "explicit"
     }
   },
-  "ruff.organizeImports": true
+  "ruff.organizeImports": true,
+  "sonarlint.connectedMode.project": {
+    "connectionId": "cryptk",
+    "projectKey": "cryptk_python-omnilogic-local"
+  }
 }
