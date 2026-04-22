@@ -327,7 +327,7 @@ class TestPump:
         pump_obj._api.async_set_equipment.assert_called_once_with(
             pool_id=7,
             equipment_id=15,
-            is_on=True,
+            is_on=50,
         )
 
     @pytest.mark.asyncio
