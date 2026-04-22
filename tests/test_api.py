@@ -168,7 +168,9 @@ def test_api_init_validation(subtests: pytest.Subtests) -> None:
         with subtests.test(msg=description):
             if should_pass:
                 api = OmniLogicAPI(ip, port, timeout)
-                assert api is not None
+                assert api.controller_ip == ip
+                assert api.controller_port == port
+                assert math.isclose(api.response_timeout, timeout, rel_tol=1e-9, abs_tol=1e-9)
             else:
                 with pytest.raises(OmniValidationError):
                     OmniLogicAPI(ip, port, timeout)
