@@ -92,6 +92,8 @@ class OmniLogic:
         *,
         if_dirty: bool = True,
         if_older_than: float = 10.0,
+        force_telemetry: bool = False,
+        force_mspconfig: bool = False,
         force: bool = False,
     ) -> None:
         """Refresh the data from the OmniLogic controller.
@@ -101,14 +103,20 @@ class OmniLogic:
             telemetry: Whether to refresh Telemetry data (if conditions are met)
             if_dirty: Only refresh if the data has been marked dirty
             if_older_than: Only refresh if data is older than this many seconds
-            force: Force refresh regardless of dirty flag or age
+            force_telemetry: Force refresh of telemetry data regardless of dirty flag or age
+            force_mspconfig: Force refresh of MSPConfig data regardless of dirty flag or age
+            force: Force refresh of telemetry and MSPConfig (deprecated, use individual force flags instead)
         """
+        if force:
+            force_telemetry = True
+            force_mspconfig = True
+
         async with self._refresh_lock:
             current_time = time.time()
 
             # Determine if telemetry needs updating
             update_telemetry = False
-            if force or (if_dirty and self._telemetry_dirty) or ((current_time - self._telemetry_last_updated) > if_older_than):
+            if force_telemetry or (if_dirty and self._telemetry_dirty) or ((current_time - self._telemetry_last_updated) > if_older_than):
                 update_telemetry = True
 
             # Update telemetry if needed
@@ -119,7 +127,7 @@ class OmniLogic:
 
             # Determine if MSPConfig needs updating
             update_mspconfig = False
-            if force:
+            if force_mspconfig:
                 update_mspconfig = True
             if self.telemetry.backyard.config_checksum != self._mspconfig_checksum:
                 update_mspconfig = True
