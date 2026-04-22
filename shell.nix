@@ -25,6 +25,7 @@ in
   name = "haomnilogic-fhs";
   targetPkgs =
     pkgs: with pkgs; [
+      nodejs
       python314
       uv
     ];
