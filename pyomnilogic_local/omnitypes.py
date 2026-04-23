@@ -161,6 +161,7 @@ class ChlorinatorType(PrettyEnum, StrEnum):
     MAIN_PANEL = "CHLOR_TYPE_MAIN_PANEL"
     DISPENSER = "CHLOR_TYPE_DISPENSER"
     AQUA_RITE = "CHLOR_TYPE_AQUA_RITE"
+    AQUA_RITE_S3 = "CHLOR_TYPE_AQR_S3"
 
 
 class ChlorinatorDispenserType(PrettyEnum, StrEnum):
