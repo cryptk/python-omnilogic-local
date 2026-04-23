@@ -464,6 +464,8 @@ class PumpState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     FREEZE_PROTECT = 2  # This is an assumption that 2 means freeze protect, ref: https://github.com/cryptk/haomnilogic-local/issues/147
+    UNKNOWN_1 = 3
+    UNKNOWN_2 = 4  # https://github.com/cryptk/haomnilogic-local/issues/223
 
 
 class PumpType(PrettyEnum, StrEnum):
