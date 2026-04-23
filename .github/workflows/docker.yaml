@@ -1,0 +1,58 @@
+# This workflow builds a multi-arch Docker image using GitHub Actions and separated Github Runners
+# with native support for ARM64 and AMD64 architectures, without using QEMU emulation.
+name: Docker Build
+run-name: Docker Build${{ github.event_name != 'pull_request' && ' and Publish' || '' }}
+
+permissions: {}
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+  pull_request:
+
+env:
+  # The name of the Docker image to be built and pushed to GHCR
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/test.yaml
+    permissions:
+      contents: read
+
+  build:
+    needs: test
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    uses: docker/github-builder/.github/workflows/build.yml@7d2a02426d4b989616ba5aaee4e879afd4134b0d # v1.6.0
+    permissions:
+      contents: read # to fetch the repository content
+      id-token: write # for signing attestation(s) with GitHub OIDC Token
+      packages: write # to push the built image to GitHub Container Registry
+    with:
+      output: image
+      push: ${{ github.event_name != 'pull_request' }}
+      platforms: linux/amd64,linux/arm64
+      build-args: |
+        VERSION={{ meta.version }}
+      cache: true
+      cache-scope: pyomnilogic-local-docker-cache
+      meta-images: ghcr.io/cryptk/python-omnilogic-local
+      meta-tags: |
+        type=ref,event=branch
+        type=ref,event=pr
+        type=semver,pattern={{version}}
+    secrets:
+      registry-auths: |
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
