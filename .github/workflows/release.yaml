@@ -12,13 +12,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Run Pytest Suite
-    uses: ./.github/workflows/pytest.yaml
-
   prek:
     name: Run Prek Checks
     uses: ./.github/workflows/prek.yaml
+    permissions:
+      contents: read
+
+  test:
+    name: Run Pytest Suite
+    uses: ./.github/workflows/pytest.yaml
+    permissions:
+      contents: read
 
   release:
     name: Create Release and Publish
