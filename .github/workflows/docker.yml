@@ -24,7 +24,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
+    permissions:
+      contents: read
+
   build:
+    needs: test
     uses: docker/github-builder/.github/workflows/build.yml@7d2a02426d4b989616ba5aaee4e879afd4134b0d # v1.6.0
     permissions:
       contents: read # to fetch the repository content
