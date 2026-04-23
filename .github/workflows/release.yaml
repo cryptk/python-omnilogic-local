@@ -1,32 +1,38 @@
 name: CD Release and Publish
 
+permissions: {}
+
+# yamllint disable-line rule:truthy
 on:
-  workflow_run:
-    workflows:
-      - CI Testing Workflow
-    types:
-      - completed
-    branches:
-      - main
+  # We don't need to release a new version with every commit to main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check_success:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Workflow completed successfully
-        run: echo "CI workflow passed. Proceeding with CD."
+  test:
+    name: Run Pytest Suite
+    uses: ./.github/workflows/pytest.yml
+
+  prek:
+    name: Run Prek Checks
+    uses: ./.github/workflows/prek.yml
 
   release:
+    name: Create Release and Publish
     runs-on: ubuntu-latest
-    needs: check_success
+    needs:
+      - test
+      - prek
     concurrency:
       group: ${{ github.workflow }}-release-${{ github.ref_name }}
       cancel-in-progress: false
 
     environment: release
     permissions:
-      contents: write
+      contents: write # Required to allow creating releases and uploading release assets
 
     outputs:
       released: ${{ steps.release.outputs.released }}
@@ -39,15 +45,18 @@ jobs:
       # possible that the branch was updated while the workflow was running. This
       # prevents accidentally releasing un-evaluated changes.
       - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           token: ${{ secrets.PYTHON_SEMANTIC_RELEASE_TOKEN }}
           ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Setup | Force release branch to be at workflow sha
         run: |
-          git reset --hard ${{ github.sha }}
+          git reset --hard "${GITHUB_SHA}"
+        env:
+          GITHUB_SHA: ${{ github.sha }}
 
       - name: Evaluate | Verify upstream has NOT changed
         # Last chance to abort before causing an error as another PR/push was applied to
@@ -91,21 +100,21 @@ jobs:
       - name: Action | Semantic Version Release
         id: release
         # Adjust tag with desired version if applicable.
-        uses: python-semantic-release/python-semantic-release@v10.5.3
+        uses: python-semantic-release/python-semantic-release@350c48fcb3ffcdfd2e0a235206bc2ecea6b69df0 # v10.5.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
 
       - name: Publish | Upload to GitHub Release Assets
-        uses: python-semantic-release/publish-action@v10.4.1
+        uses: python-semantic-release/publish-action@350c48fcb3ffcdfd2e0a235206bc2ecea6b69df0 # v10.5.3
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
 
       - name: Upload | Distribution Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.release.outputs.released == 'true'
         with:
           name: distribution-artifacts
@@ -117,6 +126,7 @@ jobs:
     #    the least amount of token privilege
     # 2. Also, deployments can fail, and its better to have a separate job if you need to retry
     #    and it won't require reversing the release.
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
     needs: release
     if: ${{ needs.release.outputs.released == 'true' }}
@@ -124,18 +134,18 @@ jobs:
     environment: release
     permissions:
       contents: read
-      id-token: write
+      id-token: write # Required for pypi for trusted publishing
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         id: artifact-download
         with:
           name: distribution-artifacts
           path: dist
 
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           packages-dir: dist
           print-hash: true
