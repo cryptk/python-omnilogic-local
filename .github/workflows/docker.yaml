@@ -1,7 +1,8 @@
 # This workflow builds a multi-arch Docker image using GitHub Actions and separated Github Runners
 # with native support for ARM64 and AMD64 architectures, without using QEMU emulation.
+# The docker build runs on PRs and merges to main but it only pushes the image on version tags
 name: Docker Build
-run-name: Docker Build${{ github.event_name != 'pull_request' && ' and Publish' || '' }}
+run-name: Docker Build${{ startsWith(github.ref, 'refs/tags/v') && ' and Publish' || '' }}
 
 permissions: {}
 
@@ -40,7 +41,7 @@ jobs:
       packages: write # to push the built image to GitHub Container Registry
     with:
       output: image
-      push: ${{ github.event_name != 'pull_request' }}
+      push: ${{ startsWith(github.ref, 'refs/tags/v') }}
       platforms: linux/amd64,linux/arm64
       build-args: |
         VERSION={{ meta.version }}
