@@ -392,16 +392,13 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         # BOW_POOL = 0, BOW_SPA = 1 (based on typical protocol values)
         bow_type = 0 if bow.equip_type == "BOW_POOL" else 1
 
-        # Get operating mode from telemetry (it's already an int or enum with .value)
-        op_mode = self.telemetry.operating_mode if isinstance(self.telemetry.operating_mode, int) else self.telemetry.operating_mode.value
-
         await self._api.async_set_chlorinator_params(
             pool_id=self.bow_id,
             equipment_id=self.system_id,
             timed_percent=percent,
             cell_type=self.mspconfig.cell_type.value,  # ChlorinatorCellType is now IntEnum, use .value
-            op_mode=op_mode,
-            sc_timeout=self.mspconfig.superchlor_timeout,
+            op_mode=self.operating_mode.value,
+            sc_timeout=self.superchlor_timeout,
             bow_type=bow_type,
-            orp_timeout=self.mspconfig.orp_timeout,
+            orp_timeout=self.orp_timeout,
         )
