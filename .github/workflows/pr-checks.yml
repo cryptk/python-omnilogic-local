@@ -30,8 +30,8 @@ jobs:
 
   prek:
     name: Run Prek Checks
-    uses: ./.github/workflows/prek.yml
+    uses: ./.github/workflows/prek.yaml
 
   test:
     name: Run Pytest Suite
-    uses: ./.github/workflows/pytest.yml
+    uses: ./.github/workflows/pytest.yaml
