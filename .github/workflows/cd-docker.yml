@@ -34,7 +34,7 @@ jobs:
       push: ${{ github.event_name != 'pull_request' }}
       platforms: linux/amd64,linux/arm64
       build-args: |
-        VERSION=${{ meta.version }}
+        VERSION={{ meta.version }}
       cache: true
       cache-scope: pyomnilogic-local-docker-cache
       meta-images: ghcr.io/cryptk/python-omnilogic-local
