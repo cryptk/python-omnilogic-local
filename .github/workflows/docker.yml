@@ -1,6 +1,7 @@
 # This workflow builds a multi-arch Docker image using GitHub Actions and separated Github Runners
 # with native support for ARM64 and AMD64 architectures, without using QEMU emulation.
-name: CD Build and publish multi arch Docker Image
+name: Docker Build
+run-name: Docker Build${{ github.event_name != 'pull_request' && ' and Publish' || '' }}
 
 permissions: {}
 
