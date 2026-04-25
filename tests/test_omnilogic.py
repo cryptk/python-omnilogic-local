@@ -42,11 +42,11 @@ def test__check_duplicate_item_names_different_host() -> None:
     ]
     warning = _check_duplicate_item_names(
         items,
-        source_id="10.0.0.1:3000",
+        source_id="127.0.0.2:3000",
     )
 
     assert warning is not None
-    assert "OmniLogic 10.0.0.1:3000 contains multiple items with the same name:" in warning
+    assert "OmniLogic 127.0.0.2:3000 contains multiple items with the same name:" in warning
 
 
 def test__check_duplicate_item_names_no_duplicates() -> None:
