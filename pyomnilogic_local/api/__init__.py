@@ -8,7 +8,29 @@ over a local network connection via the UDP XML API.
 from __future__ import annotations
 
 from .api import OmniLogicAPI
+from .exceptions import (
+    OmniCommandError,
+    OmniConnectionError,
+    OmniFragmentationError,
+    OmniLogicError,
+    OmniMessageFormatError,
+    OmniProtocolError,
+    OmniTimeoutError,
+    OmniValidationError,
+)
+from .message import OmniLogicMessage
+from .protocol import OmniLogicProtocol
 
 __all__ = [
+    "OmniCommandError",
+    "OmniConnectionError",
+    "OmniFragmentationError",
     "OmniLogicAPI",
+    "OmniLogicError",
+    "OmniLogicMessage",
+    "OmniLogicProtocol",
+    "OmniMessageFormatError",
+    "OmniProtocolError",
+    "OmniTimeoutError",
+    "OmniValidationError",
 ]

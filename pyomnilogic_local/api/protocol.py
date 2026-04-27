@@ -1,16 +1,16 @@
+"""Asyncio UDP datagram protocol for communication with the OmniLogic controller."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import random
-import struct
-import time
 import xml.etree.ElementTree as ET
 import zlib
-from typing import Any, Self, cast
+from typing import cast
 
 from pyomnilogic_local.models.leadmessage import LeadMessage
-from pyomnilogic_local.omnitypes import ClientType, MessageType
+from pyomnilogic_local.omnitypes import MessageType
 
 from .constants import (
     ACK_WAIT_TIMEOUT,
@@ -19,455 +19,330 @@ from .constants import (
     MAX_FRAGMENT_WAIT_TIME,
     MAX_QUEUE_SIZE,
     OMNI_RETRANSMIT_COUNT,
-    OMNI_RETRANSMIT_TIME,
-    PROTOCOL_HEADER_FORMAT,
-    PROTOCOL_HEADER_SIZE,
-    PROTOCOL_VERSION,
-    XML_ENCODING,
     XML_NAMESPACE,
 )
-from .exceptions import OmniFragmentationError, OmniMessageFormatError, OmniTimeoutError
+from .exceptions import OmniConnectionError, OmniMessageFormatError, OmniTimeoutError
+from .message import OmniLogicMessage
 
 _LOGGER = logging.getLogger(__name__)
 
+_ACK_PAYLOAD = f'<Request xmlns="{XML_NAMESPACE}">\n<Name>Ack</Name>\n</Request>'
 
-class OmniLogicMessage:
-    """A protocol message for communication with the OmniLogic controller.
+_ACK_TYPES = frozenset({MessageType.ACK, MessageType.XML_ACK})
 
-    Handles serialization and deserialization of message headers and payloads.
-    """
-
-    header_format = PROTOCOL_HEADER_FORMAT
-    id: int
-    type: MessageType
-    payload: bytes
-    client_type: ClientType = ClientType.SIMPLE
-    version: str = PROTOCOL_VERSION
-    timestamp: int
-    reserved_1: int = 0
-    compressed: bool = False
-    reserved_2: int = 0
-
-    def __init__(
-        self,
-        msg_id: int,
-        msg_type: MessageType,
-        payload: str | None = None,
-        version: str = PROTOCOL_VERSION,
-        timestamp: int | None = None,
-    ) -> None:
-        """Initialize a new OmniLogicMessage.
-
-        Args:
-            msg_id: Unique message identifier.
-            msg_type: Type of message being sent.
-            payload: Optional string payload (XML or command body).
-            version: Protocol version string.
-            timestamp: Optional timestamp for the message.
-        """
-        self.id = msg_id
-        self.type = msg_type
-        # If we are speaking the XML API, it seems like we need client_type 0, otherwise we need client_type 1
-        self.client_type = ClientType.XML if payload is not None else ClientType.SIMPLE
-        # The Hayward API terminates it's messages with a null character
-        payload = f"{payload}\x00" if payload is not None else ""
-        self.payload = bytes(payload, "utf-8")
-
-        self.version = version
-        self.timestamp = timestamp if timestamp is not None else int(time.time())
-
-    def __bytes__(self) -> bytes:
-        """Serialize the message to bytes for UDP transmission.
-
-        Returns:
-            Byte representation of the message.
-        """
-        header = struct.pack(
-            self.header_format,
-            self.id,  # Msg id
-            self.timestamp,
-            bytes(self.version, "ascii"),  # version string
-            self.type.value,  # OpID/msgType
-            self.client_type.value,  # Client type
-            0,  # reserved
-            self.compressed,  # compressed
-            0,  # reserved
-        )
-        return header + self.payload
-
-    def __repr__(self) -> str:
-        """Return a string representation of the message for debugging."""
-        if self.compressed or self.type is MessageType.MSP_BLOCKMESSAGE:
-            return f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}"
-        return (
-            f"ID: {self.id}, Type: {self.type.name}, Compressed: {self.compressed}, Client: {self.client_type.name}, "
-            f"Body: {self.payload[:-1].decode('utf-8')}"
-        )
-
-    @classmethod
-    def from_bytes(cls, data: bytes) -> Self:
-        """Parse a message from its byte representation.
-
-        Args:
-            data: Byte data received from the controller.
-
-        Returns:
-            OmniLogicMessage instance.
-
-        Raises:
-            OmniMessageFormatException: If the message format is invalid.
-        """
-        if len(data) < PROTOCOL_HEADER_SIZE:
-            msg = f"Message too short: {len(data)} bytes, expected at least {PROTOCOL_HEADER_SIZE}"
-            raise OmniMessageFormatError(msg)
-
-        # split the header and data
-        header = data[:PROTOCOL_HEADER_SIZE]
-        rdata: bytes = data[PROTOCOL_HEADER_SIZE:]
-
-        try:
-            (msg_id, tstamp, vers, msg_type, client_type, res1, compressed, res2) = struct.unpack(cls.header_format, header)
-        except struct.error as exc:
-            msg = f"Failed to unpack message header: {exc}"
-            raise OmniMessageFormatError(msg) from exc
-
-        # Validate message type
-        try:
-            message_type_enum = MessageType(msg_type)
-        except ValueError as exc:
-            msg = f"Unknown message type: {msg_type}: {exc}"
-            raise OmniMessageFormatError(msg) from exc
-
-        # Validate client type
-        try:
-            client_type_enum = ClientType(int(client_type))
-        except ValueError as exc:
-            msg = f"Unknown client type: {client_type}: {exc}"
-            raise OmniMessageFormatError(msg) from exc
-
-        message = cls(msg_id=msg_id, msg_type=message_type_enum, version=vers.decode("utf-8"))
-        message.timestamp = tstamp
-        message.client_type = client_type_enum
-        message.reserved_1 = res1
-        # There are some messages that are ALWAYS compressed although they do not return a 1 in their LeadMessage
-        message.compressed = compressed == 1 or message.type in [MessageType.MSP_TELEMETRY_UPDATE]
-        message.reserved_2 = res2
-        message.payload = rdata
-
-        return message
+# Type alias for items placed on the receive queue: either a parsed message or a parse error.
+_QueueItem = OmniLogicMessage | OmniMessageFormatError
 
 
 class OmniLogicProtocol(asyncio.DatagramProtocol):
-    """Asyncio DatagramProtocol implementation for OmniLogic UDP communication.
+    """Asyncio UDP datagram protocol for communication with the OmniLogic controller.
 
-    Handles message sending, receiving, retries, and block message reassembly.
+    Handles message framing, acknowledgement, retransmission, and multi-part
+    response reassembly for the Hayward OmniLogic local UDP protocol.
+
+    Example:
+        loop = asyncio.get_running_loop()
+        transport, protocol = await loop.create_datagram_endpoint(
+            OmniLogicProtocol, remote_addr=(controller_ip, controller_port)
+        )
+        try:
+            response = await protocol.async_send_and_receive(MessageType.GET_TELEMETRY, xml_body)
+        finally:
+            transport.close()
     """
 
-    transport: asyncio.DatagramTransport
-    # The omni will re-transmit a packet every 2 seconds if it does not receive an ACK.  We pad that just a touch to be safe
-    _omni_retransmit_time = OMNI_RETRANSMIT_TIME
-    # The omni will re-transmit 5 times (a total of 6 attempts including the initial) if it does not receive an ACK
-    _omni_retransmit_count = OMNI_RETRANSMIT_COUNT
-
-    data_queue: asyncio.Queue[OmniLogicMessage]
-    error_queue: asyncio.Queue[Exception]
-
     def __init__(self) -> None:
-        """Initialize the protocol handler and message queue."""
-        self.data_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
-        self.error_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
+        self._transport: asyncio.DatagramTransport | None = None
+        # Seed with a random value so each protocol instance (one per API call) uses distinct IDs.
+        # Message ID is an unsigned 32-bit integer in the wire format, so cap at 2**16 to
+        # leave room for plenty of increments.
+        self._msg_counter: int = random.randint(1, 2**16)
+        self._ack_futures: dict[int, asyncio.Future[OmniLogicMessage]] = {}
+        self._receive_queue: asyncio.Queue[_QueueItem] = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
+
+    # -------------------------------------------------------------------------
+    # asyncio.DatagramProtocol callbacks
+    # -------------------------------------------------------------------------
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
-        """Called when a UDP connection is made."""
-        self.transport = cast("asyncio.DatagramTransport", transport)
+        self._transport = cast("asyncio.DatagramTransport", transport)
+        _LOGGER.debug("connection established")
 
-    def connection_lost(self, exc: Exception | None) -> None:
-        """Called when the UDP connection is lost or closed."""
-        if exc:
-            raise exc
-
-    def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
-        """Called when a datagram is received from the controller.
-
-        Parses the message and puts it on the queue. Handles corrupt or unexpected data gracefully.
-        """
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         try:
-            message = OmniLogicMessage.from_bytes(data)
-            _LOGGER.debug("Received Message %s from %s", str(message), addr)
-            try:
-                self.data_queue.put_nowait(message)
-            except asyncio.QueueFull:
-                _LOGGER.exception("Data queue is full. Dropping message: %s", str(message))
+            msg = OmniLogicMessage.from_bytes(data)
         except OmniMessageFormatError as exc:
-            _LOGGER.exception("Failed to parse incoming datagram from %s", addr)
-            self.error_queue.put_nowait(exc)
-        except Exception as exc:
-            _LOGGER.exception("Unexpected error processing datagram from %s", addr)
-            self.error_queue.put_nowait(exc)
+            _LOGGER.warning("received unparsable datagram from %s: %s", addr, exc)
+            self._receive_queue.put_nowait(exc)
+            return
+
+        _LOGGER.debug("received from %s: %r", addr, msg)
+
+        if msg.type in _ACK_TYPES:
+            self._resolve_ack(msg)
+        else:
+            self._send_xml_ack(msg.id)
+            self._receive_queue.put_nowait(msg)
 
     def error_received(self, exc: Exception) -> None:
-        """Called when a UDP error is received.
+        _LOGGER.error("transport error: %s", exc)
 
-        Store the error so it can be handled by awaiting coroutines.
-        """
-        self.error_queue.put_nowait(exc)
+    def connection_lost(self, exc: Exception | None) -> None:
+        _LOGGER.debug("connection lost: %s", exc)
 
-    async def _wait_for_ack(self, ack_id: int) -> None:
-        """Wait for an ACK message with the given ID.
+    # -------------------------------------------------------------------------
+    # Internal helpers
+    # -------------------------------------------------------------------------
 
-        Handles dropped or out-of-order ACKs.
+    def _next_msg_id(self) -> int:
+        """Return the next sequential message ID."""
+        self._msg_counter += 1
+        return self._msg_counter
 
-        Args:
-            ack_id: The message ID to wait for an ACK.
+    def _resolve_ack(self, msg: OmniLogicMessage) -> None:
+        """Resolve the pending ACK future for the given message ID."""
+        future = self._ack_futures.get(msg.id)
+        if future is not None and not future.done():
+            future.set_result(msg)
 
-        Raises:
-            OmniTimeoutException: If no ACK is received.
-            Exception: If a protocol error occurs.
-        """
-        # Wait for either an ACK message or an error
-        # Race condition: datagram_received() calls put_nowait() synchronously, so data_task may
-        # already be done when wait_for fires its timeout CancelledError. In that case we catch
-        # the cancellation, skip re-looping, and fall through to check the result below. If the
-        # result is our ACK we return normally, suppressing the CancelledError so wait_for treats
-        # the call as successful. If it isn't, we re-raise after the loop.
-        cancelled: asyncio.CancelledError | None = None
-        retry = True
-        while retry:
-            # Wait for either a message or an error
-            data_task = asyncio.create_task(self.data_queue.get())
-            error_task = asyncio.create_task(self.error_queue.get())
-            try:
-                done, pending = await asyncio.wait([data_task, error_task], return_when=asyncio.FIRST_COMPLETED)
-            except asyncio.CancelledError as exc:
-                retry = False
-                cancelled = exc
-                done = {t for t in (data_task, error_task) if t.done()}
-                pending = {t for t in (data_task, error_task) if not t.done()}
+    def _send_xml_ack(self, msg_id: int) -> None:
+        """Transmit an XML_ACK for a received message."""
+        if self._transport is None:
+            _LOGGER.warning("cannot send ACK for ID %d, transport unavailable", msg_id)
+            return
+        ack = OmniLogicMessage(msg_id=msg_id, msg_type=MessageType.XML_ACK, payload=_ACK_PAYLOAD)
+        self._transport.sendto(bytes(ack))
+        _LOGGER.debug("sent XML_ACK for message ID %d", msg_id)
 
-            # Cancel any pending tasks to avoid "Task was destroyed but it is pending" warnings
-            for task in pending:
-                task.cancel()
+    def _build_request(self, msg_type: MessageType, payload: str) -> OmniLogicMessage:
+        """Build a new outgoing request message with a fresh ID."""
+        return OmniLogicMessage(msg_id=self._next_msg_id(), msg_type=msg_type, payload=payload)
 
-            if error_task in done:
-                err = error_task.result()
-                if isinstance(err, Exception):
-                    raise err
-                _LOGGER.error("Unknown error occurred during communication with OmniLogic: %s", err)
-            if data_task in done:
-                message = data_task.result()
-                if message.id == ack_id:
-                    _LOGGER.debug("Received ACK for message ID %s", ack_id)
-                    return
-                _LOGGER.debug("We received a message that is not our ACK, it appears the ACK was dropped")
-                if message.type in {MessageType.MSP_LEADMESSAGE, MessageType.MSP_TELEMETRY_UPDATE}:
-                    _LOGGER.debug("Omni has sent a new message, continuing on with the communication")
-                    await self.data_queue.put(message)
-                    return
+    async def _send_with_retry(self, msg_type: MessageType, payload: str) -> None:
+        """Transmit a message and wait for acknowledgement, retransmitting as needed.
 
-        if cancelled is not None:
-            raise cancelled
-
-    async def _ensure_sent(
-        self,
-        message: OmniLogicMessage,
-        max_attempts: int = 5,
-    ) -> None:
-        """Send a message and ensure it is acknowledged, retrying if necessary.
+        A fresh message ID is used on each attempt so the controller treats every
+        retransmission as a new request (an ACK only confirms receipt/parse, not
+        that the controller will act on or re-respond to the same ID again).
 
         Args:
-            message: The message to send.
-            max_attempts: Maximum number of send attempts.
+            msg_type: The type of message to send.
+            payload: The XML payload string.
 
         Raises:
-            OmniTimeoutException: If no ACK is received after retries.
+            OmniConnectionError: If the transport is not available.
+            OmniTimeoutError: If no ACK is received after all retransmission attempts.
         """
-        for attempt in range(max_attempts):
-            self.transport.sendto(bytes(message))
-            _LOGGER.debug("Sent message ID %s (attempt %d/%d)", message.id, attempt + 1, max_attempts)
+        if self._transport is None:
+            msg = f"Cannot send message type {msg_type.name}, transport not available"
+            raise OmniConnectionError(msg)
 
-            # If the message that we just sent is an ACK, we do not need to wait to receive an ACK, we are done
-            if message.type in [MessageType.XML_ACK, MessageType.ACK]:
-                return
+        loop = asyncio.get_running_loop()
 
-            # Wait for a bit to either receive an ACK for our message, otherwise, we retry delivery
+        for attempt in range(OMNI_RETRANSMIT_COUNT + 1):
+            message = self._build_request(msg_type, payload)
+            ack_future: asyncio.Future[OmniLogicMessage] = loop.create_future()
+            self._ack_futures[message.id] = ack_future
+
             try:
-                await asyncio.wait_for(self._wait_for_ack(message.id), ACK_WAIT_TIMEOUT)
-            except TimeoutError as exc:
-                if attempt < max_attempts - 1:
-                    _LOGGER.warning(
-                        "ACK not received for message type %s (ID: %s), attempt %d/%d. Retrying...",
-                        message.type.name,
-                        message.id,
-                        attempt + 1,
-                        max_attempts,
-                    )
+                _LOGGER.debug(
+                    "transmitting message ID: %d, type: %s (attempt %d/%d)",
+                    message.id,
+                    message.type.name,
+                    attempt + 1,
+                    OMNI_RETRANSMIT_COUNT + 1,
+                )
+                self._transport.sendto(bytes(message))
+                try:
+                    await asyncio.wait_for(asyncio.shield(ack_future), timeout=ACK_WAIT_TIMEOUT)
+                except TimeoutError:
+                    if attempt < OMNI_RETRANSMIT_COUNT:
+                        _LOGGER.debug("no ACK for message ID %d, will retry", message.id)
                 else:
-                    _LOGGER.exception(
-                        "Failed to receive ACK for message type %s (ID: %s) after %d attempts.", message.type.name, message.id, max_attempts
-                    )
-                    msg = f"Failed to receive acknowledgement of command, max retries exceeded: {exc}"
-                    raise OmniTimeoutError(msg) from exc
-            else:
-                return
+                    return
+            finally:
+                self._ack_futures.pop(message.id, None)
+                if not ack_future.done():
+                    ack_future.cancel()
 
-    async def send_and_receive(
-        self,
-        msg_type: MessageType,
-        payload: str | None,
-        msg_id: int | None = None,
-        response_timeout: float = DEFAULT_RESPONSE_TIMEOUT,
-    ) -> str:
-        """Send a message and wait for a response, returning the response payload as a string.
+        msg = f"No ACK received for message type {msg_type.name} after {OMNI_RETRANSMIT_COUNT + 1} attempts"
+        raise OmniTimeoutError(msg)
 
-        Args:
-            msg_type: Type of message to send.
-            payload: Optional payload string.
-            msg_id: Optional message ID.
-            response_timeout: Timeout in seconds to wait for the response.
-
-        Returns:
-            Response payload as a string.
-        """
-        await self.send_message(msg_type, payload, msg_id)
-        return await self._receive_file(response_timeout=response_timeout)
-
-    # Send a message that you do NOT need a response to
-    async def send_message(
-        self,
-        msg_type: MessageType,
-        payload: str | None,
-        msg_id: int | None = None,
-    ) -> None:
-        """Send a message that does not require a response.
-
-        Args:
-            msg_type: Type of message to send.
-            payload: Optional payload string.
-            msg_id: Optional message ID.
-        """
-        # If we aren't sending a specific msg_id, lets randomize it
-        if not msg_id:
-            msg_id = random.randrange(2**32)
-
-        message = OmniLogicMessage(msg_id, msg_type, payload)
-
-        _LOGGER.debug("Sending Message %s", str(message))
-
-        await self._ensure_sent(message)
-
-    async def _send_ack(self, msg_id: int) -> None:
-        """Send an ACK message for the given message ID."""
-        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
-        name_element = ET.SubElement(body_element, "Name")
-        name_element.text = "Ack"
-
-        req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
-        await self.send_message(MessageType.XML_ACK, req_body, msg_id)
-
-    async def _receive_file(self, response_timeout: float = DEFAULT_RESPONSE_TIMEOUT) -> str:
-        """Wait for and reassemble a full response from the controller.
-
-        Handles single and multi-block (LeadMessage/BlockMessage) responses.
-
-        Args:
-            response_timeout: Timeout in seconds to wait for the initial response.
-
-        Returns:
-            Response payload as a string.
+    async def _receive_next_message(self) -> OmniLogicMessage:
+        """Wait for and return the next incoming (non-ACK) message from the queue.
 
         Raises:
-            OmniTimeoutException: If a block message is not received in time.
-            OmniFragmentationException: If fragment reassembly fails.
+            OmniTimeoutError: If no message arrives within MAX_FRAGMENT_WAIT_TIME seconds.
+            OmniMessageFormatError: If the queued item is a parse error.
         """
-        # wait for the initial packet.
         try:
-            message = await asyncio.wait_for(self.data_queue.get(), response_timeout)
+            async with asyncio.timeout(MAX_FRAGMENT_WAIT_TIME):
+                item: _QueueItem = await self._receive_queue.get()
         except TimeoutError as exc:
-            msg = f"Timeout waiting for response from controller: {exc}"
+            msg = "Timed out waiting for response message from controller"
             raise OmniTimeoutError(msg) from exc
 
-        # If messages have to be re-transmitted, we can sometimes receive multiple ACKs.  The first one would be handled by
-        # self._ensure_sent, but if any subsequent ACKs are sent to us, we need to dump them and wait for a "real" message.
-        while message.type in [MessageType.ACK, MessageType.XML_ACK]:
-            _LOGGER.debug("Skipping duplicate ACK message")
+        if isinstance(item, OmniMessageFormatError):
+            raise item
+
+        return item
+
+    # -------------------------------------------------------------------------
+    # Response assembly
+    # -------------------------------------------------------------------------
+
+    async def _receive_response(self) -> tuple[bytes, bool]:
+        """Receive and return the full response payload for a prior request.
+
+        Handles both single-message responses and multi-part lead/block responses.
+
+        Returns:
+            Tuple of (raw_payload_bytes, compressed_flag).
+        """
+        while True:
+            msg = await self._receive_next_message()
+
+            if msg.type == MessageType.MSP_LEADMESSAGE:
+                return await self._reassemble_multipart(msg)
+
+            if msg.type == MessageType.MSP_BLOCKMESSAGE:
+                _LOGGER.warning("received block message ID %d before any lead message, ignoring", msg.id)
+                continue
+
+            return msg.payload, msg.compressed
+
+    async def _reassemble_multipart(self, lead_msg: OmniLogicMessage) -> tuple[bytes, bool]:
+        """Reassemble a multi-part response from a lead message and its block messages.
+
+        Args:
+            lead_msg: The initial MSP_LEADMESSAGE received from the controller.
+
+        Returns:
+            Tuple of (concatenated_block_payload_bytes, compressed_flag).
+        """
+        lead = self._parse_lead_message(lead_msg)
+        compressed = lead_msg.compressed
+        seen_lead_ids: set[int] = {lead_msg.id}
+
+        _LOGGER.debug(
+            "reassembling %d-block response (compressed=%s)",
+            lead.msg_block_count,
+            compressed,
+        )
+
+        payload_data = b""
+        received_block_count = 0
+        seen_block_ids: set[int] = set()
+
+        while received_block_count < lead.msg_block_count:
+            msg = await self._receive_next_message()
+
+            if msg.type == MessageType.MSP_LEADMESSAGE:
+                if msg.id not in seen_lead_ids:
+                    _LOGGER.warning("received unexpected secondary lead message ID %d", msg.id)
+                    seen_lead_ids.add(msg.id)
+                else:
+                    _LOGGER.debug("received duplicate lead message ID %d, re-ACK already sent", msg.id)
+                continue
+
+            if msg.type != MessageType.MSP_BLOCKMESSAGE:
+                _LOGGER.warning("expected block message but got %s (ID %d), ignoring", msg.type.name, msg.id)
+                continue
+
+            if msg.id in seen_block_ids:
+                _LOGGER.debug("received duplicate block message ID %d, re-ACK already sent", msg.id)
+                continue
+
+            seen_block_ids.add(msg.id)
+            payload_data += msg.payload[BLOCK_MESSAGE_HEADER_OFFSET:]
+            received_block_count += 1
+            _LOGGER.debug("received block %d/%d", received_block_count, lead.msg_block_count)
+
+        return payload_data, compressed
+
+    def _parse_lead_message(self, msg: OmniLogicMessage) -> LeadMessage:
+        """Parse the XML payload of an MSP_LEADMESSAGE into a LeadMessage model.
+
+        Args:
+            msg: The MSP_LEADMESSAGE to parse.
+
+        Returns:
+            Parsed LeadMessage model.
+        """
+        payload_str = msg.payload.decode("utf-8").strip("\x00")
+        root = ET.fromstring(payload_str)
+        return LeadMessage.model_validate(root)
+
+    def _decode_payload(self, data: bytes, compressed: bool) -> str:
+        """Decode a raw response payload, decompressing if necessary.
+
+        Args:
+            data: Raw payload bytes.
+            compressed: Whether the payload is zlib-compressed.
+
+        Returns:
+            Decoded UTF-8 string with leading/trailing null bytes stripped.
+        """
+        if compressed:
+            data = zlib.decompress(data.rstrip(b"\x00"))
+        return data.decode("utf-8").strip("\x00")
+
+    # -------------------------------------------------------------------------
+    # Public API
+    # -------------------------------------------------------------------------
+
+    async def async_send(self, msg_type: MessageType, payload: str) -> None:
+        """Send a message to the controller and wait for acknowledgement.
+
+        The message is retransmitted up to OMNI_RETRANSMIT_COUNT times if no ACK
+        is received within ACK_WAIT_TIMEOUT seconds.
+
+        Args:
+            msg_type: The type of message to send.
+            payload: The XML payload string.
+
+        Raises:
+            OmniConnectionError: If the transport is not available.
+            OmniTimeoutError: If no ACK is received after all retransmission attempts.
+        """
+        await self._send_with_retry(msg_type, payload)
+
+    async def async_send_and_receive(self, msg_type: MessageType, payload: str) -> str:
+        """Send a message and receive the controller's response payload.
+
+        Handles the full send → ACK → response (single or lead/block) flow,
+        including retransmission on ACK timeout and decompression of compressed
+        responses. If an ACK is received but the controller never sends the
+        expected follow-up response within DEFAULT_RESPONSE_TIMEOUT, the entire
+        send+receive cycle is retried up to OMNI_RETRANSMIT_COUNT times.
+
+        Args:
+            msg_type: The type of message to send.
+            payload: The XML payload string.
+
+        Returns:
+            The decoded UTF-8 response string from the controller.
+
+        Raises:
+            OmniConnectionError: If the transport is not available.
+            OmniTimeoutError: If no ACK or response is received within the allowed time.
+            OmniMessageFormatError: If an unparsable response datagram is received.
+        """
+        for attempt in range(OMNI_RETRANSMIT_COUNT + 1):
+            await self._send_with_retry(msg_type, payload)
             try:
-                message = await asyncio.wait_for(self.data_queue.get(), response_timeout)
-            except TimeoutError as exc:
-                msg = f"Timeout waiting for response from controller: {exc}"
-                raise OmniTimeoutError(msg) from exc
-
-        await self._send_ack(message.id)
-
-        # If the response is too large, the controller will send a LeadMessage indicating how many follow-up messages will be sent
-        if message.type is MessageType.MSP_LEADMESSAGE:
-            try:
-                leadmsg = LeadMessage.model_validate(ET.fromstring(message.payload[:-1]))
-            except Exception as exc:
-                msg = f"Failed to parse LeadMessage: {exc}"
-                raise OmniFragmentationError(msg) from exc
-
-            _LOGGER.debug("Will receive %s blockmessages for fragmented response", leadmsg.msg_block_count)
-
-            # Wait for the block data data
-            retval: bytes = b""
-            # If we received a LeadMessage, continue to receive messages until we have all of our data
-            # Fragments of data may arrive out of order, so we store them in a buffer as they arrive and sort them after
-            data_fragments: dict[int, bytes] = {}
-            fragment_start_time = time.time()
-
-            while len(data_fragments) < leadmsg.msg_block_count:
-                # Check if we've been waiting too long for fragments
-                if time.time() - fragment_start_time > MAX_FRAGMENT_WAIT_TIME:
-                    _LOGGER.error(
-                        "Timeout waiting for fragments: received %d/%d after %ds",
-                        len(data_fragments),
-                        leadmsg.msg_block_count,
-                        MAX_FRAGMENT_WAIT_TIME,
+                async with asyncio.timeout(DEFAULT_RESPONSE_TIMEOUT):
+                    raw_data, compressed = await self._receive_response()
+                return self._decode_payload(raw_data, compressed)
+            except TimeoutError:
+                if attempt < OMNI_RETRANSMIT_COUNT:
+                    _LOGGER.debug(
+                        "no response received for %s within %ds, retrying (attempt %d/%d)",
+                        msg_type.name,
+                        DEFAULT_RESPONSE_TIMEOUT,
+                        attempt + 1,
+                        OMNI_RETRANSMIT_COUNT + 1,
                     )
-                    msg = (
-                        f"Timeout waiting for fragments: received {len(data_fragments)}/{leadmsg.msg_block_count} "
-                        f"after {MAX_FRAGMENT_WAIT_TIME}s"
-                    )
-                    raise OmniFragmentationError(msg)
 
-                # We need to wait long enough for the Omni to get through all of it's retries before we bail out.
-                try:
-                    resp = await asyncio.wait_for(self.data_queue.get(), response_timeout)
-                except TimeoutError as exc:
-                    msg = f"Timeout receiving fragment: got {len(data_fragments)}/{leadmsg.msg_block_count} fragments: {exc}"
-                    raise OmniFragmentationError(msg) from exc
-
-                # We only want to collect blockmessages here
-                if resp.type is not MessageType.MSP_BLOCKMESSAGE:
-                    _LOGGER.debug("Received a message other than a blockmessage during fragmentation: %s", resp.type)
-                    continue
-
-                await self._send_ack(resp.id)
-
-                # remove an 8 byte header to get to the payload data
-                data_fragments[resp.id] = resp.payload[BLOCK_MESSAGE_HEADER_OFFSET:]
-                _LOGGER.debug("Received fragment %d/%d", len(data_fragments), leadmsg.msg_block_count)
-
-            # Reassemble the fragmets in order
-            for _, data in sorted(data_fragments.items()):
-                retval += data
-
-            _LOGGER.debug("Successfully reassembled %d fragments into %d bytes", leadmsg.msg_block_count, len(retval))
-
-        # We did not receive a LeadMessage, so our payload is just this one packet
-        else:
-            retval = message.payload
-
-        # Decompress the returned data if necessary
-        if message.compressed:
-            _LOGGER.debug("Decompressing response payload")
-            try:
-                comp_bytes = bytes.fromhex(retval.hex())
-                retval = zlib.decompress(comp_bytes)
-                _LOGGER.debug("Decompressed %d bytes to %d bytes", len(comp_bytes), len(retval))
-            except zlib.error as exc:
-                msg = f"Failed to decompress message: {exc}"
-                raise OmniMessageFormatError(msg) from exc
-
-        # For some API calls, the Omni null terminates the response, we are stripping that here to make parsing it later easier
-        return retval.decode("utf-8").strip("\x00")
+        msg = f"No response received for {msg_type.name} after {OMNI_RETRANSMIT_COUNT + 1} attempts"
+        raise OmniTimeoutError(msg)

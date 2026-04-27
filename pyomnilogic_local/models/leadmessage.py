@@ -1,9 +1,12 @@
+# ruff: noqa: TC001  # pydantic relies on the omnitypes imports at runtime
 from __future__ import annotations
 
 from typing import Any
 from xml.etree.ElementTree import Element
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from pyomnilogic_local.omnitypes import MessageType
 
 from .const import XML_NS
 
@@ -24,7 +27,7 @@ from .const import XML_NS
 class LeadMessage(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    source_op_id: int = Field(alias="SourceOpId")
+    source_op_id: MessageType = Field(alias="SourceOpId")
     msg_size: int = Field(alias="MsgSize")
     msg_block_count: int = Field(alias="MsgBlockCount")
     type: int = Field(alias="Type")

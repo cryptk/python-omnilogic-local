@@ -32,8 +32,8 @@ class MessageType(PrettyEnum, IntEnum):
     GET_FILTER_DIAGNOSTIC_INFO = 386
     HANDSHAKE = 1000
     ACK = 1002
-    MSP_TELEMETRY_UPDATE = 1004
     MSP_CONFIGURATIONUPDATE = 1003
+    MSP_TELEMETRY_UPDATE = 1004
     MSP_ALARM_LIST_RESPONSE = 1304
     MSP_LEADMESSAGE = 1998
     MSP_BLOCKMESSAGE = 1999
@@ -324,6 +324,7 @@ class ZodiacShow(PrettyEnum, IntEnum):
 class ColorLogicPowerState(PrettyEnum, IntEnum):
     OFF = 0
     POWERING_OFF = 1
+    INITIALIZING = 2  # The app shows this as 15 seconds of white, but this state seems to happen when the Omni first powers up
     CHANGING_SHOW = 3
     FIFTEEN_SECONDS_WHITE = 4
     ACTIVE = 6

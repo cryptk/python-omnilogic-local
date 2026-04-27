@@ -111,30 +111,39 @@ class OmniLogicAPI:
         self.controller_port = controller_port
         self.response_timeout = response_timeout
 
-    @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[True]) -> str: ...
-    @overload
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: Literal[False]) -> None: ...
-    async def async_send_message(self, message_type: MessageType, message: str | None, need_response: bool = False) -> str | None:
+    async def async_send(self, message_type: MessageType, message: str) -> None:
         """Send a message via the Hayward Omni UDP protocol along with properly handling timeouts and responses.
 
         Args:
             message_type (MessageType): A selection from MessageType indicating what type of communication you are sending
-            message (str | None): The XML body of the message to deliver
-            need_response (bool, optional): Should a response be received and returned to the caller. Defaults to False.
+            message (str): The XML body of the message to deliver
 
         Returns:
-            str | None: The response body sent from the Omni if need_response indicates that a response will be sent
+            None
         """
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=(self.controller_ip, self.controller_port))
 
-        resp: str | None = None
         try:
-            if need_response:
-                resp = await protocol.send_and_receive(message_type, message, response_timeout=self.response_timeout)
-            else:
-                await protocol.send_message(message_type, message)
+            await protocol.async_send(message_type, message)
+        finally:
+            transport.close()
+
+    async def async_send_and_receive(self, message_type: MessageType, message: str) -> str:
+        """Convenience method to send a message and receive a response without needing to specify need_response every time.
+
+        Args:
+            message_type (MessageType): A selection from MessageType indicating what type of communication you are sending
+            message (str): The message payload to send.
+
+        Returns:
+            str: The response body sent from the Omni
+        """
+        loop = asyncio.get_running_loop()
+        transport, protocol = await loop.create_datagram_endpoint(OmniLogicProtocol, remote_addr=(self.controller_ip, self.controller_port))
+
+        try:
+            resp = await protocol.async_send_and_receive(message_type, message)
         finally:
             transport.close()
 
@@ -164,7 +173,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending RequestConfiguration with body: %s", req_body)
 
-        resp = await self.async_send_message(MessageType.REQUEST_CONFIGURATION, req_body, True)
+        resp = await self.async_send_and_receive(MessageType.REQUEST_CONFIGURATION, req_body)
 
         _LOGGER.debug("Received response for RequestConfiguration: %s", resp)
 
@@ -206,7 +215,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending GetUIFilterDiagnosticInfo with body: %s", req_body)
 
-        resp = await self.async_send_message(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body, True)
+        resp = await self.async_send_and_receive(MessageType.GET_FILTER_DIAGNOSTIC_INFO, req_body)
 
         _LOGGER.debug("Received response for GetUIFilterDiagnosticInfo: %s", resp)
 
@@ -235,7 +244,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending RequestTelemetryData with body: %s", req_body)
 
-        resp = await self.async_send_message(MessageType.GET_TELEMETRY, req_body, True)
+        resp = await self.async_send_and_receive(MessageType.GET_TELEMETRY, req_body)
 
         _LOGGER.debug("Received response for RequestTelemetryData: %s", resp)
 
@@ -276,7 +285,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUIHeaterCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_HEATER_COMMAND, req_body, False)
+        return await self.async_send(MessageType.SET_HEATER_COMMAND, req_body)
 
     async def async_set_solar_heater(
         self,
@@ -311,7 +320,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUISolarSetPointCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body, False)
+        return await self.async_send(MessageType.SET_SOLAR_SET_POINT_COMMAND, req_body)
 
     async def async_set_heater_mode(
         self,
@@ -346,7 +355,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUIHeaterModeCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_HEATER_MODE_COMMAND, req_body, False)
+        return await self.async_send(MessageType.SET_HEATER_MODE_COMMAND, req_body)
 
     async def async_set_heater_enable(
         self,
@@ -381,7 +390,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetHeaterEnable with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_HEATER_ENABLED, req_body, False)
+        return await self.async_send(MessageType.SET_HEATER_ENABLED, req_body)
 
     async def async_set_equipment(
         self,
@@ -443,7 +452,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUIEquipmentCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_EQUIPMENT, req_body, False)
+        return await self.async_send(MessageType.SET_EQUIPMENT, req_body)
 
     async def async_set_filter_speed(self, pool_id: int, equipment_id: int, speed: int) -> None:
         """Set the speed for a variable speed filter/pump.
@@ -471,7 +480,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUIFilterSpeedCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_FILTER_SPEED, req_body, False)
+        return await self.async_send(MessageType.SET_FILTER_SPEED, req_body)
 
     async def async_set_light_show(
         self,
@@ -543,7 +552,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetStandAloneLightShow with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body, False)
+        return await self.async_send(MessageType.SET_STANDALONE_LIGHT_SHOW, req_body)
 
     async def async_set_chlorinator_enable(self, pool_id: int, enabled: int | bool) -> None:
         body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
@@ -561,7 +570,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetCHLOREnable with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_CHLOR_ENABLED, req_body, False)
+        return await self.async_send(MessageType.SET_CHLOR_ENABLED, req_body)
 
     # This is used to set the ORP target value on a CSAD
     async def async_set_csad_orp_target_level(
@@ -587,7 +596,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUICSADORPTargetLevel with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_CSAD_ORP_TARGET, req_body, False)
+        return await self.async_send(MessageType.SET_CSAD_ORP_TARGET, req_body)
 
     # This is used to set the pH target value on a CSAD
     async def async_set_csad_target_value(
@@ -613,7 +622,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending UISetCSADTargetValue with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_CSAD_TARGET_VALUE, req_body, False)
+        return await self.async_send(MessageType.SET_CSAD_TARGET_VALUE, req_body)
 
     async def async_set_chlorinator_params(
         self,
@@ -656,7 +665,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetCHLORParams with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_CHLOR_PARAMS, req_body, False)
+        return await self.async_send(MessageType.SET_CHLOR_PARAMS, req_body)
 
     async def async_set_chlorinator_superchlorinate(
         self,
@@ -681,7 +690,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUISuperCHLORCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_SUPERCHLORINATE, req_body, False)
+        return await self.async_send(MessageType.SET_SUPERCHLORINATE, req_body)
 
     async def async_restore_idle_state(self) -> None:
         body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
@@ -695,7 +704,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending RestoreIdleState with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.RESTORE_IDLE_STATE, req_body, False)
+        return await self.async_send(MessageType.RESTORE_IDLE_STATE, req_body)
 
     async def async_set_spillover(
         self,
@@ -738,7 +747,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending SetUISpilloverCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.SET_SPILLOVER, req_body, False)
+        return await self.async_send(MessageType.SET_SPILLOVER, req_body)
 
     async def async_set_group_enable(
         self,
@@ -781,7 +790,7 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending RunGroupCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.RUN_GROUP_CMD, req_body, False)
+        return await self.async_send(MessageType.RUN_GROUP_CMD, req_body)
 
     async def async_edit_schedule(
         self,
@@ -854,4 +863,4 @@ class OmniLogicAPI:
 
         _LOGGER.debug("Sending EditUIScheduleCmd with body: %s", req_body)
 
-        return await self.async_send_message(MessageType.EDIT_SCHEDULE, req_body, False)
+        return await self.async_send(MessageType.EDIT_SCHEDULE, req_body)
