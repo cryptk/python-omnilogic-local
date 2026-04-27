@@ -11,9 +11,9 @@ PROTOCOL_VERSION = "1.19"  # Current protocol version
 BLOCK_MESSAGE_HEADER_OFFSET = 8  # Offset to skip block message header and get to payload
 
 # Timing Constants (in seconds)
-OMNI_RETRANSMIT_TIME = 2.1  # Time Omni waits before retransmitting a packet
+OMNI_RETRANSMIT_TIME = 2  # Time Omni waits before retransmitting a packet
 OMNI_RETRANSMIT_COUNT = 5  # Number of retransmit attempts (6 total including initial)
-ACK_WAIT_TIMEOUT = 1  # Timeout waiting for ACK response, 0.5 showed to be just a tad too short in some cases.
+ACK_WAIT_TIMEOUT = OMNI_RETRANSMIT_TIME * 2  # Timeout waiting for ACK response, 0.5 showed to be just a tad too short in some cases.
 DEFAULT_RESPONSE_TIMEOUT = OMNI_RETRANSMIT_TIME * OMNI_RETRANSMIT_COUNT  # Default timeout for receiving responses
 
 # Network Constants

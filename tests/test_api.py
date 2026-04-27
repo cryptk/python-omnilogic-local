@@ -186,7 +186,7 @@ async def test_async_get_mspconfig_generates_valid_xml() -> None:
     """Test that async_get_mspconfig generates valid XML request."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = '<?xml version="1.0"?><Response><Name>Configuration</Name></Response>'
 
         await api.async_get_mspconfig(raw=True)
@@ -206,7 +206,7 @@ async def test_async_get_telemetry_generates_valid_xml() -> None:
     """Test that async_get_telemetry generates valid XML request."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = '<?xml version="1.0"?><Response><Name>Telemetry</Name></Response>'
 
         await api.async_get_telemetry(raw=True)
@@ -226,7 +226,7 @@ async def test_async_get_filter_diagnostics_generates_valid_xml() -> None:
     """Test that async_get_filter_diagnostics generates valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = '<?xml version="1.0"?><Response><Name>FilterDiagnostics</Name></Response>'
 
         await api.async_get_filter_diagnostics(pool_id=1, equipment_id=2, raw=True)
@@ -248,7 +248,7 @@ async def test_async_set_heater_generates_valid_xml() -> None:
     """Test that async_set_heater generates valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_heater(pool_id=1, equipment_id=2, temperature=75)
@@ -273,7 +273,7 @@ async def test_async_set_filter_speed_generates_valid_xml() -> None:
     """Test that async_set_filter_speed generates valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_filter_speed(pool_id=1, equipment_id=2, speed=75)
@@ -296,7 +296,7 @@ async def test_async_set_equipment_generates_valid_xml() -> None:
     """Test that async_set_equipment generates valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_equipment(
@@ -339,7 +339,7 @@ async def test_async_set_heater_mode_generates_valid_xml() -> None:
     """Test that async_set_heater_mode generates valid XML with correct enum values."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_heater_mode(pool_id=1, equipment_id=2, mode=HeaterMode.HEAT)
@@ -360,7 +360,7 @@ async def test_async_set_light_show_generates_valid_xml() -> None:
     """Test that async_set_light_show generates valid XML with correct enum values."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_light_show(
@@ -399,7 +399,7 @@ async def test_async_set_chlorinator_enable_boolean_conversion(subtests: pytest.
     ]
 
     for enabled, expected, description in test_cases:
-        with subtests.test(msg=description), patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+        with subtests.test(msg=description), patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = None
 
             await api.async_set_chlorinator_enable(pool_id=1, enabled=enabled)
@@ -424,7 +424,7 @@ async def test_async_set_heater_enable_boolean_conversion(subtests: pytest.Subte
     ]
 
     for enabled, expected, description in test_cases:
-        with subtests.test(msg=description), patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+        with subtests.test(msg=description), patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = None
 
             await api.async_set_heater_enable(pool_id=1, equipment_id=2, enabled=enabled)
@@ -441,7 +441,7 @@ async def test_async_set_chlorinator_params_generates_valid_xml() -> None:
     """Test that async_set_chlorinator_params generates valid XML with all parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
-    with patch.object(api, "async_send_message", new_callable=AsyncMock) as mock_send:
+    with patch.object(api, "async_send", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = None
 
         await api.async_set_chlorinator_params(
@@ -489,12 +489,12 @@ async def test_async_send_message_creates_transport() -> None:
 
     mock_transport = MagicMock()
     mock_protocol = AsyncMock()
-    mock_protocol.send_message = AsyncMock()
+    mock_protocol.async_send = AsyncMock()
 
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)
+        await api.async_send(MessageType.REQUEST_CONFIGURATION, "test")
 
         # Verify endpoint was created with correct parameters
         mock_loop.return_value.create_datagram_endpoint.assert_called_once()
@@ -512,15 +512,15 @@ async def test_async_send_message_with_response() -> None:
 
     mock_transport = MagicMock()
     mock_protocol = AsyncMock()
-    mock_protocol.send_and_receive = AsyncMock(return_value="test response")
+    mock_protocol.async_send_and_receive = AsyncMock(return_value="test response")
 
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        result = await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=True)
+        result = await api.async_send_and_receive(MessageType.REQUEST_CONFIGURATION, "test")
 
         assert result == "test response"
-        mock_protocol.send_and_receive.assert_called_once()
+        mock_protocol.async_send_and_receive.assert_called_once()
         mock_transport.close.assert_called_once()
 
 
@@ -531,15 +531,15 @@ async def test_async_send_message_without_response() -> None:
 
     mock_transport = MagicMock()
     mock_protocol = AsyncMock()
-    mock_protocol.send_message = AsyncMock()
+    mock_protocol.async_send = AsyncMock()
 
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
-        result = await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)  # type: ignore[func-returns-value]
+        result = await api.async_send(MessageType.REQUEST_CONFIGURATION, "test")  # type: ignore[func-returns-value]
 
         assert result is None
-        mock_protocol.send_message.assert_called_once()
+        mock_protocol.async_send.assert_called_once()
         mock_transport.close.assert_called_once()
 
 
@@ -550,13 +550,13 @@ async def test_async_send_message_closes_transport_on_error() -> None:
 
     mock_transport = MagicMock()
     mock_protocol = AsyncMock()
-    mock_protocol.send_message = AsyncMock(side_effect=Exception("Test error"))
+    mock_protocol.async_send = AsyncMock(side_effect=Exception("Test error"))
 
     with patch("asyncio.get_running_loop") as mock_loop:
         mock_loop.return_value.create_datagram_endpoint = AsyncMock(return_value=(mock_transport, mock_protocol))
 
         with pytest.raises(Exception, match="Test error"):
-            await api.async_send_message(MessageType.REQUEST_CONFIGURATION, "test", need_response=False)
+            await api.async_send(MessageType.REQUEST_CONFIGURATION, "test")
 
         # Verify transport was still closed despite the error
         mock_transport.close.assert_called_once()

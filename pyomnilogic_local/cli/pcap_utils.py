@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 from scapy.layers.inet import UDP
 from scapy.utils import rdpcap
 
-from pyomnilogic_local.api.protocol import OmniLogicMessage
+from pyomnilogic_local.api.message import OmniLogicMessage
 from pyomnilogic_local.models.leadmessage import LeadMessage
 from pyomnilogic_local.omnitypes import MessageType
 
