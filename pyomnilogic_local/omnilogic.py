@@ -180,6 +180,10 @@ class OmniLogic:
             if update_mspconfig or update_telemetry:
                 self._update_equipment()
 
+            # After equipment has been updated
+            if update_mspconfig:
+                self._check_duplicate_equipment_names()
+
     def _update_equipment(self) -> None:
         """Update equipment objects based on the latest MSPConfig and Telemetry data."""
         if not hasattr(self, "mspconfig") or self.mspconfig is None:
@@ -208,11 +212,14 @@ class OmniLogic:
         else:
             self.schedules = EquipmentDict([Schedule(self, schedule_, self.telemetry) for schedule_ in self.mspconfig.schedules])
 
-        current_names = {item.name for item in self.all_equipment if item.name is not None}
-        if not current_names.issubset(self._seen_item_names):
-            if warning := _check_duplicate_item_names(self.all_equipment, f"{self.host}:{self.port}"):
-                _LOGGER.warning(warning)
-            self._seen_item_names.update(current_names)
+    def _check_duplicate_equipment_names(self) -> None:
+        """Check for and log a warning if there are items with duplicate names."""
+        current_names = {i.name for i in self.all_equipment if i.name is not None}
+        if current_names.issubset(self._seen_item_names):
+            return
+        self._seen_item_names.update(current_names)
+        if warning := _check_duplicate_item_names(self.all_equipment, f"{self.host}:{self.port}"):
+            _LOGGER.warning(warning)
 
     # Equipment discovery properties
     @property
