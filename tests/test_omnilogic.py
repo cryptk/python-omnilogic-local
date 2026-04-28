@@ -25,11 +25,9 @@ def test__check_duplicate_item_names() -> None:
     )
 
     assert warning == (
-        "OmniLogic 127.0.0.1:10444 contains multiple items with the same name:\n"
-        "  - Gas: IDs 3, 4\n"
-        "  - Solar: IDs 1, 2\n"
+        "OmniLogic 127.0.0.1:10444 provided equipment with duplicate names: 'Gas' [3, 4], 'Solar' [1, 2]. "
         "Name-based lookups will return the first match. "
-        "Consider using system_id-based lookups for reliability "
+        "Consider looking up by system_id (shown in parentheses) for reliability "
         "or renaming equipment on the OmniLogic controller to avoid duplicates."
     )
 
@@ -46,7 +44,7 @@ def test__check_duplicate_item_names_different_host() -> None:
     )
 
     assert warning is not None
-    assert "OmniLogic 127.0.0.2:3000 contains multiple items with the same name:" in warning
+    assert "OmniLogic 127.0.0.2:3000 provided equipment with duplicate names:" in warning
 
 
 def test__check_duplicate_item_names_no_duplicates() -> None:

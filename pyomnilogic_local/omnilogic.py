@@ -48,19 +48,16 @@ def _check_duplicate_item_names(items: Sequence[OmniEquipment[Any, Any]], source
     if not duplicate_names:
         return None
 
-    item = items[0]  # Guaranteed to exist if we have duplicates
-    msg_lines = [f"OmniLogic {source_id} contains multiple items with the same name:"]
+    duplicates = []
     for name in sorted(duplicate_names):
-        name_items = items_by_name[name]
-        ids = [str(i.system_id) for i in name_items if i.system_id is not None]
-        msg_lines.append(f"  - {name}: IDs {', '.join(ids)}")
-
-    msg_lines.append(
+        ids = [i.system_id for i in items_by_name[name] if i.system_id is not None]
+        duplicates.append(f"'{name}' {ids}")
+    return (
+        f"OmniLogic {source_id} provided equipment with duplicate names: {', '.join(duplicates)}. "
         "Name-based lookups will return the first match. "
-        "Consider using system_id-based lookups for reliability "
+        "Consider looking up by system_id (shown in parentheses) for reliability "
         "or renaming equipment on the OmniLogic controller to avoid duplicates."
     )
-    return "\n".join(msg_lines)
 
 
 class OmniLogic:
