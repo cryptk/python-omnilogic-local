@@ -239,7 +239,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         See Also:
             is_generating: Check if actively producing chlorine right now
         """
-        return self.enabled and self.telemetry.enable
+        return self.telemetry.enable
 
     @property
     def is_generating(self) -> bool:
