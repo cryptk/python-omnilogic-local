@@ -306,7 +306,7 @@ def set_csad_ph(ctx: click.Context, bow_id: int, csad_id: int, target: float) ->
 
     # Execute the command
     try:
-        asyncio.run(omnilogic._api.async_set_csad_target_value(pool_id=bow_id, csad_id=csad_id, ph_target=target))
+        asyncio.run(omnilogic._api.async_set_csad_ph_target_value(pool_id=bow_id, csad_id=csad_id, ph_target=target))
         click.echo(f"Successfully set CSAD {csad_id} in BOW {bow_id} pH target to {target}")
     except Exception as e:
         click.echo(f"Error setting CSAD pH target: {e}", err=True)

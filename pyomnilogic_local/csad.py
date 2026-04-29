@@ -5,9 +5,11 @@ from typing import TYPE_CHECKING
 from pyomnilogic_local._base import OmniEquipment
 from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.csad_equip import CSADEquipment
+from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPCSAD
 from pyomnilogic_local.models.telemetry import TelemetryCSAD
 from pyomnilogic_local.omnitypes import CSADMode, CSADStatus
+from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
     from pyomnilogic_local.models.telemetry import Telemetry
@@ -74,29 +76,44 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
         return self.mspconfig.equip_type
 
     @property
-    def target_ph(self) -> float:
+    def ph_target_level(self) -> float:
         """Target pH level that the CSAD aims to maintain."""
         return self.mspconfig.target_value
 
     @property
-    def calibration_value(self) -> float:
+    def ph_current_value(self) -> float:
+        """Current pH level reading from the sensor, including calibration offset."""
+        return self.telemetry.ph + self.ph_calibration_value
+
+    @property
+    def ph_current_value_raw(self) -> float:
+        """Current pH level reading from the sensor without calibration offset."""
+        return self.telemetry.ph
+
+    @property
+    def ph_calibration_value(self) -> float:
         """Calibration offset value for pH sensor."""
         return self.mspconfig.calibration_value
 
     @property
-    def ph_low_alarm(self) -> float:
+    def ph_low_alarm_level(self) -> float:
         """Low pH threshold for triggering an alarm."""
-        return self.mspconfig.ph_low_alarm_value
+        return self.mspconfig.ph_low_alarm_level
 
     @property
-    def ph_high_alarm(self) -> float:
+    def ph_high_alarm_level(self) -> float:
         """High pH threshold for triggering an alarm."""
-        return self.mspconfig.ph_high_alarm_value
+        return self.mspconfig.ph_high_alarm_level
 
     @property
     def orp_target_level(self) -> int:
         """Target ORP (Oxidation-Reduction Potential) level in millivolts."""
         return self.mspconfig.orp_target_level
+
+    @property
+    def orp_current_level(self) -> int:
+        """Current ORP (Oxidation-Reduction Potential) reading in millivolts."""
+        return self.telemetry.orp
 
     @property
     def orp_runtime_level(self) -> int:
@@ -128,36 +145,6 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
     def status(self) -> CSADStatus:
         """Raw status value from telemetry."""
         return self.telemetry.status
-
-    @property
-    def current_ph(self) -> float:
-        """Current pH level reading from the sensor.
-
-        Returns:
-            Current pH level (typically 0-14, where 7 is neutral)
-
-        Example:
-            >>> print(f"pH: {csad.current_ph:.2f}")
-        """
-        return self.telemetry.ph
-
-    @property
-    def current_orp(self) -> int:
-        """Current ORP (Oxidation-Reduction Potential) reading in millivolts.
-
-        Note:
-            ORP readings in CSAD telemetry are provided for monitoring purposes to
-            assess chlorinator effectiveness. The ORP sensor output is primarily
-            used by the chlorinator function for ORP-based automatic chlorine
-            generation control. The CSAD system focuses on pH control.
-
-        Returns:
-            Current ORP level in mV (typically 400-800 mV for pools)
-
-        Example:
-            >>> print(f"ORP: {csad.current_orp} mV")
-        """
-        return self.telemetry.orp
 
     @property
     def mode(self) -> CSADMode:
@@ -234,8 +221,8 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
             >>> if csad.has_alert:
             ...     print(f"Alert! {csad.alert_status}")
         """
-        ph_alert = self.current_ph < self.ph_low_alarm or self.current_ph > self.ph_high_alarm
-        orp_alert = self.current_orp < self.orp_low_alarm_level or self.current_orp > self.orp_high_alarm_level
+        ph_alert = self.ph_current_value < self.ph_low_alarm_level or self.ph_current_value > self.ph_high_alarm_level
+        orp_alert = self.orp_current_level < self.orp_low_alarm_level or self.orp_current_level > self.orp_high_alarm_level
         return ph_alert or orp_alert
 
     @property
@@ -252,54 +239,48 @@ class CSAD(OmniEquipment[MSPCSAD, TelemetryCSAD]):
         """
         alerts = []
 
-        if self.current_ph < self.ph_low_alarm:
-            alerts.append(f"pH too low ({self.current_ph:.2f} < {self.ph_low_alarm:.2f})")
-        elif self.current_ph > self.ph_high_alarm:
-            alerts.append(f"pH too high ({self.current_ph:.2f} > {self.ph_high_alarm:.2f})")
+        if self.ph_current_value < self.ph_low_alarm_level:
+            alerts.append(f"pH too low ({self.ph_current_value:.2f} < {self.ph_low_alarm_level:.2f})")
+        elif self.ph_current_value > self.ph_high_alarm_level:
+            alerts.append(f"pH too high ({self.ph_current_value:.2f} > {self.ph_high_alarm_level:.2f})")
 
-        if self.current_orp < self.orp_low_alarm_level:
-            alerts.append(f"ORP too low ({self.current_orp} < {self.orp_low_alarm_level} mV)")
-        elif self.current_orp > self.orp_high_alarm_level:
-            alerts.append(f"ORP too high ({self.current_orp} > {self.orp_high_alarm_level} mV)")
+        if self.orp_current_level < self.orp_low_alarm_level:
+            alerts.append(f"ORP too low ({self.orp_current_level} < {self.orp_low_alarm_level} mV)")
+        elif self.orp_current_level > self.orp_high_alarm_level:
+            alerts.append(f"ORP too high ({self.orp_current_level} > {self.orp_high_alarm_level} mV)")
 
         return "; ".join(alerts) if alerts else "OK"
 
-    @property
-    def current_value(self) -> float:
-        """Get the primary current value being monitored (pH for most CSAD systems).
+    @control_method
+    async def set_ph_target(self, ph_target: float) -> None:
+        """Set the target pH for the CSAD.
 
-        Returns:
-            Current pH level
-
-        Note:
-            For ACID type CSAD, this returns pH. For CO2 type, this also returns pH.
-            Use current_orp property for ORP readings.
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
-        return self.current_ph
+        if self.bow_id is None or self.system_id is None:
+            msg = "Cannot set pH: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
-    @property
-    def target_value(self) -> float:
-        """Get the target value the CSAD is trying to maintain (pH target).
+        if not 7.0 <= ph_target <= 8.0:
+            msg = f"Invalid pH target: {ph_target}. Target pH must be between 7.0 and 8.0"
+            raise ValueError(msg)
 
-        Returns:
-            Target pH level
+        await self._api.async_set_csad_ph_target_value(pool_id=self.bow_id, csad_id=self.system_id, ph_target=ph_target)
 
-        Note:
-            This is an alias for target_ph for convenience and consistency
-            with the task requirements.
+    @control_method
+    async def set_orp_target(self, orp_target: int) -> None:
+        """Set the target ORP for the CSAD.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
         """
-        return self.target_ph
+        if self.bow_id is None or self.system_id is None:
+            msg = "Cannot set ORP: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
 
-    @property
-    def ph_offset(self) -> float:
-        """Calculate how far the current pH is from the target.
+        if not 400 <= orp_target <= 900:
+            msg = f"Invalid ORP target: {orp_target}. Target ORP must be between 400 and 900 mV"
+            raise ValueError(msg)
 
-        Returns:
-            Difference between current and target pH (positive = too high, negative = too low)
-
-        Example:
-            >>> offset = csad.ph_offset
-            >>> if offset > 0:
-            ...     print(f"pH is {offset:.2f} points above target")
-        """
-        return self.current_ph - self.target_ph
+        await self._api.async_set_csad_orp_target_level(pool_id=self.bow_id, csad_id=self.system_id, orp_target=orp_target)

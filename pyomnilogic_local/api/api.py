@@ -599,7 +599,7 @@ class OmniLogicAPI:
         return await self.async_send(MessageType.SET_CSAD_ORP_TARGET, req_body)
 
     # This is used to set the pH target value on a CSAD
-    async def async_set_csad_target_value(
+    async def async_set_csad_ph_target_value(
         self,
         pool_id: int,
         csad_id: int,
