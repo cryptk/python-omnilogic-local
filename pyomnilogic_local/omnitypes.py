@@ -419,8 +419,8 @@ class FilterWhyOn(PrettyEnum, IntEnum):
     GROUP_COMMAND = 18
     SPILLOVER_INTERLOCK = 19
     MAX_VALUE = 20
-    UNKNOWN_1 = 21
-    UNKNOWN_2 = 22
+    UNKNOWN_1 = 21  # https://github.com/cryptk/python-omnilogic-local/issues/101
+    UNKNOWN_2 = 22  # https://github.com/cryptk/python-omnilogic-local/issues/101
 
 
 class FilterSpeedPresets(PrettyEnum, StrEnum):
@@ -457,7 +457,7 @@ class HeaterMode(PrettyEnum, IntEnum):
     HEAT = 0
     COOL = 1
     AUTO = 2
-    UNKNOWN_1 = 3
+    UNKNOWN_1 = 3  # https://github.com/cryptk/haomnilogic-local/issues/172
 
 
 # Pumps
@@ -465,7 +465,7 @@ class PumpState(PrettyEnum, IntEnum):
     OFF = 0
     ON = 1
     FREEZE_PROTECT = 2  # This is an assumption that 2 means freeze protect, ref: https://github.com/cryptk/haomnilogic-local/issues/147
-    UNKNOWN_1 = 3
+    UNKNOWN_1 = 3  # We assume this value exists as we have evidence of a state of 4 existing
     PRIMING = 4  # https://github.com/cryptk/haomnilogic-local/issues/223
 
 
