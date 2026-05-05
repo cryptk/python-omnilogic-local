@@ -90,7 +90,7 @@ class BodyOfWaterType(PrettyEnum, StrEnum):
 
 
 # Chlorinators
-class ChlorinatorStatus(Flag):
+class ChlorinatorStatus(PrettyEnum, Flag):
     """Chlorinator status flags.
 
     These flags represent the current operational state of the chlorinator
@@ -107,7 +107,7 @@ class ChlorinatorStatus(Flag):
     K2_ACTIVE = 1 << 7  # K2 relay is active
 
 
-class ChlorinatorAlert(Flag):
+class ChlorinatorAlert(PrettyEnum, Flag):
     """Chlorinator alert flags.
 
     Multi-bit fields are represented by their individual values.
@@ -126,7 +126,7 @@ class ChlorinatorAlert(Flag):
     CELL_CLEAN = 1 << 11  # Cell cleaning runtime alert
 
 
-class ChlorinatorError(Flag):
+class ChlorinatorError(PrettyEnum, Flag):
     """Chlorinator error flags.
 
     Multi-bit fields are represented by their individual values.
