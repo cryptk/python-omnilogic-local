@@ -53,6 +53,7 @@ class OmniBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     _sub_devices: set[str] | None = None
+    _propagate_bow_id_devices: set[str] | None = None
     system_id: int = Field(alias="System-Id")
     name: str | None = Field(alias="Name", default=None)
     bow_id: int = -1
@@ -68,7 +69,9 @@ class OmniBase(BaseModel):
         # If we have no devices under us, we have nothing to do
         if self._sub_devices is None:
             return
-        for subdevice_name in self._sub_devices:
+        # If we have a specific list of devices that should receive the bow_id, use that, otherwise propagate to all sub_devices
+        propagate_devices = self._propagate_bow_id_devices if self._propagate_bow_id_devices is not None else self._sub_devices
+        for subdevice_name in propagate_devices:
             subdevice = getattr(self, subdevice_name)
             # If our subdevice is a list of subdevices ...
             if isinstance(subdevice, list):
@@ -346,7 +349,9 @@ class MSPBoW(OmniBase):
 
 class MSPBackyard(OmniBase):
     _sub_devices = {"sensor", "bow", "colorlogic_light", "relay"}
-    bow_id: int = -1
+    # Only propagate bow_id to sub-devices that are not BoWs as they have their own bow_id that should be used instead
+    _propagate_bow_id_devices = {"sensor", "colorlogic_light", "relay"}
+    bow_id: int = 0
 
     omni_type: OmniType = OmniType.BACKYARD
 
@@ -354,6 +359,14 @@ class MSPBackyard(OmniBase):
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
     relay: list[MSPRelay] | None = Field(alias="Relay", default=None)
     sensor: list[MSPSensor] | None = Field(alias="Sensor", default=None)
+
+    # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the backyard
+    # itself is initialized
+    def __init__(self, **data: Any) -> None:
+        # As we are requiring a bow_id on everything in OmniBase, we need to propagate it down now
+        # before calling super().__init__() so that it will be present for validation.
+        super().__init__(**data)
+        self.propagate_bow_id(self.system_id)
 
 
 class MSPSchedule(OmniBase):
