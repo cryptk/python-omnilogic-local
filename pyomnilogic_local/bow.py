@@ -139,7 +139,7 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     lights: EquipmentDict[ColorLogicLight] = EquipmentDict()
     pumps: EquipmentDict[Pump] = EquipmentDict()
     chlorinator: Chlorinator | None = None
-    csads: EquipmentDict[CSAD] = EquipmentDict()
+    csad: CSAD | None = None
 
     def __init__(self, omni: OmniLogic, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         super().__init__(omni, mspconfig, telemetry)
@@ -164,8 +164,8 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
             parts.append("heater=True")
         if self.chlorinator is not None:
             parts.append("chlorinator=True")
-        if len(self.csads) > 0:
-            parts.append(f"csads={len(self.csads)}")
+        if self.csad is not None:
+            parts.append("csad=True")
 
         return f"Bow({', '.join(parts)})"
 
@@ -277,10 +277,10 @@ class Bow(OmniEquipment[MSPBoW, TelemetryBoW]):
     def _update_csads(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the CSADs based on the MSP configuration."""
         if mspconfig.csad is None:
-            self.csads = EquipmentDict()
+            self.csad = None
             return
 
-        self.csads = EquipmentDict([CSAD(self._omni, csad, telemetry) for csad in mspconfig.csad])
+        self.csad = CSAD(self._omni, mspconfig.csad, telemetry)
 
     def _update_filters(self, mspconfig: MSPBoW, telemetry: Telemetry) -> None:
         """Update the filters based on the MSP configuration."""

@@ -336,7 +336,7 @@ class MSPBoW(OmniBase):
     colorlogic_light: list[MSPColorLogicLight] | None = Field(alias="ColorLogic-Light", default=None)
     pump: list[MSPPump] | None = Field(alias="Pump", default=None)
     chlorinator: MSPChlorinator | None = Field(alias="Chlorinator", default=None)
-    csad: list[MSPCSAD] | None = Field(alias="CSAD", default=None)
+    csad: MSPCSAD | None = Field(alias="CSAD", default=None)
 
     # We override the __init__ here so that we can trigger the propagation of the bow_id down to all of it's sub devices after the bow
     # itself is initialized
@@ -462,7 +462,6 @@ class MSPConfig(BaseModel):
             # everything that *could* be a list into a list to make the parsing more consistent.
             force_list=(
                 OmniType.BOW_MSP,
-                OmniType.CSAD,
                 OmniType.CL_LIGHT,
                 OmniType.FAVORITES,
                 OmniType.FILTER,
