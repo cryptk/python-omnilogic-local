@@ -3,17 +3,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import click
 
 from pyomnilogic_local.cli.utils import echo_properties
-from pyomnilogic_local.omnitypes import BodyOfWaterType
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
-    from pyomnilogic_local.models.mspconfig import MSPBoW
-    from pyomnilogic_local.models.telemetry import TelemetryType
 
 
 @click.command()
@@ -31,70 +28,26 @@ def bows(ctx: click.Context) -> None:
     all_bows = omnilogic.all_bows
     for bow in all_bows:
         echo_properties(bow)
+        click.echo("\n  Equipment Counts:")
+
+        _print_equipment_count("Filter", len(bow.filters))
+        _print_equipment_count("Pump", len(bow.pumps))
+        _print_equipment_count("Heater (virtual)", 1 if bow.heater else 0)
+        _print_equipment_count("Heaters (physical)", len(bow.heater.heater_equipment) if bow.heater else 0)
+        _print_equipment_count("Sensors", len(bow.sensors))
+        _print_equipment_count("Lights", len(bow.lights))
+        _print_equipment_count("Relays", len(bow.relays))
+        _print_equipment_count("Chlorinator (virtual)", 1 if bow.chlorinator else 0)
+        _print_equipment_count("Chlorinators (physical)", len(bow.chlorinator.chlorinator_equipment) if bow.chlorinator else 0)
+        _print_equipment_count("CSAD (virtual)", 1 if bow.csad else 0)
+        _print_equipment_count("CSADs (physical)", len(bow.csad.csad_equipment) if bow.csad else 0)
+
+        click.echo("=" * 60)
 
     if len(all_bows) == 0:
         click.echo("No Bodies of Water found in the system configuration.")
 
 
-def _print_bow_info(bow: MSPBoW, telemetry: TelemetryType | None) -> None:
-    """Format and print Body of Water information in a nice table format.
-
-    Args:
-        bow: BOW object from MSPConfig with attributes to display
-        telemetry: Telemetry object containing current state information
-    """
-    click.echo("\n" + "=" * 60)
-    click.echo("BODY OF WATER")
-    click.echo("=" * 60)
-
-    # Combine config and telemetry data
-    bow_data: dict[Any, Any] = {**dict(bow), **dict(telemetry)} if telemetry else dict(bow)
-
-    # Fields to exclude from main display (we'll show equipment counts instead)
-    exclude_fields = {"filter", "relay", "heater", "sensor", "colorlogic_light", "pump", "chlorinator", "csad"}
-
-    for attr_name, value in bow_data.items():
-        if attr_name in exclude_fields:
-            continue
-
-        if attr_name == "type":
-            value = str(BodyOfWaterType(value))
-        elif isinstance(value, list):
-            # Format lists nicely
-            value = ", ".join(str(v) for v in value) if value else "None"
-
-        # Format the attribute name to be more readable
-        display_name = attr_name.replace("_", " ").title()
-        click.echo(f"{display_name:20} : {value}")
-
-    # Show equipment summary
-    click.echo("\nAttached Equipment:")
-    click.echo("-" * 60)
-
-    equipment_counts = []
-    if bow.filter:
-        equipment_counts.append(f"Filters: {len(bow.filter)}")
-    if bow.pump:
-        equipment_counts.append(f"Pumps: {len(bow.pump)}")
-    if bow.heater:
-        equipment_counts.append("Heater: 1 (virtual)")
-        if bow.heater.heater_equipment:
-            equipment_counts.append(f"  - Physical Heaters: {len(bow.heater.heater_equipment)}")
-    if bow.sensor:
-        equipment_counts.append(f"Sensors: {len(bow.sensor)}")
-    if bow.colorlogic_light:
-        equipment_counts.append(f"ColorLogic Lights: {len(bow.colorlogic_light)}")
-    if bow.relay:
-        equipment_counts.append(f"Relays: {len(bow.relay)}")
-    if bow.chlorinator:
-        equipment_counts.append("Chlorinator: 1")
-    if bow.csad:
-        equipment_counts.append(f"CSADs: {len(bow.csad)}")
-
-    if equipment_counts:
-        for count in equipment_counts:
-            click.echo(f"  {count}")
-    else:
-        click.echo("  None")
-
-    click.echo("=" * 60)
+def _print_equipment_count(name: str, count: int) -> None:
+    """Helper function to print equipment counts with styling."""
+    click.echo(f"  - {click.style(name, fg='green')}: {count}")
