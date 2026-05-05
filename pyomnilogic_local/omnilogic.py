@@ -271,9 +271,7 @@ class OmniLogic:
     @property
     def all_csads(self) -> EquipmentDict[CSAD]:
         """Returns all CSAD instances across all bows in the backyard."""
-        csads: list[CSAD] = []
-        for bow in self.backyard.bow.values():
-            csads.extend(bow.csads.values())
+        csads = [bow.csad for bow in self.backyard.bow.values() if bow.csad is not None]
         return EquipmentDict(csads)
 
     @property
