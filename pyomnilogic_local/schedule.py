@@ -88,6 +88,11 @@ class Schedule(OmniEquipment[MSPSchedule, None]):
         return self.mspconfig.data
 
     @property
+    def is_on(self) -> bool:
+        """Convenience alias for self.enabled."""
+        return self.enabled
+
+    @property
     def enabled(self) -> bool:
         """Returns whether the schedule is currently enabled."""
         return self.mspconfig.enabled
