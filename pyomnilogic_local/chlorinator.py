@@ -372,7 +372,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         Note:
             This method uses the async_set_chlorinator_params API which requires
             all chlorinator configuration parameters. The current values from
-            mspconfig are used for unchanged parameters.
+            mspconfig/telemetry are used for unchanged parameters.
         """
         if self.bow_id is None or self.system_id is None:
             msg = "Cannot set timed percent: bow_id or system_id is None"
@@ -398,6 +398,50 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             timed_percent=percent,
             cell_type=self.mspconfig.cell_type.value,  # ChlorinatorCellType is now IntEnum, use .value
             op_mode=self.operating_mode.value,
+            sc_timeout=self.superchlor_timeout,
+            bow_type=bow_type,
+            orp_timeout=self.orp_timeout,
+        )
+
+    @control_method
+    async def set_op_mode(self, op_mode: ChlorinatorOperatingMode) -> None:
+        """Set the operating mode for chlorine generation.
+
+        Args:
+            op_mode: The operating mode for chlorine generation.
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+
+        Note:
+            This method uses the async_set_chlorinator_params API which requires
+            all chlorinator configuration parameters. The current values from
+            mspconfig/telemetry are used for unchanged parameters.
+        """
+        if self.bow_id is None or self.system_id is None:
+            msg = "Cannot set operating mode: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        # Get the parent Bow to determine bow_type
+        # We need to find our bow in the backyard
+        if (bow := self._omni.backyard.bow.get(self.bow_id)) is None:
+            msg = f"Cannot find bow with id {self.bow_id}"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        if self.timed_percent_telemetry is None:
+            msg = "Cannot set operating mode: timed_percent telemetry value is None"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        # Map equipment type to numeric bow_type value
+        # BOW_POOL = 0, BOW_SPA = 1 (based on typical protocol values)
+        bow_type = 0 if bow.equip_type == "BOW_POOL" else 1
+
+        await self._api.async_set_chlorinator_params(
+            pool_id=self.bow_id,
+            equipment_id=self.system_id,
+            timed_percent=self.timed_percent_telemetry,
+            cell_type=self.mspconfig.cell_type.value,  # ChlorinatorCellType is now IntEnum, use .value
+            op_mode=op_mode.value,
             sc_timeout=self.superchlor_timeout,
             bow_type=bow_type,
             orp_timeout=self.orp_timeout,
