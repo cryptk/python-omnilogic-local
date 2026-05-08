@@ -291,3 +291,37 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
             equipment_id=self.system_id,
             is_on=speed,
         )
+
+    @control_method
+    async def set_dual_speed(self, speed: PumpSpeedPresets) -> None:
+        """Set the pump to a specific speed for dual speed pumps.
+
+        For Dual Speed pumps, LOW and MEDIUM presets will set the pump to 50% speed, while HIGH will set it to 100%.
+        Semantically, it is preferred to only use LOW and HIGH presets for dual speed pumps but MEDIUM is accepted for convenience
+
+        Args:
+            speed: The preset speed to use (LOW, or HIGH)
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If an invalid speed preset is provided or if the pump is not a dual speed pump.
+        """
+        if self.equip_type != PumpType.DUAL_SPEED:
+            msg = "set_dual_speed can only be used with dual speed pumps"
+            raise ValueError(msg)
+
+        if self.bow_id is None or self.system_id is None:
+            msg = "Pump bow_id and system_id must be set"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        speed_value: int
+        match speed:
+            case PumpSpeedPresets.LOW | PumpSpeedPresets.MEDIUM:
+                speed_value = 50
+            case PumpSpeedPresets.HIGH:
+                speed_value = 100
+            case _:
+                msg = f"Invalid speed preset: {speed}"
+                raise ValueError(msg)
+
+        await self.set_speed(speed_value)
