@@ -255,7 +255,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
             >>> if chlorinator.is_generating:
             ...     print(f"Generating at {chlorinator.timed_percent_telemetry}%")
         """
-        return self.telemetry.active
+        return bool(ChlorinatorStatus.GENERATING.value & self.telemetry.status_raw == ChlorinatorStatus.GENERATING.value)
 
     @property
     def is_paused(self) -> bool:
