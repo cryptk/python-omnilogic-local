@@ -72,6 +72,26 @@ def get_telemetry(ctx: click.Context) -> None:
 
 
 @debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("equip_id", type=int)
+@click.pass_context
+def get_filter_diagnostics(ctx: click.Context, bow_id: int, equip_id: int) -> None:
+    """Retrieve current filter diagnostics from the controller.
+
+    Filter diagnostics include real-time sensor readings, equipment states, temperatures,
+    and other operational data. Use --raw to see the unprocessed XML.
+
+    Example:
+        omnilogic debug get-filter-diagnostics
+        omnilogic debug --raw get-filter-diagnostics
+
+    """
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+    telemetry = asyncio.run(omnilogic._api.async_get_filter_diagnostics(pool_id=bow_id, equipment_id=equip_id, raw=ctx.obj["RAW"]))
+    click.echo(telemetry)
+
+
+@debug.command()
 @click.argument("pcap_file", type=click.Path(exists=True, path_type=Path))
 def parse_pcap(pcap_file: Path) -> None:
     """Parse a PCAP file and reconstruct OmniLogic protocol communication.
