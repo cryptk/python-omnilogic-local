@@ -4,16 +4,21 @@
 from __future__ import annotations
 
 import asyncio
+import xml.etree.ElementTree as ET
+from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 import click
 
+from pyomnilogic_local.api.constants import XML_ENCODING, XML_NAMESPACE
 from pyomnilogic_local.cli.pcap_utils import parse_pcap_file, process_pcap_messages
+from pyomnilogic_local.util import PrettyEnum
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
     from pyomnilogic_local.models.telemetry import TelemetryChlorinator
+    from pyomnilogic_local.omnitypes import MessageType
 
 
 @click.group()
@@ -350,3 +355,36 @@ def set_csad_orp(ctx: click.Context, bow_id: int, csad_id: int, target: int) -> 
     except Exception as e:
         click.echo(f"Error setting CSAD ORP target: {e}", err=True)
         raise click.Abort from e
+
+
+@debug.command()
+@click.argument("bow_id", type=int)
+@click.argument("csad_id", type=int)
+@click.argument("opid", type=int)
+@click.argument("is_on")
+@click.pass_context
+def set_csad_enable(ctx: click.Context, bow_id: int, csad_id: int, opid: int, is_on: bool) -> None:
+    """Attempt to enable or disable a CSAD (Chemical Sense and Dispense) device."""
+    omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
+
+    body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
+
+    name_element = ET.SubElement(body_element, "Name")
+    name_element.text = "UISetCSADEnabled"
+
+    parameters_element = ET.SubElement(body_element, "Parameters")
+    parameter = ET.SubElement(parameters_element, "Parameter", name="poolId", dataType="int")
+    parameter.text = str(bow_id)
+    parameter = ET.SubElement(parameters_element, "Parameter", name="CSADID", dataType="int", alias="EquipmentID")
+    parameter.text = str(csad_id)
+    parameter = ET.SubElement(parameters_element, "Parameter", name="Enabled", dataType="bool", alias="Data")
+    parameter.text = str(int(is_on))
+
+    req_body = ET.tostring(body_element, xml_declaration=True, encoding=XML_ENCODING)
+
+    class CustomMessageType(PrettyEnum, IntEnum):
+        SET_CSAD_ENABLE = opid
+
+    click.echo(f"Sending UISetCSADEnabled with op ID: {opid}; body: {req_body}")
+
+    asyncio.run(omnilogic._api.async_send(cast("MessageType", CustomMessageType.SET_CSAD_ENABLE), req_body))
