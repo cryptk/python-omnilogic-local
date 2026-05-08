@@ -223,7 +223,8 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
         # This matches the behavior of the OmniLogic phone app
         target_speed: int = 100
         match self.equip_type:
-            case FilterType.VARIABLE_SPEED:
+            # Dual speed filters are controlled similar to VSPs, but they only support speed values of 0, 50, and 100
+            case FilterType.VARIABLE_SPEED | FilterType.DUAL_SPEED:
                 if self.last_speed >= self.min_percent and self.last_speed <= self.max_percent:
                     target_speed = self.last_speed
             case FilterType.SINGLE_SPEED:
@@ -310,3 +311,37 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             equipment_id=self.system_id,
             speed=speed,
         )
+
+    @control_method
+    async def set_dual_speed(self, speed: FilterSpeedPresets) -> None:
+        """Set the filter to a specific speed for dual speed filters.
+
+        For Dual Speed filters, LOW and MEDIUM presets will set the filter to 50% speed, while HIGH will set it to 100%.
+        Semantically, it is preferred to only use LOW and HIGH presets for dual speed filters but MEDIUM is accepted for convenience
+
+        Args:
+            speed: The preset speed to use (LOW, or HIGH)
+
+        Raises:
+            OmniEquipmentNotInitializedError: If bow_id or system_id is None.
+            ValueError: If an invalid speed preset is provided or if the filter is not a dual speed filter.
+        """
+        if self.equip_type != FilterType.DUAL_SPEED:
+            msg = "set_dual_speed can only be used with dual speed filters"
+            raise ValueError(msg)
+
+        if self.bow_id is None or self.system_id is None:
+            msg = "Filter bow_id and system_id must be set"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        speed_value: int
+        match speed:
+            case FilterSpeedPresets.LOW | FilterSpeedPresets.MEDIUM:
+                speed_value = 50
+            case FilterSpeedPresets.HIGH:
+                speed_value = 100
+            case _:
+                msg = f"Invalid speed preset: {speed}"
+                raise ValueError(msg)
+
+        await self.set_speed(speed_value)
