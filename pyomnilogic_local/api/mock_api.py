@@ -97,15 +97,15 @@ class OmniLogicMockAPI:
     async def async_get_telemetry(self) -> Telemetry: ...
     async def async_get_telemetry(self, raw: bool = False) -> Telemetry | str:
         """Return the pre-loaded telemetry from the current simulation file."""
+        self._index = (self._index + 1) % len(self._sim_data)
         data = self._sim_data[self._index]
         if self.increment_on_telemetry:
             _LOGGER.debug(
-                "Advancing simulation file index from %s to %s, filepath: %s",
+                "Simulation file index advanced from %s to %s, filepath: %s",
                 self._index,
                 (self._index + 1) % len(self._sim_data),
                 data["filepath"],
             )
-            self._index = (self._index + 1) % len(self._sim_data)
         if raw:
             return data["telemetry"]
         return Telemetry.load_xml(data["telemetry"])
