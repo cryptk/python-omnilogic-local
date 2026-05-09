@@ -20,6 +20,7 @@ from pyomnilogic_local.omnitypes import (
     BodyOfWaterType,
     ChlorinatorCellType,
     ChlorinatorDispenserType,
+    ChlorinatorMSPConfigMode,
     ChlorinatorType,
     ColorLogicLightType,
     ColorLogicShow25,
@@ -217,6 +218,7 @@ class MSPChlorinator(OmniBase):
     omni_type: OmniType = OmniType.CHLORINATOR
 
     enabled: bool = Field(alias="Enabled")
+    mode: ChlorinatorMSPConfigMode = Field(alias="Mode")
     timed_percent: int = Field(alias="Timed-Percent")
     superchlor_timeout: int = Field(alias="SuperChlor-Timeout")
     orp_timeout: int = Field(alias="ORP-Timeout")
