@@ -8,7 +8,7 @@ from pyomnilogic_local.collections import EquipmentDict
 from pyomnilogic_local.decorators import control_method
 from pyomnilogic_local.models.mspconfig import MSPChlorinator
 from pyomnilogic_local.models.telemetry import TelemetryChlorinator
-from pyomnilogic_local.omnitypes import ChlorinatorStatus
+from pyomnilogic_local.omnitypes import ChlorinatorMSPConfigMode, ChlorinatorStatus
 from pyomnilogic_local.util import OmniEquipmentNotInitializedError
 
 if TYPE_CHECKING:
@@ -99,8 +99,27 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         return self.telemetry.operating_state
 
     @property
+    def mode(self) -> ChlorinatorMSPConfigMode:
+        """Current operating mode from MSP Config (NOT_CONFIGURED, TIMED, ORP_AUTO).
+
+        TThis data appears to have some discrepancies with the mode reported in the Telemetry.
+        The assumption is that the MSP Config mode represents the intended/configured mode, while the
+        Telemetry operating mode represents the actual/current mode of operation. The reasons for
+        discrepancies are not fully understood.
+
+        Returns:
+            ChlorinatorMSPConfigMode: The operating mode enum value
+        """
+        return self.mspconfig.mode
+
+    @property
     def operating_mode(self) -> ChlorinatorOperatingMode:
         """Current operating mode (DISABLED, TIMED, ORP_AUTO, or ORP_TIMED_RW).
+
+        This data appears to have some discrepancies with the mode reported in the MSP Config.
+        The assumption is that the MSP Config mode represents the intended/configured mode, while the
+        Telemetry operating mode represents the actual/current mode of operation. The reasons for
+        discrepancies are not fully understood.
 
         Returns:
             ChlorinatorOperatingMode: The operating mode enum value
@@ -402,7 +421,7 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
         )
 
     @control_method
-    async def set_op_mode(self, op_mode: ChlorinatorOperatingMode) -> None:
+    async def set_op_mode(self, op_mode: ChlorinatorMSPConfigMode) -> None:
         """Set the operating mode for chlorine generation.
 
         Args:
@@ -432,12 +451,22 @@ class Chlorinator(OmniEquipment[MSPChlorinator, TelemetryChlorinator]):
 
         bow_type = 0 if bow.equip_type == "BOW_POOL" else 1
 
+        new_op_mode: int
+        match op_mode:
+            case ChlorinatorMSPConfigMode.TIMED:
+                new_op_mode = 1
+            case ChlorinatorMSPConfigMode.ORP_AUTO:
+                new_op_mode = 2
+            case _:
+                msg = f"Unsupported operating mode: {op_mode}"
+                raise ValueError(msg)
+
         await self._api.async_set_chlorinator_params(
             pool_id=self.bow_id,
             equipment_id=self.system_id,
             timed_percent=self.timed_percent_telemetry,
             cell_type=self.mspconfig.cell_type.value,
-            op_mode=op_mode.value,
+            op_mode=new_op_mode,
             sc_timeout=self.superchlor_timeout,
             bow_type=bow_type,
             orp_timeout=self.orp_timeout,

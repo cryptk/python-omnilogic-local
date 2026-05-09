@@ -151,6 +151,12 @@ class ChlorinatorError(PrettyEnum, Flag):
     AQUARITE_PCB_ERROR = 1 << 14
 
 
+class ChlorinatorMSPConfigMode(PrettyEnum, StrEnum):
+    DISABLED = "CHLOR_OP_MODE_NOT_CONFIG_R"
+    TIMED = "CHLOR_OP_MODE_TIMED"
+    ORP_AUTO = "CHLOR_OP_MODE_ORP_AUTO"
+
+
 class ChlorinatorOperatingMode(PrettyEnum, IntEnum):
     DISABLED = 0
     TIMED = 1
