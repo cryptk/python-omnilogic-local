@@ -47,7 +47,6 @@ class OmniLogic:
     _api: OmniLogicAPI | OmniLogicMockAPI
     _mspconfig_last_updated: float = 0.0
     _telemetry_last_updated: float = 0.0
-    _mspconfig_checksum: int = 0
     _telemetry_dirty: bool = True
     _refresh_lock: asyncio.Lock
     # This is the minimum supported MSP version for full functionality
@@ -129,7 +128,7 @@ class OmniLogic:
             update_mspconfig = False
             if force_mspconfig:
                 update_mspconfig = True
-            if self.telemetry.backyard.config_checksum != self._mspconfig_checksum:
+            if not hasattr(self, "mspconfig") or self.telemetry.backyard.config_checksum != self.mspconfig.checksum:
                 update_mspconfig = True
 
             if (
@@ -149,7 +148,6 @@ class OmniLogic:
             if update_mspconfig:
                 self.mspconfig = await self._api.async_get_mspconfig()
                 self._mspconfig_last_updated = time.time()
-                self._mspconfig_checksum = self.telemetry.backyard.config_checksum
 
             if update_mspconfig or update_telemetry:
                 self._update_equipment()

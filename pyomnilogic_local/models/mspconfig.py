@@ -432,6 +432,7 @@ class MSPConfig(BaseModel):
     backyard: MSPBackyard = Field(alias="Backyard")
     groups: list[MSPGroup] | None = None
     schedules: list[MSPSchedule] | None = None
+    checksum: int = Field(alias="CHECKSUM")
 
     def __init__(self, **data: Any) -> None:
         # Extract groups from the Groups container if present
