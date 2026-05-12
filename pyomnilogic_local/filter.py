@@ -236,7 +236,7 @@ class Filter(OmniEquipment[MSPFilter, TelemetryFilter]):
             is_on=target_speed,
         )
 
-    @control_method
+    @control_method(check_ready=False)
     async def turn_off(self) -> None:
         """Turn the filter off.
 
