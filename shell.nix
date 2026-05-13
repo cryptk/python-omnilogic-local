@@ -28,6 +28,7 @@ in
       nodejs
       python314
       uv
+      jq
     ];
 
   runScript = "bash --rcfile ${shellInit}";
