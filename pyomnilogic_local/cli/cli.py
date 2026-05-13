@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import click
 
@@ -14,7 +15,8 @@ from pyomnilogic_local.cli.get import commands as get
 @click.option("--host", default="127.0.0.1", help="Hostname or IP address of OmniLogic system (default: 127.0.0.1)")
 @click.option("--port", default=10444, help="Port number of OmniLogic system (default: 10444)")
 @click.option("--timeout", default=5, help="Timeout duration for connecting to OmniLogic system in seconds (default: 5)")
-def entrypoint(ctx: click.Context, host: str, port: int, timeout: int) -> None:
+@click.option("--debug", is_flag=True, default=False, help="Enable debug logging")
+def entrypoint(ctx: click.Context, host: str, port: int, timeout: int, debug: bool) -> None:
     """OmniLogic Local Control - Command line interface for Hayward pool controllers.
 
     This CLI provides local control and monitoring of Hayward OmniLogic and OmniHub
@@ -36,6 +38,9 @@ def entrypoint(ctx: click.Context, host: str, port: int, timeout: int) -> None:
     For more information, visit: https://github.com/cryptk/python-omnilogic-local
     """
     ctx.ensure_object(dict)
+
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     # Store the host for later connection, but don't connect yet
     ctx.obj["HOST"] = host
