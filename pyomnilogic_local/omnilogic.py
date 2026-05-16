@@ -16,6 +16,8 @@ from pyomnilogic_local.schedule import Schedule
 from pyomnilogic_local.system import System
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from pyomnilogic_local._base import OmniEquipment
     from pyomnilogic_local.bow import Bow
     from pyomnilogic_local.chlorinator import Chlorinator
@@ -33,6 +35,29 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _check_duplicate_item_names(items: Sequence[OmniEquipment[Any, Any]], source_id: str) -> str | None:
+    """Returns a warning message if there are items with a duplicate name."""
+    items_by_name: dict[str, list[OmniEquipment[Any, Any]]] = {}
+    for item in items:
+        if item.name is not None:
+            items_by_name.setdefault(item.name, []).append(item)
+
+    duplicate_names = {name for name, name_items in items_by_name.items() if len(name_items) > 1}
+    if not duplicate_names:
+        return None
+
+    duplicates = []
+    for name in sorted(duplicate_names):
+        ids = [i.system_id for i in items_by_name[name] if i.system_id is not None]
+        duplicates.append(f"'{name}' {ids}")
+    return (
+        f"OmniLogic {source_id} provided equipment with duplicate names: {', '.join(duplicates)}. "
+        "Name-based lookups will return the first match. "
+        "Consider looking up by system_id (shown in parentheses) for reliability "
+        "or renaming equipment on the OmniLogic controller to avoid duplicates."
+    )
 
 
 class OmniLogic:
@@ -65,6 +90,7 @@ class OmniLogic:
         else:
             self._api = OmniLogicAPI(host, port, timeout)
         self._refresh_lock = asyncio.Lock()
+        self._seen_item_names: set[str] = set()
 
     def __repr__(self) -> str:
         """Return a string representation of the OmniLogic instance for debugging.
@@ -154,6 +180,10 @@ class OmniLogic:
             if update_mspconfig or update_telemetry:
                 self._update_equipment()
 
+            # After equipment has been updated
+            if update_mspconfig:
+                self._check_duplicate_equipment_names()
+
     def _update_equipment(self) -> None:
         """Update equipment objects based on the latest MSPConfig and Telemetry data."""
         if not hasattr(self, "mspconfig") or self.mspconfig is None:
@@ -181,6 +211,15 @@ class OmniLogic:
             self.schedules = EquipmentDict()
         else:
             self.schedules = EquipmentDict([Schedule(self, schedule_, self.telemetry) for schedule_ in self.mspconfig.schedules])
+
+    def _check_duplicate_equipment_names(self) -> None:
+        """Check for and log a warning if there are items with duplicate names."""
+        current_names = {i.name for i in self.all_equipment if i.name is not None}
+        if current_names.issubset(self._seen_item_names):
+            return
+        self._seen_item_names.update(current_names)
+        if warning := _check_duplicate_item_names(self.all_equipment, f"{self.host}:{self.port}"):
+            _LOGGER.warning(warning)
 
     # Equipment discovery properties
     @property
@@ -275,6 +314,26 @@ class OmniLogic:
         return EquipmentDict(csads)
 
     @property
+    def all_equipment(self) -> list[OmniEquipment[Any, Any]]:
+        """Returns a flat list of all equipment instances in the system."""
+        equipment: list[OmniEquipment[Any, Any]] = [self.backyard]
+        equipment.extend(self.all_lights.values())
+        equipment.extend(self.all_relays.values())
+        equipment.extend(self.all_pumps.values())
+        equipment.extend(self.all_filters.values())
+        equipment.extend(self.all_sensors.values())
+        equipment.extend(self.all_heaters.values())
+        equipment.extend(self.all_heater_equipment.values())
+        equipment.extend(self.all_chlorinators.values())
+        equipment.extend(self.all_chlorinator_equipment.values())
+        equipment.extend(self.all_csads.values())
+        equipment.extend(self.all_csad_equipment.values())
+        equipment.extend(self.all_bows.values())
+        equipment.extend(self.groups.values())
+        equipment.extend(self.schedules.values())
+        return equipment
+
+    @property
     def all_bows(self) -> EquipmentDict[Bow]:
         """Returns all Bow instances across all bows in the backyard."""
         # Bows are stored directly in backyard as EquipmentDict already
@@ -290,24 +349,7 @@ class OmniLogic:
         Returns:
             The first equipment with matching name, or None if not found
         """
-        # Search all equipment types
-        all_equipment: list[OmniEquipment[Any, Any]] = []
-        all_equipment.extend([self.backyard])
-        all_equipment.extend(self.all_lights.values())
-        all_equipment.extend(self.all_relays.values())
-        all_equipment.extend(self.all_pumps.values())
-        all_equipment.extend(self.all_filters.values())
-        all_equipment.extend(self.all_sensors.values())
-        all_equipment.extend(self.all_heaters.values())
-        all_equipment.extend(self.all_heater_equipment.values())
-        all_equipment.extend(self.all_chlorinators.values())
-        all_equipment.extend(self.all_chlorinator_equipment.values())
-        all_equipment.extend(self.all_csads.values())
-        all_equipment.extend(self.all_csad_equipment.values())
-        all_equipment.extend(self.all_bows.values())
-        all_equipment.extend(self.groups.values())
-
-        for equipment in all_equipment:
+        for equipment in self.all_equipment:
             if equipment.name == name:
                 return equipment
 
@@ -322,25 +364,7 @@ class OmniLogic:
         Returns:
             The first equipment with matching system_id, or None if not found
         """
-        # Search all equipment types
-        all_equipment: list[OmniEquipment[Any, Any]] = []
-        all_equipment.extend([self.backyard])
-        all_equipment.extend(self.all_lights.values())
-        all_equipment.extend(self.all_relays.values())
-        all_equipment.extend(self.all_pumps.values())
-        all_equipment.extend(self.all_filters.values())
-        all_equipment.extend(self.all_sensors.values())
-        all_equipment.extend(self.all_heaters.values())
-        all_equipment.extend(self.all_heater_equipment.values())
-        all_equipment.extend(self.all_chlorinators.values())
-        all_equipment.extend(self.all_chlorinator_equipment.values())
-        all_equipment.extend(self.all_csads.values())
-        all_equipment.extend(self.all_csad_equipment.values())
-        all_equipment.extend(self.all_bows.values())
-        all_equipment.extend(self.groups.values())
-        all_equipment.extend(self.schedules.values())
-
-        for equipment in all_equipment:
+        for equipment in self.all_equipment:
             if equipment.system_id == system_id:
                 return equipment
 

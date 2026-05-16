@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections import Counter
 from enum import Enum
 from typing import TYPE_CHECKING, Any, overload
 
@@ -14,9 +13,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 _LOGGER = logging.getLogger(__name__)
-
-# Track which duplicate names we've already warned about to avoid log spam
-_WARNED_DUPLICATE_NAMES: set[str] = set()
 
 
 class EquipmentDict[OE: OmniEquipment[Any, Any]]:
@@ -72,10 +68,6 @@ class EquipmentDict[OE: OmniEquipment[Any, Any]]:
     def _validate(self) -> None:
         """Validate the equipment collection.
 
-        Checks for:
-        1. Items without both system_id and name (raises ValueError)
-        2. Duplicate names (logs warning once per unique duplicate)
-
         Raises:
             ValueError: If any item has neither a system_id nor a name.
         """
@@ -87,23 +79,6 @@ class EquipmentDict[OE: OmniEquipment[Any, Any]]:
                 "at least one identifier for addressing."
             )
             raise ValueError(msg)
-
-        # Find duplicate names that we haven't warned about yet
-        name_counts = Counter(item.name for item in self._items if item.name is not None)
-        duplicate_names = {name for name, count in name_counts.items() if count > 1}
-        unwarned_duplicates = duplicate_names.difference(_WARNED_DUPLICATE_NAMES)
-
-        # Log warnings for new duplicates
-        for name in unwarned_duplicates:
-            _LOGGER.warning(
-                "Equipment collection contains %d items with the same name '%s'. "
-                "Name-based lookups will return the first match. "
-                "Consider using system_id-based lookups for reliability "
-                "or renaming equipment to avoid duplicates.",
-                name_counts[name],
-                name,
-            )
-            _WARNED_DUPLICATE_NAMES.add(name)
 
     @property
     def _by_name(self) -> dict[str, OE]:
