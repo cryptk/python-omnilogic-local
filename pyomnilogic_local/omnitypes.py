@@ -587,6 +587,7 @@ class RelayFunction(PrettyEnum, StrEnum):
 
 
 class RelayState(PrettyEnum, IntEnum):
+    # NOTE: Valve actuators are actually relays, so we reuse the RelayState enum for them as well
     OFF = 0
     ON = 1
     ON_FREEZE_PROTECT = 2
@@ -604,6 +605,7 @@ class RelayType(PrettyEnum, StrEnum):
 
 
 class RelayWhyOn(PrettyEnum, IntEnum):
+    # NOTE: Valve actuators are actually relays, so we reuse the RelayWhyOn enum for them as well
     NO_MESSAGE = 0
     MANUAL_OFF = 1
     COUNTDOWN_DONE = 2
@@ -636,12 +638,6 @@ class SensorUnits(PrettyEnum, StrEnum):
     ACTIVE_INACTIVE = "UNITS_ACTIVE_INACTIVE"
     NO_UNITS = "UNITS_NO_UNITS"
     ADC = "UNITS_ADC"
-
-
-# Valve Actuators
-class ValveActuatorState(PrettyEnum, IntEnum):
-    OFF = 0
-    ON = 1
 
 
 # Schedules

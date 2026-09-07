@@ -38,7 +38,6 @@ from pyomnilogic_local.omnitypes import (
     PumpWhyOn,
     RelayState,
     RelayWhyOn,
-    ValveActuatorState,
     ZodiacShow,
 )
 
@@ -422,8 +421,8 @@ class TelemetryValveActuator(BaseModel):
 
     omni_type: OmniType = OmniType.VALVE_ACTUATOR
     system_id: int = Field(alias="@systemId")
-    state: ValveActuatorState = Field(alias="@valveActuatorState")
-    # Valve actuators are actually relays, so we can reuse the RelayWhyOn enum here
+    # Valve actuators are actually relays, so we can reuse the RelayState and RelayWhyOn enums here
+    state: RelayState = Field(alias="@valveActuatorState")
     why_on: RelayWhyOn = Field(alias="@whyOn")
 
 
