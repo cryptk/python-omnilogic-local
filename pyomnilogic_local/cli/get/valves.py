@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 import click
 
 from pyomnilogic_local.cli.utils import echo_properties
-from pyomnilogic_local.omnitypes import RelayFunction, RelayType, RelayWhyOn, ValveActuatorState
+from pyomnilogic_local.omnitypes import RelayFunction, RelayState, RelayType, RelayWhyOn
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
@@ -64,7 +64,7 @@ def _print_valve_info(relay: MSPRelay, telemetry: Telemetry) -> None:
         elif attr_name == "function":
             value = str(RelayFunction(value))
         elif attr_name == "state":
-            value = str(ValveActuatorState(value))
+            value = str(RelayState(value))
         elif attr_name == "why_on":
             value = str(RelayWhyOn(value))
         elif isinstance(value, list):
