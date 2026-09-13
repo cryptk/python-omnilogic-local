@@ -5,6 +5,7 @@ import logging
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING, Literal, overload
 
+from pyomnilogic_local.models.chlorinator_diagnostics import ChlorinatorMeasurement, ChlorinatorRelayPolarity
 from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
 from pyomnilogic_local.models.mspconfig import MSPConfig
 from pyomnilogic_local.models.telemetry import Telemetry
@@ -222,6 +223,68 @@ class OmniLogicAPI:
         if raw:
             return resp
         return FilterDiagnostics.load_xml(resp)
+
+    @overload
+    async def async_get_chlorinator_measurement(self, pool_id: int, chlorinator_id: int, raw: Literal[True]) -> str: ...
+    @overload
+    async def async_get_chlorinator_measurement(self, pool_id: int, chlorinator_id: int, raw: Literal[False]) -> ChlorinatorMeasurement: ...
+    @overload
+    async def async_get_chlorinator_measurement(self, pool_id: int, chlorinator_id: int) -> ChlorinatorMeasurement: ...
+    async def async_get_chlorinator_measurement(self, pool_id: int, chlorinator_id: int, raw: bool = False) -> ChlorinatorMeasurement | str:
+        """Retrieve electrical, temperature, and salt measurements from a chlorinator.
+
+        Args:
+            pool_id: Body-of-water system ID.
+            chlorinator_id: Physical chlorinator equipment ID.
+            raw: Return the raw XML response instead of a parsed model.
+
+        Returns:
+            Parsed chlorinator measurements or the raw XML response.
+        """
+        req_body = self._build_chlorinator_diagnostic_request("GetCHLORMeasurement", pool_id, chlorinator_id)
+        resp = await self.async_send_and_receive(MessageType.GET_FILTER_DIAGNOSTIC, req_body)
+        if raw:
+            return resp
+        return ChlorinatorMeasurement.load_xml(resp)
+
+    @overload
+    async def async_get_chlorinator_relay_polarity(self, pool_id: int, chlorinator_id: int, raw: Literal[True]) -> str: ...
+    @overload
+    async def async_get_chlorinator_relay_polarity(
+        self, pool_id: int, chlorinator_id: int, raw: Literal[False]
+    ) -> ChlorinatorRelayPolarity: ...
+    @overload
+    async def async_get_chlorinator_relay_polarity(self, pool_id: int, chlorinator_id: int) -> ChlorinatorRelayPolarity: ...
+    async def async_get_chlorinator_relay_polarity(
+        self, pool_id: int, chlorinator_id: int, raw: bool = False
+    ) -> ChlorinatorRelayPolarity | str:
+        """Retrieve the relay polarity from physical chlorinator equipment.
+
+        Args:
+            pool_id: Body-of-water system ID.
+            chlorinator_id: Physical chlorinator equipment ID.
+            raw: Return the raw XML response instead of a parsed model.
+
+        Returns:
+            Parsed relay polarity or the raw XML response.
+        """
+        req_body = self._build_chlorinator_diagnostic_request("GetCHLORRelayPolarity", pool_id, chlorinator_id)
+        resp = await self.async_send_and_receive(MessageType.GET_FILTER_DIAGNOSTIC, req_body)
+        if raw:
+            return resp
+        return ChlorinatorRelayPolarity.load_xml(resp)
+
+    @staticmethod
+    def _build_chlorinator_diagnostic_request(operation: str, pool_id: int, chlorinator_id: int) -> str:
+        body_element = ET.Element("Request", {"xmlns": XML_NAMESPACE})
+        name_element = ET.SubElement(body_element, "Name")
+        name_element.text = operation
+        parameters_element = ET.SubElement(body_element, "Parameters")
+        parameter = ET.SubElement(parameters_element, "Parameter", name="PoolID", dataType="int")
+        parameter.text = str(pool_id)
+        parameter = ET.SubElement(parameters_element, "Parameter", name="ChlorID", dataType="int")
+        parameter.text = str(chlorinator_id)
+        return ET.tostring(body_element, xml_declaration=True, encoding="unicode")
 
     @overload
     async def async_get_telemetry(self, raw: Literal[True]) -> str: ...

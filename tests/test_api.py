@@ -244,6 +244,48 @@ async def test_async_get_filter_diagnostics_generates_valid_xml() -> None:
 
 
 @pytest.mark.asyncio
+async def test_async_get_chlorinator_measurement_generates_valid_xml() -> None:
+    """Test chlorinator measurement request generation."""
+    api = OmniLogicAPI("controller.local")
+
+    with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
+        mock_send.return_value = '<?xml version="1.0"?><Response><Name>GetCHLORMeasurementRsp</Name></Response>'
+
+        await api.async_get_chlorinator_measurement(pool_id=1, chlorinator_id=4, raw=True)
+
+        mock_send.assert_awaited_once()
+        message_type, xml_payload = mock_send.call_args.args
+        root = ET.fromstring(xml_payload)
+
+        assert message_type is MessageType.GET_FILTER_DIAGNOSTIC
+        assert _get_xml_tag(root) == "Request"
+        assert _find_elem(root, "Name").text == "GetCHLORMeasurement"
+        assert _find_param(root, "PoolID").text == "1"
+        assert _find_param(root, "ChlorID").text == "4"
+
+
+@pytest.mark.asyncio
+async def test_async_get_chlorinator_relay_polarity_generates_valid_xml() -> None:
+    """Test chlorinator relay polarity request generation."""
+    api = OmniLogicAPI("controller.local")
+
+    with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
+        mock_send.return_value = '<?xml version="1.0"?><Response><Name>GetCHLORRelayPolarityRsp</Name></Response>'
+
+        await api.async_get_chlorinator_relay_polarity(pool_id=1, chlorinator_id=4, raw=True)
+
+        mock_send.assert_awaited_once()
+        message_type, xml_payload = mock_send.call_args.args
+        root = ET.fromstring(xml_payload)
+
+        assert message_type is MessageType.GET_FILTER_DIAGNOSTIC
+        assert _get_xml_tag(root) == "Request"
+        assert _find_elem(root, "Name").text == "GetCHLORRelayPolarity"
+        assert _find_param(root, "PoolID").text == "1"
+        assert _find_param(root, "ChlorID").text == "4"
+
+
+@pytest.mark.asyncio
 async def test_async_set_heater_generates_valid_xml() -> None:
     """Test that async_set_heater generates valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
