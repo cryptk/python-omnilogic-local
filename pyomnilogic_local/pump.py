@@ -42,6 +42,7 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
     Properties (Telemetry):
         state: Current operational state (OFF, ON)
         speed: Current operating speed
+        power: Current power consumption in watts
         last_speed: Previous speed setting
         why_on: Reason code for pump being on
 
@@ -144,6 +145,11 @@ class Pump(OmniEquipment[MSPPump, TelemetryPump]):
     def speed(self) -> int:
         """Current pump speed."""
         return self.telemetry.speed
+
+    @property
+    def power(self) -> int:
+        """Current power consumption."""
+        return self.telemetry.power
 
     @property
     def last_speed(self) -> int:

@@ -289,8 +289,8 @@ omnilogic get heaters
 # Get raw XML responses
 omnilogic debug --raw get-mspconfig
 
-# View filter diagnostics
-omnilogic debug get-filter-diagnostics
+# View filter/pump diagnostics (works for both filter pumps and auxiliary VSP pumps)
+omnilogic debug get-filter-pump-diagnostics <bow_id> <equip_id>
 ```
 
 **Installation with CLI tools**:

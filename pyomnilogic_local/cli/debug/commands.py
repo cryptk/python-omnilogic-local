@@ -17,8 +17,18 @@ from pyomnilogic_local.util import PrettyEnum
 
 if TYPE_CHECKING:
     from pyomnilogic_local import OmniLogic
+    from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
     from pyomnilogic_local.models.telemetry import TelemetryChlorinator
     from pyomnilogic_local.omnitypes import MessageType
+
+
+def _echo_diagnostics_summary(diagnostics: "FilterDiagnostics", bow_id: int, equip_id: int) -> None:
+    click.echo(f"PoolID: {bow_id}")
+    click.echo(f"EquipmentID: {equip_id}")
+    click.echo(f"Power: {diagnostics.power_watts} W")
+    click.echo(f"Drive Rev: {diagnostics.drive_firmware_revision or 'Unknown'}")
+    click.echo(f"Display Rev: {diagnostics.display_firmware_revision or 'Unknown'}")
+    click.echo(f"Error: {diagnostics.error_summary}")
 
 
 @click.group()
@@ -75,20 +85,24 @@ def get_telemetry(ctx: click.Context) -> None:
 @click.argument("bow_id", type=int)
 @click.argument("equip_id", type=int)
 @click.pass_context
-def get_filter_diagnostics(ctx: click.Context, bow_id: int, equip_id: int) -> None:
-    """Retrieve current filter diagnostics from the controller.
+def get_filter_pump_diagnostics(ctx: click.Context, bow_id: int, equip_id: int) -> None:
+    """Retrieve current filter/pump diagnostics from the controller.
 
-    Filter diagnostics include real-time sensor readings, equipment states, temperatures,
-    and other operational data. Use --raw to see the unprocessed XML.
+    Filter and VSP pump diagnostics use the same underlying OmniLogic request type.
+    This command works for both filter pumps and auxiliary VSP pumps.
 
     Example:
-        omnilogic debug get-filter-diagnostics
-        omnilogic debug --raw get-filter-diagnostics
+        omnilogic debug get-filter-pump-diagnostics 1 3
+        omnilogic debug --raw get-filter-pump-diagnostics 1 3
 
     """
     omnilogic: OmniLogic = ctx.obj["OMNILOGIC"]
-    telemetry = asyncio.run(omnilogic._api.async_get_filter_diagnostics(pool_id=bow_id, equipment_id=equip_id, raw=ctx.obj["RAW"]))
-    click.echo(telemetry)
+    diagnostics = asyncio.run(omnilogic._api.async_get_filter_diagnostics(pool_id=bow_id, equipment_id=equip_id, raw=ctx.obj["RAW"]))
+    if ctx.obj["RAW"]:
+        click.echo(diagnostics)
+        return
+
+    _echo_diagnostics_summary(diagnostics, bow_id, equip_id)
 
 
 @debug.command()

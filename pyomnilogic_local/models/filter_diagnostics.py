@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError
 from xmltodict import parse as xml_parse
 
@@ -55,6 +57,56 @@ class FilterDiagnostics(BaseModel):
 
     def get_param_by_name(self, name: str) -> int:
         return next(param.value for param in self.parameters if param.name == name)
+
+    def _decode_revision(self, prefix: str) -> str:
+        bytes_ = []
+        for index in range(1, 7):
+            param_name = f"{prefix}B{index}"
+            try:
+                byte_val = self.get_param_by_name(param_name)
+            except StopIteration:
+                break
+            if byte_val == 0:
+                break
+            bytes_.append(byte_val)
+        if not bytes_:
+            return ""
+        raw = bytes(bytes_).decode("ascii", errors="ignore").strip()
+        if re.fullmatch(r"\d{4}", raw):
+            return f"{raw[:2]}.{raw[2]}.{raw[3]}"
+
+        compact = raw.lstrip("0") or raw
+        if re.fullmatch(r"\d{2}[A-Za-z]", compact):
+            return f"{compact[0]}.{compact[1:]}"
+
+        return raw
+
+    @property
+    def power_watts(self) -> int:
+        """Current power draw in watts computed from MSB/LSB fields."""
+        lsb = self.get_param_by_name("PowerLSB")
+        msb = self.get_param_by_name("PowerMSB")
+        return (msb << 8) | lsb
+
+    @property
+    def drive_firmware_revision(self) -> str:
+        """Drive firmware revision string, if present in diagnostics payload."""
+        return self._decode_revision("DriveFWRevision")
+
+    @property
+    def display_firmware_revision(self) -> str:
+        """Display firmware revision string, if present in diagnostics payload."""
+        return self._decode_revision("DisplayFWRevision")
+
+    @property
+    def error_status(self) -> int:
+        """Raw error status code reported by controller diagnostics."""
+        return self.get_param_by_name("ErrorStatus")
+
+    @property
+    def error_summary(self) -> str:
+        """Friendly error summary for diagnostics."""
+        return "No errors detected" if self.error_status == 0 else f"Error status code {self.error_status}"
 
     @staticmethod
     def load_xml(xml: str) -> FilterDiagnostics:

@@ -26,6 +26,8 @@ from pyomnilogic_local.api.constants import (
     XML_NAMESPACE,
 )
 from pyomnilogic_local.api.exceptions import OmniValidationError
+from pyomnilogic_local.models.filter_diagnostics import FilterDiagnostics
+from pyomnilogic_local.models.telemetry import TelemetryPump
 from pyomnilogic_local.omnitypes import ColorLogicBrightness, ColorLogicShow40, ColorLogicSpeed, HeaterMode, MessageType
 
 # ============================================================================
@@ -223,11 +225,11 @@ async def test_async_get_telemetry_generates_valid_xml() -> None:
 
 @pytest.mark.asyncio
 async def test_async_get_filter_diagnostics_generates_valid_xml() -> None:
-    """Test that async_get_filter_diagnostics generates valid XML with correct parameters."""
+    """Filter diagnostics request should generate valid XML with correct parameters."""
     api = OmniLogicAPI("192.168.1.100")
 
     with patch.object(api, "async_send_and_receive", new_callable=AsyncMock) as mock_send:
-        mock_send.return_value = '<?xml version="1.0"?><Response><Name>FilterDiagnostics</Name></Response>'
+        mock_send.return_value = '<?xml version="1.0"?><Response><Name>Diagnostics</Name></Response>'
 
         await api.async_get_filter_diagnostics(pool_id=1, equipment_id=2, raw=True)
 
@@ -241,6 +243,53 @@ async def test_async_get_filter_diagnostics_generates_valid_xml() -> None:
         assert _find_elem(root, "Name").text == "GetUIFilterDiagnosticInfo"
         assert _find_param(root, "poolId").text == "1"
         assert _find_param(root, "equipmentId").text == "2"
+
+
+def test_filter_diagnostics_computed_fields() -> None:
+    """Power and revision fields should be decoded from diagnostics payload."""
+    xml = """<?xml version="1.0" encoding="UTF-8" ?>
+<Response xmlns="http://nextgen.hayward.com/api">
+    <Name>GetUIFilterDiagnosticInfoRsp</Name>
+    <Parameters>
+        <Parameter name="PoolID" dataType="int">1</Parameter>
+        <Parameter name="EquipmentID" dataType="int">9</Parameter>
+        <Parameter name="PowerLSB" dataType="byte">29</Parameter>
+        <Parameter name="PowerMSB" dataType="byte">2</Parameter>
+        <Parameter name="ErrorStatus" dataType="byte">0</Parameter>
+        <Parameter name="DisplayFWRevisionB1" dataType="byte">49</Parameter>
+        <Parameter name="DisplayFWRevisionB2" dataType="byte">48</Parameter>
+        <Parameter name="DisplayFWRevisionB3" dataType="byte">46</Parameter>
+        <Parameter name="DisplayFWRevisionB4" dataType="byte">49</Parameter>
+        <Parameter name="DisplayFWRevisionB5" dataType="byte">46</Parameter>
+        <Parameter name="DisplayFWRevisionB6" dataType="byte">55</Parameter>
+        <Parameter name="DriveFWRevisionB1" dataType="byte">49</Parameter>
+        <Parameter name="DriveFWRevisionB2" dataType="byte">46</Parameter>
+        <Parameter name="DriveFWRevisionB3" dataType="byte">48</Parameter>
+        <Parameter name="DriveFWRevisionB4" dataType="byte">65</Parameter>
+        <Parameter name="DriveFWRevisionB5" dataType="byte">0</Parameter>
+    </Parameters>
+</Response>"""
+
+    diagnostics = FilterDiagnostics.load_xml(xml)
+    assert diagnostics.power_watts == 541
+    assert diagnostics.display_firmware_revision == "10.1.7"
+    assert diagnostics.drive_firmware_revision == "1.0A"
+    assert diagnostics.error_summary == "No errors detected"
+
+
+def test_telemetry_pump_parses_power() -> None:
+    """TelemetryPump should parse power when present."""
+    telemetry = TelemetryPump.model_validate(
+        {
+            "@systemId": "9",
+            "@pumpState": "1",
+            "@pumpSpeed": "70",
+            "@power": "541",
+            "@lastSpeed": "70",
+            "@whyOn": "0",
+        }
+    )
+    assert telemetry.power == 541
 
 
 @pytest.mark.asyncio

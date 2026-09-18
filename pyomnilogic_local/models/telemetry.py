@@ -373,6 +373,7 @@ class TelemetryPump(BaseModel):
     Fields:
         state: Current pump state (OFF, ON, FREEZE_PROTECT)
         speed: Current speed setting (percentage 0-100 or RPM depending on type)
+        power: Current power consumption in watts
         last_speed: Previous speed setting before state change
         why_on: Reason pump is running (usage similar to FilterWhyOn)
     """
@@ -383,6 +384,7 @@ class TelemetryPump(BaseModel):
     system_id: int = Field(alias="@systemId")
     state: PumpState = Field(alias="@pumpState")
     speed: int = Field(alias="@pumpSpeed")
+    power: int = Field(alias="@power", default=0)
     last_speed: int = Field(alias="@lastSpeed")
     why_on: PumpWhyOn = Field(alias="@whyOn")
 
