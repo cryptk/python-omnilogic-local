@@ -13,13 +13,17 @@ from __future__ import annotations
 
 import json
 import pathlib
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from pyomnilogic_local.models.mspconfig import MSPConfig
-from pyomnilogic_local.models.telemetry import Telemetry
-from pyomnilogic_local.omnitypes import OmniType
+from pyomnilogic_local.collections import EquipmentDict
+from pyomnilogic_local.heater import Heater
+from pyomnilogic_local.models.mspconfig import MSPConfig, MSPVirtualHeater
+from pyomnilogic_local.models.telemetry import Telemetry, TelemetryHeater, TelemetryVirtualHeater
+from pyomnilogic_local.omnitypes import BackyardState, HeaterMode, HeaterState, HeaterWhyOn, OmniType
 
 if TYPE_CHECKING:
     from pyomnilogic_local._base import OmniEquipment
@@ -72,6 +76,112 @@ def get_equipment_by_type(msp: MSPConfig, omni_type: OmniType) -> list[Any]:
                         if hasattr(item, "heater_equipment") and item.heater_equipment:
                             equipment.extend(child for child in item.heater_equipment if child.omni_type == omni_type)
     return equipment
+
+
+def make_heater_equipment_data(system_id: int, name: str, *, supports_cooling: bool) -> dict[str, Any]:
+    """Create MSP config data for physical heater equipment."""
+    return {
+        "System-Id": system_id,
+        "Name": name,
+        "Type": "PET_HEATER",
+        "Heater-Type": "HTR_HEAT_PUMP",
+        "Enabled": True,
+        "Min-Speed-For-Operation": 45,
+        "Sensor-System-Id": 99,
+        "SupportsCooling": supports_cooling,
+    }
+
+
+def make_heater() -> Heater:
+    """Create a virtual heater with one cooling-capable and one heat-only unit."""
+    heater_config = MSPVirtualHeater.model_validate(
+        {
+            "System-Id": 20,
+            "Name": "Virtual Heater",
+            "Enabled": True,
+            "Current-Set-Point": 80,
+            "Max-Settable-Water-Temp": 104,
+            "Min-Settable-Water-Temp": 65,
+            "Operation": [
+                {OmniType.HEATER_EQUIP: make_heater_equipment_data(21, "Heat Pump", supports_cooling=True)},
+                {OmniType.HEATER_EQUIP: make_heater_equipment_data(22, "Gas Heater", supports_cooling=False)},
+            ],
+        },
+    )
+    heater_config.propagate_bow_id(7)
+
+    virtual_telemetry = TelemetryVirtualHeater.model_validate(
+        {
+            "@systemId": 20,
+            "@Current-Set-Point": 80,
+            "@enable": True,
+            "@SolarSetPoint": 0,
+            "@Mode": HeaterMode.HEATING,
+            "@SilentMode": 0,
+            "@whyHeaterIsOn": HeaterWhyOn.STOP_HEATER,
+        },
+    )
+    physical_telemetry = {
+        system_id: TelemetryHeater.model_validate(
+            {
+                "@systemId": system_id,
+                "@heaterState": HeaterState.OFF,
+                "@temp": 78,
+                "@enable": True,
+                "@priority": priority,
+                "@maintainFor": 24,
+            },
+        )
+        for priority, system_id in enumerate((21, 22), start=1)
+    }
+
+    def get_telem(system_id: int) -> TelemetryVirtualHeater | TelemetryHeater | None:
+        if system_id == 20:
+            return virtual_telemetry
+        return physical_telemetry.get(system_id)
+
+    telemetry = Mock(spec=Telemetry)
+    telemetry.get_telem_by_systemid = Mock(side_effect=get_telem)
+
+    omni = Mock()
+    omni._api = Mock()
+    omni._make_equipment_dict = Mock(side_effect=lambda items=None: EquipmentDict(items))
+    omni._telemetry_dirty = False
+    omni.backyard = SimpleNamespace(telemetry=SimpleNamespace(state=BackyardState.ON))
+
+    return Heater(omni, heater_config, telemetry)
+
+
+class TestHeaterControls:
+    """Tests for Heater behavior using fixture-style equipment data."""
+
+    @pytest.mark.asyncio
+    async def test_heater_set_mode(self) -> None:
+        """Test set_mode calls the heater mode API with the BoW and virtual heater IDs."""
+        heater = make_heater()
+        heater._api.async_set_heater_mode = AsyncMock()  # type: ignore[method-assign,union-attr]
+
+        await heater.set_mode(HeaterMode.COOLING)
+
+        heater._api.async_set_heater_mode.assert_called_once_with(7, 20, HeaterMode.COOLING)
+
+    def test_heater_supports_cooling_when_any_heater_equipment_supports_cooling(self) -> None:
+        """Test a virtual heater supports cooling when any physical heater equipment supports it."""
+        heater = make_heater()
+
+        assert len(heater.heater_equipment) == 2
+        assert heater.heater_equipment["Heat Pump"].supports_cooling is True
+        assert heater.heater_equipment["Gas Heater"].supports_cooling is False
+        assert heater.supports_cooling is True
+
+    def test_heater_cooling_equipment(self) -> None:
+        """Test cooling_equipment returns only physical heater equipment that supports cooling."""
+        heater = make_heater()
+
+        cooling_equipment = heater.cooling_heater_equipment
+
+        assert len(cooling_equipment) == 1
+        assert cooling_equipment[0].name == "Heat Pump"
 
 
 class TestIssue144:

@@ -40,7 +40,7 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         min_temp: Minimum settable temperature (Fahrenheit)
 
     Properties (Telemetry):
-        mode: Current heater mode (OFF, HEAT, AUTO, etc.)
+        mode: Current heater mode (HEATING, COOLING, AUTO, or OFF.)
         current_set_point: Current target temperature (Fahrenheit)
         solar_set_point: Solar heater target temperature (Fahrenheit)
         enabled: Whether heater is enabled
@@ -244,6 +244,16 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
         await self._api.async_set_heater(self.bow_id, self.system_id, temperature)
 
     @control_method
+    async def set_mode(self, mode: HeaterMode) -> None:
+        """Set the heater operating mode: HEATING, COOLING, AUTO, or OFF."""
+
+        if self.bow_id is None or self.system_id is None:
+            msg = "Cannot set heater mode: bow_id or system_id is None"
+            raise OmniEquipmentNotInitializedError(msg)
+
+        await self._api.async_set_heater_mode(self.bow_id, self.system_id, mode)
+
+    @control_method
     async def set_solar_temperature(self, temperature: int) -> None:
         """Set the solar heater set point.
 
@@ -272,3 +282,20 @@ class Heater(OmniEquipment[MSPVirtualHeater, TelemetryVirtualHeater]):
 
         # Always use Fahrenheit as that's what the OmniLogic system uses internally
         await self._api.async_set_solar_heater(self.bow_id, self.system_id, temperature)
+
+    @property
+    def supports_cooling(self) -> bool:
+        """Return True if any physical heater equipment supports cooling."""
+        return any(
+            heater_equip.supports_cooling is True
+            for _, _, heater_equip in self.heater_equipment.items()
+        )
+
+    @property
+    def cooling_heater_equipment(self) -> tuple[HeaterEquipment, ...]:
+        """Return physical heater equipment that supports cooling."""
+        return tuple(
+            heater_equip
+            for _, _, heater_equip in self.heater_equipment.items()
+            if heater_equip.supports_cooling is True
+        )
