@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Flag, IntEnum, StrEnum, auto
 
-from .util import PrettyEnum
+from .util import PrettyEnum, TolerantIntEnum
 
 
 # OmniAPI Enums
@@ -74,7 +74,7 @@ class OmniType(StrEnum):
 
 
 # Backyard/BoW
-class BackyardState(PrettyEnum, IntEnum):
+class BackyardState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     ON = 1
     SERVICE_MODE = 2
@@ -159,14 +159,14 @@ class ChlorinatorMode(PrettyEnum, StrEnum):
 
 
 # Chlorinator Operating Mode is used in the Telemetry to represent the current mode
-class ChlorinatorOperatingMode(PrettyEnum, IntEnum):
+class ChlorinatorOperatingMode(PrettyEnum, TolerantIntEnum, IntEnum):
     DISABLED = 0
     TIMED = 1
     ORP_AUTO = 2
     ORP_TIMED_RW = 3  # Chlorinator in ORP mode experienced CSAD condition that prevents ORP operation
 
 
-class ChlorinatorOperatingState(PrettyEnum, IntEnum):
+class ChlorinatorOperatingState(PrettyEnum, TolerantIntEnum, IntEnum):
     WAIT_DEV_READY = 0
     PAUSE = 1
     CONTINUE = 2
@@ -344,7 +344,7 @@ class ZodiacShow(PrettyEnum, IntEnum):
     DISCO_TECH = 13
 
 
-class ColorLogicPowerState(PrettyEnum, IntEnum):
+class ColorLogicPowerState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     WAIT_POWER_DOWN = 1
     RESETTING = 2
@@ -378,12 +378,12 @@ class CSADEquipmentType(PrettyEnum, StrEnum):
 
 
 # Chemistry Sense and Dispense
-class CSADStatus(PrettyEnum, IntEnum):
+class CSADStatus(PrettyEnum, TolerantIntEnum, IntEnum):
     NOT_DISPENSING = 0
     DISPENSING = 1
 
 
-class CSADMode(PrettyEnum, IntEnum):
+class CSADMode(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     AUTO = 1
     FORCED_ON = 2
@@ -392,7 +392,7 @@ class CSADMode(PrettyEnum, IntEnum):
 
 
 # Filters
-class FilterState(PrettyEnum, IntEnum):
+class FilterState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     ON = 1
     PRIMING = 2
@@ -414,7 +414,7 @@ class FilterType(PrettyEnum, StrEnum):
     SINGLE_SPEED = "FMT_SINGLE_SPEED"
 
 
-class FilterValvePosition(PrettyEnum, IntEnum):
+class FilterValvePosition(PrettyEnum, TolerantIntEnum, IntEnum):
     POOL_ONLY = 1
     SPA_ONLY = 2
     SPILLOVER = 3
@@ -422,7 +422,7 @@ class FilterValvePosition(PrettyEnum, IntEnum):
     HIGH_PRIO_HEAT = 5
 
 
-class FilterWhyOn(PrettyEnum, IntEnum):
+class FilterWhyOn(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     NO_WATER_FLOW = 1
     COOLDOWN = 2
@@ -455,13 +455,13 @@ class FilterSpeedPresets(PrettyEnum, StrEnum):
 
 
 # Groups
-class GroupState(PrettyEnum, IntEnum):
+class GroupState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     ON = 1
 
 
 # Heaters
-class HeaterState(PrettyEnum, IntEnum):
+class HeaterState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     ON = 1
     PAUSE = 2
@@ -482,14 +482,14 @@ class HeaterType(PrettyEnum, StrEnum):
     TEST_HEATER = "HTR_TEST_HEATER"
 
 
-class HeaterMode(PrettyEnum, IntEnum):
+class HeaterMode(PrettyEnum, TolerantIntEnum, IntEnum):
     HEATING = 0
     COOLING = 1
     AUTO = 2
     OFF = 3  # https://github.com/cryptk/haomnilogic-local/issues/172
 
 
-class HeaterWhyOn(PrettyEnum, IntEnum):
+class HeaterWhyOn(PrettyEnum, TolerantIntEnum, IntEnum):
     NO_MESSAGE = 0
     STOP_HEATER = 1
     BOOST = 2
@@ -509,7 +509,7 @@ class HeaterWhyOn(PrettyEnum, IntEnum):
 
 
 # Pumps
-class PumpState(PrettyEnum, IntEnum):
+class PumpState(PrettyEnum, TolerantIntEnum, IntEnum):
     OFF = 0
     ON = 1
     ON_FREEZE_PROTECT = 2  # This is an assumption that 2 means freeze protect, ref: https://github.com/cryptk/haomnilogic-local/issues/147
@@ -526,7 +526,7 @@ class PumpType(PrettyEnum, StrEnum):
     VARIABLE_SPEED = "PMP_VARIABLE_SPEED_PUMP"
 
 
-class PumpWhyOn(PrettyEnum, IntEnum):
+class PumpWhyOn(PrettyEnum, TolerantIntEnum, IntEnum):
     NO_MESSAGE = 0
     FREEZE_PROTECT = 1
     INTERLOCK = 2
@@ -586,7 +586,7 @@ class RelayFunction(PrettyEnum, StrEnum):
     WATER_BOWL = "RLY_WATER_BOWL"
 
 
-class RelayState(PrettyEnum, IntEnum):
+class RelayState(PrettyEnum, TolerantIntEnum, IntEnum):
     # NOTE: Valve actuators are actually relays, so we reuse the RelayState enum for them as well
     OFF = 0
     ON = 1
@@ -604,7 +604,7 @@ class RelayType(PrettyEnum, StrEnum):
     SMART_VALVE_ACTUATOR = "RLY_SMART_VALVE_ACTUATOR"
 
 
-class RelayWhyOn(PrettyEnum, IntEnum):
+class RelayWhyOn(PrettyEnum, TolerantIntEnum, IntEnum):
     # NOTE: Valve actuators are actually relays, so we reuse the RelayWhyOn enum for them as well
     NO_MESSAGE = 0
     MANUAL_OFF = 1
