@@ -89,3 +89,8 @@ class TolerantIntEnum(Enum):
             int_value,
         )
         return cls._value2member_map_.setdefault(int_value, pseudo)  # type: ignore[return-value]
+
+
+def is_unknown_member(value: object) -> bool:
+    """True if value is a pseudo-member TolerantIntEnum made for a value the enum doesn't list."""
+    return isinstance(value, TolerantIntEnum) and value._name_ not in type(value).__members__

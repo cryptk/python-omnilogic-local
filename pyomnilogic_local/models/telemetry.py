@@ -1,7 +1,7 @@
 # ruff: noqa: TC001  # pydantic relies on the omnitypes imports at runtime
 from __future__ import annotations
 
-from typing import Any, SupportsInt, cast, overload
+from typing import Any, NamedTuple, SupportsInt, cast, overload
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError, computed_field
 from xmltodict import parse as xml_parse
@@ -40,6 +40,7 @@ from pyomnilogic_local.omnitypes import (
     RelayWhyOn,
     ZodiacShow,
 )
+from pyomnilogic_local.util import is_unknown_member
 
 from .exceptions import OmniParsingError
 
@@ -469,6 +470,20 @@ type TelemetryType = (
 )
 
 
+class UnknownEnumValue(NamedTuple):
+    """A telemetry value that its enum doesn't list (see ``Telemetry.unknown_enum_values``)."""
+
+    equipment: str  # telemetry model, e.g. "TelemetryFilter"
+    system_id: int | None
+    field: str  # attribute name, e.g. "why_on"
+    enum: str  # enum class, e.g. "FilterWhyOn"
+    value: int
+
+    def __str__(self) -> str:
+        """E.g. 'FilterWhyOn 23 (TelemetryFilter 3, why_on)'."""
+        return f"{self.enum} {self.value} ({self.equipment} {self.system_id}, {self.field})"
+
+
 class Telemetry(BaseModel):
     """Complete real-time telemetry snapshot from the OmniLogic controller.
 
@@ -512,7 +527,14 @@ class Telemetry(BaseModel):
     virtual_heater: list[TelemetryVirtualHeater] | None = Field(alias="VirtualHeater", default=None)
 
     @staticmethod
-    def load_xml(xml: str) -> Telemetry:
+    def load_xml(xml: str, *, strict_enums: bool = False) -> Telemetry:
+        """Parse telemetry XML.
+
+        A value an enum doesn't list is kept as an ``UNKNOWN_<n>`` pseudo-member, and
+        ``unknown_enum_values()`` lists them. With ``strict_enums=True`` any such value raises
+        OmniParsingError instead.
+        """
+
         @overload
         def xml_postprocessor(path: Any, key: Any, value: SupportsInt) -> tuple[Any, SupportsInt]: ...
         @overload
@@ -561,8 +583,30 @@ class Telemetry(BaseModel):
         except ValidationError as exc:
             msg = f"Failed to parse Telemetry: {exc}"
             raise OmniParsingError(msg) from exc
-        else:
-            return instance
+        if strict_enums and (unknown := instance.unknown_enum_values()):
+            msg = "Failed to parse Telemetry: unknown enum values: " + ", ".join(str(u) for u in unknown)
+            raise OmniParsingError(msg)
+        return instance
+
+    def unknown_enum_values(self) -> list[UnknownEnumValue]:
+        """Every value in this telemetry that its enum doesn't list.
+
+        Empty when everything is known. Consumers can use it to tell the user (and ask them
+        to report the value), or to treat the affected equipment as unavailable.
+        """
+        found: list[UnknownEnumValue] = []
+        for field_name, value in self:
+            if field_name == "version" or value is None:
+                continue
+            for model in value if isinstance(value, list) else [value]:
+                for attr, attr_value in model:
+                    if is_unknown_member(attr_value):
+                        found.append(
+                            UnknownEnumValue(
+                                type(model).__name__, getattr(model, "system_id", None), attr, type(attr_value).__name__, int(attr_value)
+                            )
+                        )
+        return found
 
     def get_telem_by_systemid(self, system_id: int) -> TelemetryType | None:
         for field_name, value in self:

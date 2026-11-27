@@ -15,8 +15,9 @@ import re
 import pytest
 
 from pyomnilogic_local.models.exceptions import OmniParsingError
-from pyomnilogic_local.models.telemetry import Telemetry, TelemetryFilter
+from pyomnilogic_local.models.telemetry import Telemetry, TelemetryFilter, UnknownEnumValue
 from pyomnilogic_local.omnitypes import FilterState, FilterWhyOn, HeaterState, RelayWhyOn
+from pyomnilogic_local.util import is_unknown_member
 
 TELEMETRY = json.loads((pathlib.Path(__file__).parent / "fixtures" / "issue-60.json").read_text(encoding="utf-8"))["telemetry"]
 
@@ -79,3 +80,29 @@ def test_non_integers_still_rejected(bad: str) -> None:
     """Values that are not integers still fail validation."""
     with pytest.raises(OmniParsingError):
         Telemetry.load_xml(with_attr(TELEMETRY, "whyFilterIsOn", bad))
+
+
+def test_unknown_values_are_listed() -> None:
+    """unknown_enum_values() says which equipment, field, enum and value."""
+    telemetry = Telemetry.load_xml(with_attr(with_attr(TELEMETRY, "whyFilterIsOn", "124"), "heaterState", "125"))
+    assert telemetry.unknown_enum_values() == [
+        UnknownEnumValue("TelemetryFilter", 3, "why_on", "FilterWhyOn", 124),
+        UnknownEnumValue("TelemetryHeater", 5, "state", "HeaterState", 125),
+    ]
+    assert str(telemetry.unknown_enum_values()[0]) == "FilterWhyOn 124 (TelemetryFilter 3, why_on)"
+
+
+def test_no_unknown_values() -> None:
+    """Fully known telemetry lists nothing, and placeholder members like FilterWhyOn.UNKNOWN_1 are real members."""
+    assert Telemetry.load_xml(TELEMETRY).unknown_enum_values() == []
+    assert not is_unknown_member(FilterWhyOn.UNKNOWN_1)
+    assert is_unknown_member(FilterWhyOn(126))
+    assert not is_unknown_member(126)
+
+
+def test_strict_enums_rejects_unknown_values() -> None:
+    """strict_enums=True fails the parse on an unknown value, naming it."""
+    xml = with_attr(TELEMETRY, "whyFilterIsOn", "127")
+    with pytest.raises(OmniParsingError, match=r"FilterWhyOn 127"):
+        Telemetry.load_xml(xml, strict_enums=True)
+    Telemetry.load_xml(TELEMETRY, strict_enums=True)
